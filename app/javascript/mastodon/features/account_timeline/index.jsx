@@ -58,6 +58,10 @@ const mapStateToProps = (state, { params: { acct, id, tagged }, withReplies = fa
 
 class AccountTimeline extends ImmutablePureComponent {
 
+  static contextTypes = {
+    identity: PropTypes.object.isRequired
+  };
+
   static propTypes = {
     params: PropTypes.shape({
       acct: PropTypes.string,
@@ -136,6 +140,7 @@ class AccountTimeline extends ImmutablePureComponent {
 
   render () {
     const { accountId, statusIds, isLoading, hasMore, blockedBy, suspended, isAccount, hidden, multiColumn, remote, remoteUrl, params: { tagged } } = this.props;
+    const { signedIn } = this.context.identity;
 
     if (isLoading && statusIds.isEmpty()) {
       return (
@@ -151,9 +156,11 @@ class AccountTimeline extends ImmutablePureComponent {
 
     let emptyMessage;
 
-    const forceEmptyState = suspended || blockedBy || hidden;
-
-    if (suspended) {
+    const forceEmptyState = suspended || blockedBy || hidden || !signedIn
+    if (!signedIn) {
+      emptyMessage = <FormattedMessage id='empty_column.visitor' defaultMessage='Account suspended' />;
+    } 
+    else if (suspended) {
       emptyMessage = <FormattedMessage id='empty_column.account_suspended' defaultMessage='Account suspended' />;
     } else if (hidden) {
       emptyMessage = <LimitedAccountHint accountId={accountId} />;
@@ -168,6 +175,7 @@ class AccountTimeline extends ImmutablePureComponent {
     return (
       <Column>
         <ColumnBackButton />
+
 
         <StatusList
           prepend={
