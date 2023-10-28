@@ -1962,8 +1962,12 @@ ko:
     title: "%{domain} 도메인의 이용 약관에 변경 있음"
   themes:
     contrast: 마스토돈 (고대비)
-    default: 마스토돈 (어두움)
+    default: 23.4 ~Ad Astra~ 테마 (비일상)
+    mastodon-bird-ui-light: 23.4 ~Ad Astra~ 테마 (일상)
     mastodon-light: 마스토돈 (밝음)
+    mastodon-dark: 마스토돈 (어두움)
+    mastodon-bird-ui-light-vanilla: 파란새풍 테마 (밝음)
+    mastodon-bird-ui-dark-vanilla: 파란새풍 테마 (어두움)
     system: 자동 (시스템 테마 사용)
   time:
     formats:

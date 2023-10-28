@@ -2005,8 +2005,12 @@ en:
     title: The terms of service of %{domain} are changing
   themes:
     contrast: Mastodon (High contrast)
-    default: Mastodon (Dark)
+    default: Mastodon Bird UI (Dark)
+    mastodon-bird-ui-light: Mastodon Bird UI (Light)
     mastodon-light: Mastodon (Light)
+    mastodon-dark: Mastodon (Dark)
+    mastodon-bird-ui-light-vanilla: Mastodon Bird UI - vanila (Light)
+    mastodon-bird-ui-dark-vanilla: Mastodon Bird UI - vanila (dark)
     system: Automatic (use system theme)
   time:
     formats:

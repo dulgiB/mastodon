@@ -15,9 +15,6 @@ export const DisplayNameDefault: FC<
     }
     let acct = account.get('acct');
 
-    if (!acct.includes('@') && localDomain) {
-      acct = `${acct}@${localDomain}`;
-    }
     return `@${acct}`;
   }, [account, localDomain]);
 

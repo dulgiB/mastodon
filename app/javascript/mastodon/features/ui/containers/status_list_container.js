@@ -18,6 +18,8 @@ const makeGetStatusIds = (pending = false) => createSelector([
 
     const statusForId = statuses.get(id);
 
+    if (statusForId.get('visibility') === 'direct') return false;
+
     if (statusForId.get('account') === me) return true;
 
     if (columnSettings.getIn(['shows', 'reblog']) === false && statusForId.get('reblog') !== null) {

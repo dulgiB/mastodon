@@ -4,6 +4,7 @@ import { Link } from 'react-router-dom';
 
 import {
   domain,
+  title,
   version,
   source_url,
   statusPageUrl,
@@ -19,7 +20,7 @@ export const LinkFooter: React.FC<{
   return (
     <div className='link-footer'>
       <p>
-        <strong>{domain}</strong>:{' '}
+        <strong>{title}</strong>:{' '}
         <Link to='/about' target={multiColumn ? '_blank' : undefined}>
           <FormattedMessage id='footer.about' defaultMessage='About' />
         </Link>

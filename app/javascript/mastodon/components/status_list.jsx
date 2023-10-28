@@ -10,6 +10,8 @@ import { RegenerationIndicator } from 'mastodon/components/regeneration_indicato
 import { InlineFollowSuggestions } from 'mastodon/features/home_timeline/components/inline_follow_suggestions';
 
 import { StatusQuoteManager } from '../components/status_quoted';
+import StatusContainer from '../containers/status_container';
+import StatusContainerWithoutDm from '../containers/status_container_without_dm';
 
 import { LoadGap } from './load_gap';
 import ScrollableList from './scrollable_list';
@@ -77,7 +79,18 @@ export default class StatusList extends ImmutablePureComponent {
             />
           );
         default:
-          return (
+          return timelineId === 'account' ? (
+            <StatusContainerWithoutDm
+              key={statusId}
+              id={statusId}
+              onMoveUp={this.handleMoveUp}
+              onMoveDown={this.handleMoveDown}
+              contextType={timelineId}
+              scrollKey={this.props.scrollKey}
+              showThread
+              withCounters={this.props.withCounters}
+            />
+          ) : (
             <StatusQuoteManager
               key={statusId}
               id={statusId}
