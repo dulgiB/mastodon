@@ -25,7 +25,7 @@ module Mastodon
     end
 
     def build_metadata
-      version_configuration[:metadata]
+      ['whippyEdition', ENV.fetch('MASTODON_VERSION_METADATA', nil)].compact_blank.join('.')
     end
 
     def to_a
@@ -50,7 +50,7 @@ module Mastodon
     end
 
     def repository
-      source_configuration[:repository]
+      ENV.fetch('GITHUB_REPOSITORY', 'whippyshou/mastodon')
     end
 
     def source_base_url
