@@ -2,14 +2,14 @@
 # important settings can be changed from the admin interface.
 
 defaults: &defaults
-  site_title: Mastodon Whippy Edition
+  site_title: Whippy Edition
   site_short_description: ''
   site_description: ''
   site_extended_description: ''
   site_terms: ''
   site_contact_username: ''
-  site_contact_email: ''
-  registrations_mode: 'none'
+site_contact_email: 'whippyshou@gmail.com'
+  registrations_mode: 'open'
   profile_directory: true
   closed_registrations_message: ''
   local_live_feed_access: 'public'
@@ -18,9 +18,11 @@ defaults: &defaults
   remote_topic_feed_access: 'public'
   show_staff_badge: true
   preview_sensitive_media: false
-  noindex: false
-  theme: 'system'
-  trends: true
+  noindex: true
+  theme: 'default'
+  trends: false
+  timeline_preview: false
+  trends_as_landing_page: false
   trendable_by_default: false
   disallowed_hashtags: # space separated string or list of hashtags without the hash
   bootstrap_timeline_accounts: ''

@@ -35,6 +35,9 @@ import {
   PINNED_STATUSES_FETCH_SUCCESS,
 } from '../actions/pin_statuses';
 import {
+  DIRECT_STATUSES_FETCH_SUCCESS,
+} from '../actions/direct_statuses';
+import {
   TRENDS_STATUSES_FETCH_REQUEST,
   TRENDS_STATUSES_FETCH_SUCCESS,
   TRENDS_STATUSES_FETCH_FAIL,
@@ -55,6 +58,11 @@ const initialState = ImmutableMap({
     items: ImmutableOrderedSet(),
   }),
   pins: ImmutableMap({
+    next: null,
+    loaded: false,
+    items: ImmutableOrderedSet(),
+  }),
+  direct: ImmutableMap({
     next: null,
     loaded: false,
     items: ImmutableOrderedSet(),
