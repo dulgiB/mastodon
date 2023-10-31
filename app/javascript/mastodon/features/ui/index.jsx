@@ -148,10 +148,6 @@ class SwitchingColumnsArea extends PureComponent {
       }
     } else if (singleUserMode && owner && initialState?.accounts[owner]) {
       redirect = <Redirect from='/' to={`/@${initialState.accounts[owner].username}`} exact />;
-    } else if (trendsEnabled && landingPage === 'trends') {
-      redirect = <Redirect from='/' to='/explore' exact />;
-    } else if (localLiveFeedAccess === 'public' && landingPage === 'local_feed') {
-      redirect = <Redirect from='/' to='/public/local' exact />;
     } else {
       redirect = <Redirect from='/' to='/about' exact />;
     }
@@ -199,7 +195,6 @@ class SwitchingColumnsArea extends PureComponent {
             <WrappedRoute path={['/start', '/start/profile']} exact component={OnboardingProfile} content={children} />
             <WrappedRoute path='/start/follows' component={OnboardingFollows} content={children} />
             <WrappedRoute path='/directory' component={Directory} content={children} />
-            <WrappedRoute path='/explore' component={Explore} content={children} />
             <WrappedRoute path='/search' component={Search} content={children} />
             <WrappedRoute path={['/publish', '/statuses/new']} component={Compose} content={children} />
 
