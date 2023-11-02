@@ -34,6 +34,16 @@ class StatusCheckBox extends PureComponent {
       return null;
     }
 
+    const visibilityIconInfo = {
+      'public': { icon: 'globe', text: intl.formatMessage(messages.public_short) },
+      'unlisted': { icon: 'cloud', text: intl.formatMessage(messages.unlisted_short) },
+      'private': { icon: 'lock', text: intl.formatMessage(messages.private_short) },
+      'direct': { icon: 'envelope', text: intl.formatMessage(messages.direct_short) },
+    };
+
+    const visibilityIcon = visibilityIconInfo[status.get('visibility')];
+
+
     const labelComponent = (
       <div className='status-check-box__status poll__option__text'>
         <div className='detailed-status__display-name'>

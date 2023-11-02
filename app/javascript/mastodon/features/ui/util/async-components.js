@@ -14,6 +14,9 @@ export function HomeTimeline () {
   return import('../../home_timeline');
 }
 
+export function LocalTimeline () {
+  return import(/* webpackChunkName: "features/home_timeline" */'../../local_timeline');
+}
 export function PublicTimeline () {
   return import('../../public_timeline');
 }

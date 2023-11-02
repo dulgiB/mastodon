@@ -1,41 +1,35 @@
-import { createSelector } from '@reduxjs/toolkit';
 import { Map as ImmutableMap, List as ImmutableList } from 'immutable';
 import { connect } from 'react-redux';
+import { createSelector } from 'reselect';
 
 import { debounce } from 'lodash';
 
 import { scrollTopTimeline, loadPending } from '../../../actions/timelines';
 import StatusList from '../../../components/status_list';
-import { me } from '../../../initial_state';
 
 const makeGetStatusIds = (pending = false) => createSelector([
-  (state, { type }) => state.getIn(['settings', type], ImmutableMap()),
+  (state) => state.getIn(['settings', 'local'], ImmutableMap()),
   (state, { type }) => state.getIn(['timelines', type, pending ? 'pendingItems' : 'items'], ImmutableList()),
   (state)           => state.get('statuses'),
   (type)            => type
 ], (columnSettings, statusIds, statuses,type) => {
   return statusIds.filter(id => {
-    if (id === null || id === 'inline-follow-suggestions') return true;
+    if (id === null) return true;
 
     const statusForId = statuses.get(id);
+    
+    let showStatus = true;
 
-    if (statusForId.get('visibility') === 'direct') return false;
-
-    if (statusForId.get('account') === me) return true;
-
-    if (columnSettings.getIn(['shows', 'reblog']) === false && statusForId.get('reblog') !== null) {
+    if (statusForId.get('visibility') === 'direct')
       return false;
+    if (statusForId.get('in_reply_to_id')) {
+      showStatus =  showStatus && statusForId.get('in_reply_to_account_id') === statusForId.get('account')
+    }
+    if (columnSettings.getIn(['shows', 'media']) === true) {
+      showStatus = showStatus &&  statusForId.get('media_attachments').size>0;
     }
 
-    if (columnSettings.getIn(['shows', 'reply']) === false && statusForId.get('in_reply_to_id') !== null && statusForId.get('in_reply_to_account_id') !== me) {
-      return false;
-    }
-
-    if (columnSettings.getIn(['shows', 'quote']) === false && statusForId.get('quote') !== null) {
-      return false;
-    }
-
-    return true;
+    return showStatus;
   });
 });
 
