@@ -435,7 +435,7 @@ class Status extends ImmutablePureComponent {
     } else if (status.get('visibility') === 'direct') {
       prepend = (
         <div className='status__prepend'>
-          <div className='status__prepend__icon'><Icon id='at' icon={AlternateEmailIcon} /></div>
+          <div className='status__prepend-icon-wrapper'><Icon id='envelope' className='status__prepend-icon' fixedWidth /></div>
           <FormattedMessage id='status.direct_indicator' defaultMessage='Private mention' />
         </div>
       );
@@ -551,6 +551,16 @@ class Status extends ImmutablePureComponent {
     } else {
       statusAvatar = <AvatarOverlay account={status.get('account')} friend={account} />;
     }
+
+    const visibilityIconInfo = {
+      'public': { icon: 'globe', text: intl.formatMessage(messages.public_short) },
+      'unlisted': { icon: 'cloud', text: intl.formatMessage(messages.unlisted_short) },
+      'private': { icon: 'lock', text: intl.formatMessage(messages.private_short) },
+      'direct': { icon: 'envelope', text: intl.formatMessage(messages.direct_short) },
+    };
+
+    const visibilityIcon = visibilityIconInfo[status.get('visibility')];
+
 
     const {statusContentProps, hashtagBar} = getHashtagBarForStatus(status);
 
