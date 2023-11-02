@@ -66,6 +66,8 @@ export function updateNotifications(notification, intlMessages, intlLocale) {
   };
 }
 
+
+
 const noOp = () => {};
 
 // Browser support
