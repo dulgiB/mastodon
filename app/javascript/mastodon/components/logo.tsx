@@ -1,10 +1,7 @@
 import logo from '@/images/logo.svg';
 
 export const WordmarkLogo: React.FC = () => (
-  <svg viewBox='0 0 261 66' className='logo logo--wordmark' role='img'>
-    <title>Mastodon</title>
-    <use xlinkHref='#logo-symbol-wordmark' />
-  </svg>
+  <img src={wordmark} alt='Whippy Edition' className='logo logo--wordmark' />
 );
 
 export const IconLogo: React.FC = () => (
@@ -15,5 +12,5 @@ export const IconLogo: React.FC = () => (
 );
 
 export const SymbolLogo: React.FC = () => (
-  <img src={logo} alt='Mastodon' className='logo logo--icon' />
+  <img src={logo} alt='Whippy Edition' className='logo logo--icon' />
 );
