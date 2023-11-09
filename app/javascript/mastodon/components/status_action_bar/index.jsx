@@ -126,6 +126,7 @@ class StatusActionBar extends ImmutablePureComponent {
     } else {
       this.props.onInteractionModal(this.props.status);
     }
+    e.stopPropagation();
   };
 
   handleQuoteClick = () => {
@@ -148,10 +149,12 @@ class StatusActionBar extends ImmutablePureComponent {
     } else {
       this.props.onInteractionModal(this.props.status);
     }
+    e.stopPropagation();
   };
 
-  handleBookmarkClick = () => {
+  handleBookmarkClick = e => {
     this.props.onBookmark(this.props.status);
+    e.stopPropagation();
   };
 
   handleDeleteClick = () => {
@@ -246,6 +249,15 @@ class StatusActionBar extends ImmutablePureComponent {
     const url = this.props.status.get('url');
     navigator.clipboard.writeText(url);
   };
+
+  handleHideClick = () => {
+    this.props.onFilter();
+  };
+
+  handleActionbarClick = (e) => {
+    e.stopPropagation();
+  };
+
 
   render () {
     const { status, relationship, statusQuoteState, quotedAccountId, contextType, intl, withDismiss, withCounters, scrollKey } = this.props;

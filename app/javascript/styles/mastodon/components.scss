@@ -1544,6 +1544,7 @@
   .video-player,
   .audio-player,
   .attachment-list {
+    max-height: 500px;
     margin-top: 16px;
   }
 
@@ -1830,6 +1831,7 @@
   .media-gallery,
   .video-player,
   .audio-player {
+    max-height:unset;
     margin-top: 16px;
   }
 
@@ -2512,6 +2514,7 @@ a.account__display-name {
   line-height: 22px;
   margin-bottom: 16px;
   overflow: hidden;
+  width: fit-content;
 
   strong,
   span {
@@ -3402,6 +3405,11 @@ a.account__display-name {
       border-top: 0;
     }
   }
+
+  .ui__header__logo img.logo {
+    content: url("../images/logos/m_logo_dark.png");
+  }
+
 }
 
 @media screen and (width <= 759px) {
@@ -3766,7 +3774,7 @@ a.account__display-name {
   }
 
   .logo {
-    height: 100px;
+    height: 85px;
     width: auto;
   }
 
@@ -7429,7 +7437,6 @@ a.status-card {
   box-sizing: border-box;
   display: block;
   position: relative;
-  border-radius: 8px;
   overflow: hidden;
   outline: 1px solid var(--media-outline-color);
   outline-offset: -1px;

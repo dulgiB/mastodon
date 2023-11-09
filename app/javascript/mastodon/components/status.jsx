@@ -259,6 +259,14 @@ class Status extends ImmutablePureComponent {
     }
   };
 
+  
+  handleStatusClick = (e) => {
+    if (e.button === 0 && !(e.ctrlKey || e.metaKey) && this.context.router) {
+      e.preventDefault();
+      this.context.router.history.push(`/@${this.props.status.getIn(['account', 'acct'])}`+`/${this.props.status.get('id')}`)
+    }
+    e.stopPropagation();
+  };
   handleDeployPictureInPicture = (type, mediaProps) => {
     const { deployPictureInPicture } = this.props;
     const status = this._properStatus();
