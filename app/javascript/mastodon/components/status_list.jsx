@@ -12,6 +12,8 @@ import { InlineFollowSuggestions } from 'mastodon/features/home_timeline/compone
 import { StatusQuoteManager } from '../components/status_quoted';
 import StatusContainer from '../containers/status_container';
 import StatusContainerWithoutDm from '../containers/status_container_without_dm';
+import StatusContainerWithDm from '../containers/status_container_with_dm';
+
 
 import { LoadGap } from './load_gap';
 import ScrollableList from './scrollable_list';
@@ -48,12 +50,27 @@ export default class StatusList extends ImmutablePureComponent {
     onLoadMore(lastId || (statusIds.size > 0 ? statusIds.last() : undefined));
   }, 300, { leading: true });
 
+  _selectChild(index, align_top) {
+    const container = this.node.node;
+    const element = container.querySelector(`article:nth-of-type(${index + 1}) .focusable`);
+
+    if (element) {
+      if (align_top && container.scrollTop > element.offsetTop) {
+        element.scrollIntoView(true);
+      } else if (!align_top && container.scrollTop + container.clientHeight < element.offsetTop + element.offsetHeight) {
+        element.scrollIntoView(false);
+      }
+      element.focus();
+    }
+  }
+
+
   setRef = c => {
     this.node = c;
   };
 
-  render () {
-    const { statusIds, featuredStatusIds, onLoadMore, timelineId, ...other }  = this.props;
+  render() {
+    const { statusIds, featuredStatusIds, onLoadMore, timelineId, ...other } = this.props;
     const { isLoading, isPartial } = other;
 
     if (isPartial) {
@@ -79,18 +96,34 @@ export default class StatusList extends ImmutablePureComponent {
             />
           );
         default:
-          return timelineId === 'account' ? (
-            <StatusContainerWithoutDm
-              key={statusId}
-              id={statusId}
-              onMoveUp={this.handleMoveUp}
-              onMoveDown={this.handleMoveDown}
-              contextType={timelineId}
-              scrollKey={this.props.scrollKey}
-              showThread
-              withCounters={this.props.withCounters}
-            />
-          ) : (
+          if (timelineId === 'account') {
+            return (
+              <StatusContainerWithoutDm
+                key={statusId}
+                id={statusId}
+                onMoveUp={this.handleMoveUp}
+                onMoveDown={this.handleMoveDown}
+                contextType={timelineId}
+                scrollKey={this.props.scrollKey}
+                showThread
+                withCounters={this.props.withCounters}
+              />
+            );
+          } else if (timelineId === 'account_direct') {
+            return (
+              <StatusContainerWithDm
+                key={statusId}
+                id={statusId}
+                onMoveUp={this.handleMoveUp}
+                onMoveDown={this.handleMoveDown}
+                contextType={timelineId}
+                scrollKey={this.props.scrollKey}
+                showThread
+                withCounters={this.props.withCounters}
+              />
+            );
+          }
+          return (
             <StatusQuoteManager
               key={statusId}
               id={statusId}

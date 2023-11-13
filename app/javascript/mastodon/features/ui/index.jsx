@@ -47,6 +47,7 @@ import {
   LocalTimeline,
   Followers,
   Following,
+  AccountDirectMessages,
   Reblogs,
   Favourites,
   DirectTimeline,
