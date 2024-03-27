@@ -24,6 +24,7 @@ class Notification < ApplicationRecord
   include Redisable
 
   LEGACY_TYPE_CLASS_MAP = {
+    'Direct' => :direct,
     'Mention' => :mention,
     'Status' => :reblog,
     'Follow' => :follow,
@@ -33,60 +34,24 @@ class Notification < ApplicationRecord
     'Quote' => :quote,
   }.freeze
 
-  # Please update app/javascript/api_types/notification.ts if you change this
-  PROPERTIES = {
-    mention: {
-      filterable: true,
-    }.freeze,
-    status: {
-      filterable: false,
-    }.freeze,
-    reblog: {
-      filterable: true,
-    }.freeze,
-    follow: {
-      filterable: true,
-    }.freeze,
-    follow_request: {
-      filterable: true,
-    }.freeze,
-    favourite: {
-      filterable: true,
-    }.freeze,
-    poll: {
-      filterable: false,
-    }.freeze,
-    update: {
-      filterable: false,
-    }.freeze,
-    severed_relationships: {
-      filterable: false,
-    }.freeze,
-    moderation_warning: {
-      filterable: false,
-    }.freeze,
-    annual_report: {
-      filterable: false,
-    }.freeze,
-    'admin.sign_up': {
-      filterable: false,
-    }.freeze,
-    'admin.report': {
-      filterable: false,
-    }.freeze,
-    quote: {
-      filterable: true,
-    }.freeze,
-    quoted_update: {
-      filterable: false,
-    }.freeze,
-  }.freeze
-
-  TYPES = PROPERTIES.keys.freeze
+  TYPES = %i(
+    direct
+    mention
+    status
+    reblog
+    follow
+    follow_request
+    favourite
+    poll
+    update
+    admin.sign_up
+    admin.report
+  ).freeze
 
   TARGET_STATUS_INCLUDES_BY_TYPE = {
     status: :status,
     reblog: [status: :reblog],
+    direct: [mention: :status], 
     mention: [mention: :status],
     quote: [quote: :status],
     favourite: [favourite: :status],
@@ -102,6 +67,7 @@ class Notification < ApplicationRecord
 
   with_options foreign_key: 'activity_id', optional: true do
     belongs_to :mention, inverse_of: :notification
+    belongs_to :direct, inverse_of: :notification
     belongs_to :status, inverse_of: :notification
     belongs_to :follow, inverse_of: :notification
     belongs_to :follow_request, inverse_of: :notification
@@ -127,13 +93,13 @@ class Notification < ApplicationRecord
     when :status, :update, :quoted_update
       status
     when :reblog
-      status&.reblog
+      status&.reblog  
     when :favourite
       favourite&.status
     when :mention
       mention&.status
-    when :quote
-      quote&.status
+    when :direct
+      mention&.status
     when :poll
       poll&.status
     end
@@ -182,7 +148,7 @@ class Notification < ApplicationRecord
           notification.status.reblog = cached_status
         when :favourite
           notification.favourite.status = cached_status
-        when :mention
+        when :mention, :direct
           notification.mention.status = cached_status
         when :poll
           notification.poll.status = cached_status
@@ -210,7 +176,7 @@ class Notification < ApplicationRecord
       self.from_account_id = type == :quoted_update ? activity&.quote&.quoted_account_id : activity&.account_id
     when 'Follow', 'Favourite', 'FollowRequest', 'Poll', 'Report', 'Quote'
       self.from_account_id = activity&.account_id
-    when 'Mention'
+    when 'Mention', 'Direct'
       self.from_account_id = activity&.status&.account_id
     when 'Account'
       self.from_account_id = activity&.id

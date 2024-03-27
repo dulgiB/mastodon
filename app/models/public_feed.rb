@@ -86,7 +86,7 @@ class PublicFeed
   end
 
   def public_scope
-    Status.public_visibility.joins(:account).merge(Account.without_suspended.without_silenced)
+    Status.with_unlisted_visibility.joins(:account).merge(Account.without_suspended.without_silenced)
   end
 
   def local_only_scope

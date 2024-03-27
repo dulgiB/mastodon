@@ -28,7 +28,7 @@ class Feed
       unhydrated = redis.zrangebyscore(key, "(#{min_id}", "(#{max_id}", limit: [0, limit], with_scores: true).map { |id| id.first.to_i }
     end
 
-    Status.where(id: unhydrated)
+    Status.without_direct_visibility.where(id: unhydrated).cache_ids
   end
 
   def key

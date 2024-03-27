@@ -123,6 +123,10 @@ class Status < ApplicationRecord
   scope :reply_to_account, -> { where(arel_table[:in_reply_to_account_id].eq arel_table[:account_id]) }
   scope :not_replying_to_account, ->(account) { where.not(in_reply_to_account: account) }
   scope :without_reblogs, -> { where(statuses: { reblog_of_id: nil }) }
+  scope :with_public_visibility, -> { where(visibility: :public) }
+  scope :with_unlisted_visibility, -> { where(visibility: :unlisted) }
+  scope :without_direct_visibility, -> { where(visibility: [:unlisted ,:public,:private]) }
+  scope :with_direct_visibility, -> { where(visibility: :direct) }
   scope :tagged_with, ->(tag_ids) { joins(:statuses_tags).where(statuses_tags: { tag_id: tag_ids }) }
   scope :not_excluded_by_account, ->(account) { where.not(account_id: account.excluded_from_timeline_account_ids) }
   scope :not_domain_blocked_by_account, ->(account) { account.excluded_from_timeline_domains.blank? ? left_outer_joins(:account) : left_outer_joins(:account).merge(Account.not_domain_blocked_by_account(account)) }

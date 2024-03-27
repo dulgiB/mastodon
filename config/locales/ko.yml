@@ -911,6 +911,7 @@ ko:
       view_quoted_post: 인용된 게시물 보기
       visibility: 공개 설정
       with_media: 미디어 있음
+      with_direct: DM 보기
     strikes:
       actions:
         delete_statuses: "%{name} 님이 %{target} 님의 게시물을 삭제했습니다"

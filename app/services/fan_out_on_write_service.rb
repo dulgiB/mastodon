@@ -39,23 +39,18 @@ class FanOutOnWriteService < BaseService
   end
 
   def fan_out_to_local_recipients!
-    deliver_to_self!
 
-    unless @options[:skip_notifications]
-      notify_quoted_account!
-      notify_mentioned_accounts!
-      notify_about_update! if update?
-    end
+    notify_about_update! if update?
 
     case @status.visibility.to_sym
     when :public, :unlisted, :private
+      notify_mentioned_accounts!
+      deliver_to_self!
       deliver_to_all_followers!
       deliver_to_lists!
-    when :limited
-      deliver_to_mentioned_followers!
     else
-      deliver_to_mentioned_followers!
       deliver_to_conversation!
+      notify_direct_accounts!
     end
   end
 
@@ -91,6 +86,14 @@ class FanOutOnWriteService < BaseService
       # (e.g. private mentions or mentions by people they do not follow)
       PushUpdateWorker.push_bulk(mentions.filter { |mention| subscribed_to_streaming_api?(mention.account_id) }) do |mention|
         [mention.account_id, @status.id, "timeline:#{mention.account_id}:notifications", { 'update' => true }]
+      end
+    end
+  end
+
+  def notify_direct_accounts!
+    @status.active_mentions.where.not(id: @options[:silenced_account_ids] || []).joins(:account).merge(Account.local).select(:id, :account_id).reorder(nil).find_in_batches do |mentions|
+      LocalNotificationWorker.push_bulk(mentions) do |mention|
+        [mention.account_id, mention.id, 'Mention', 'direct']
       end
     end
   end
