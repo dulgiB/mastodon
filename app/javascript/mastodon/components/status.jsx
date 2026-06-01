@@ -40,10 +40,6 @@ import { IconButton } from './icon_button';
 const domParser = new DOMParser();
 
 const messages = defineMessages({
-  public_short: { id: 'privacy.public.short', defaultMessage: 'Public' },
-  unlisted_short: { id: 'privacy.unlisted.short', defaultMessage: 'Quiet public' },
-  private_short: { id: 'privacy.private.short', defaultMessage: 'Followers' },
-  direct_short: { id: 'privacy.direct.short', defaultMessage: 'Specific people' },
   edited: { id: 'status.edited', defaultMessage: 'Edited {date}' },
   quote_noun: { id: 'status.quote_noun', defaultMessage: 'Quote', description: 'Quote as a noun' },
   contains_quote: { id: 'status.contains_quote', defaultMessage: 'Contains quote' },
@@ -559,16 +555,6 @@ class Status extends ImmutablePureComponent {
     } else {
       statusAvatar = <AvatarOverlay account={status.get('account')} friend={account} />;
     }
-
-    const visibilityIconInfo = {
-      'public': { icon: 'globe', text: intl.formatMessage(messages.public_short) },
-      'unlisted': { icon: 'cloud', text: intl.formatMessage(messages.unlisted_short) },
-      'private': { icon: 'lock', text: intl.formatMessage(messages.private_short) },
-      'direct': { icon: 'envelope', text: intl.formatMessage(messages.direct_short) },
-    };
-
-    const visibilityIcon = visibilityIconInfo[status.get('visibility')];
-
 
     const {statusContentProps, hashtagBar} = getHashtagBarForStatus(status);
 

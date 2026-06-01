@@ -19,7 +19,6 @@ class StatusCheckBox extends PureComponent {
     status: ImmutablePropTypes.map.isRequired,
     checked: PropTypes.bool,
     onToggle: PropTypes.func.isRequired,
-    intl: PropTypes.object.isRequired,
   };
 
   handleStatusesToggle = (value, checked) => {
@@ -33,16 +32,6 @@ class StatusCheckBox extends PureComponent {
     if (status.get('reblog')) {
       return null;
     }
-
-    const visibilityIconInfo = {
-      'public': { icon: 'globe', text: intl.formatMessage(messages.public_short) },
-      'unlisted': { icon: 'cloud', text: intl.formatMessage(messages.unlisted_short) },
-      'private': { icon: 'lock', text: intl.formatMessage(messages.private_short) },
-      'direct': { icon: 'envelope', text: intl.formatMessage(messages.direct_short) },
-    };
-
-    const visibilityIcon = visibilityIconInfo[status.get('visibility')];
-
 
     const labelComponent = (
       <div className='status-check-box__status poll__option__text'>

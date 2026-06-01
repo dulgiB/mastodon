@@ -250,15 +250,6 @@ class StatusActionBar extends ImmutablePureComponent {
     navigator.clipboard.writeText(url);
   };
 
-  handleHideClick = () => {
-    this.props.onFilter();
-  };
-
-  handleActionbarClick = (e) => {
-    e.stopPropagation();
-  };
-
-
   render () {
     const { status, relationship, statusQuoteState, quotedAccountId, contextType, intl, withDismiss, withCounters, scrollKey } = this.props;
     const { signedIn, permissions } = this.props.identity;

@@ -154,17 +154,6 @@ class StatusContent extends PureComponent {
     this.startXY = null;
   };
 
-  handleSpoilerClick = (e) => {
-    e.preventDefault();
-    e.stopPropagation();
-    if (this.props.onExpandedToggle) {
-      this.props.onExpandedToggle();
-    } else {
-      this.setState({ hidden: !this.state.hidden });
-    }
-  };
-
-
   handleTranslate = () => {
     this.props.onTranslate();
   };

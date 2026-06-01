@@ -52,12 +52,6 @@ const messages = defineMessages({
     id: 'tabs_bar.notifications',
     defaultMessage: 'Notifications',
   },
-  explore: { id: 'explore.title', defaultMessage: 'Trending' },
-  firehose: { id: 'column.firehose', defaultMessage: 'Live feeds' },
-  firehose_singular: {
-    id: 'column.firehose_singular',
-    defaultMessage: 'Live feed',
-  },
   direct: { id: 'navigation_bar.direct', defaultMessage: 'Private mentions' },
   favourites: { id: 'navigation_bar.favourites', defaultMessage: 'Favorites' },
   bookmarks: { id: 'navigation_bar.bookmarks', defaultMessage: 'Bookmarks' },
@@ -70,11 +64,6 @@ const messages = defineMessages({
     defaultMessage: 'Follows and followers',
   },
   about: { id: 'navigation_bar.about', defaultMessage: 'About' },
-  search: { id: 'navigation_bar.search', defaultMessage: 'Search' },
-  searchTrends: {
-    id: 'navigation_bar.search_trends',
-    defaultMessage: 'Search / Trending',
-  },
   advancedInterface: {
     id: 'navigation_bar.advanced_interface',
     defaultMessage: 'Open in advanced web interface',
