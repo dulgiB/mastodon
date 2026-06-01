@@ -3,7 +3,6 @@ import { FormattedMessage } from 'react-intl';
 import { Link } from 'react-router-dom';
 
 import {
-  domain,
   title,
   version,
   source_url,

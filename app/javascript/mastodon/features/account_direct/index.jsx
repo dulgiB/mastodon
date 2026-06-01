@@ -10,8 +10,8 @@ import { connect } from 'react-redux';
 import { TimelineHint } from 'mastodon/components/timeline_hint';
 import BundleColumnError from 'mastodon/features/ui/components/bundle_column_error';
 import { normalizeForLookup } from 'mastodon/reducers/accounts_map';
-import { getAccountHidden } from 'mastodon/selectors';
-import ColumnBackButtonSlim from '../../components/column_back_button_slim';
+import { getAccountHidden } from 'mastodon/selectors/accounts';
+import { ColumnBackButton as ColumnBackButtonSlim } from '../../components/column_back_button';
 import { lookupAccount, fetchAccount } from '../../actions/accounts';
 import { fetchFeaturedTags } from '../../actions/featured_tags';
 import {  expandAccountDirectTimeline} from '../../actions/timelines';
@@ -115,7 +115,7 @@ class AccountTimeline extends ImmutablePureComponent {
       this._load();
     } else if (prevProps.params.acct !== acct) {
       dispatch(lookupAccount(acct));
-    } 
+    }
   }
 
   handleLoadMore = maxId => {
@@ -143,7 +143,7 @@ class AccountTimeline extends ImmutablePureComponent {
     const forceEmptyState = suspended || blockedBy || hidden || !signedIn
     if (!signedIn) {
       emptyMessage = <FormattedMessage id='empty_column.visitor' defaultMessage='Account suspended' />;
-    } 
+    }
     else if (suspended) {
       emptyMessage = <FormattedMessage id='empty_column.account_suspended' defaultMessage='Account suspended' />;
     }  else if (blockedBy) {

@@ -8,15 +8,15 @@ import { DisplayNameWithoutDomain } from './no-domain';
 
 export const DisplayNameDefault: FC<
   Omit<DisplayNameProps, 'variant'> & ComponentPropsWithoutRef<'span'>
-> = ({ account, localDomain, className, ...props }) => {
+> = ({ account, className, ...props }) => {
   const username = useMemo(() => {
     if (!account) {
       return null;
     }
-    let acct = account.get('acct');
+    const acct = account.get('acct');
 
     return `@${acct}`;
-  }, [account, localDomain]);
+  }, [account]);
 
   return (
     <DisplayNameWithoutDomain

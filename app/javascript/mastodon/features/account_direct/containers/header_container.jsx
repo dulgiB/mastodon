@@ -1,7 +1,6 @@
 import { connect } from 'react-redux';
 
-import { normalizeForLookup } from 'mastodon/reducers/accounts_map';
-import { getAccountHidden } from 'mastodon/selectors';
+import { getAccountHidden } from 'mastodon/selectors/accounts';
 import { makeGetAccount } from '../../../selectors';
 import Header from '../components/header';
 
