@@ -66,10 +66,6 @@ export function SendDirectMessagesStatuses () {
   return import('../../account_direct');
 }
 
-export function LocalTimeline () {
-  return import('../../firehose');
-}
-
 export function AccountTimeline () {
   return import('../../account_timeline');
 }

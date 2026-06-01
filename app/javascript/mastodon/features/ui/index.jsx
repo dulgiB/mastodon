@@ -44,7 +44,6 @@ import {
   AccountTimeline,
   AccountGallery,
   HomeTimeline,
-  LocalTimeline,
   Followers,
   Following,
   AccountDirectMessages,
@@ -178,8 +177,6 @@ class SwitchingColumnsArea extends PureComponent {
             <WrappedRoute path='/public' exact component={Firehose} componentParams={{ feedType: 'public' }} content={children} />
             <WrappedRoute path='/public/local' exact component={Firehose} componentParams={{ feedType: 'community' }} content={children} />
             <WrappedRoute path='/public/remote' exact component={Firehose} componentParams={{ feedType: 'public:remote' }} content={children} />
-            <Redirect from='/timelines/local' to='/local' exact />
-            <WrappedRoute path='/local' exact component={LocalTimeline} content={children} />
             <WrappedRoute path={['/conversations', '/timelines/direct']} component={DirectTimeline} content={children} />
             <WrappedRoute path='/tags/:id' component={HashtagTimeline} content={children} />
             <WrappedRoute path='/links/:url' component={LinkTimeline} content={children} />
