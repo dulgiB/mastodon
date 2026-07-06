@@ -8,6 +8,7 @@ import ImmutablePureComponent from 'react-immutable-pure-component';
 import { connect } from 'react-redux';
 
 import BundleColumnError from 'mastodon/features/ui/components/bundle_column_error';
+import { identityContextPropShape, withIdentity } from 'mastodon/identity_context';
 import { me } from 'mastodon/initial_state';
 import { normalizeForLookup } from 'mastodon/reducers/accounts_map';
 import { getAccountHidden } from 'mastodon/selectors/accounts';
@@ -58,11 +59,8 @@ const mapStateToProps = (state, { params: { acct, id, tagged }, withReplies = fa
 
 class AccountTimeline extends ImmutablePureComponent {
 
-  static contextTypes = {
-    identity: PropTypes.object.isRequired
-  };
-
   static propTypes = {
+    identity: identityContextPropShape,
     params: PropTypes.shape({
       acct: PropTypes.string,
       id: PropTypes.string,
@@ -140,7 +138,7 @@ class AccountTimeline extends ImmutablePureComponent {
 
   render () {
     const { accountId, statusIds, isLoading, hasMore, blockedBy, suspended, isAccount, hidden, multiColumn, remote, remoteUrl, params: { tagged } } = this.props;
-    const { signedIn } = this.context.identity;
+    const { signedIn } = this.props.identity;
 
     if (isLoading && statusIds.isEmpty()) {
       return (
@@ -202,4 +200,4 @@ class AccountTimeline extends ImmutablePureComponent {
 
 }
 
-export default connect(mapStateToProps)(AccountTimeline);
+export default connect(mapStateToProps)(withIdentity(AccountTimeline));

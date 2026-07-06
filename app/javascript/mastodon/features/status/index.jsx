@@ -527,7 +527,7 @@ class Status extends ImmutablePureComponent {
     let ancestors, descendants, remoteHint;
     const { isLoading, status, ancestorsIds, descendantsIds, refresh, intl, domain, multiColumn, pictureInPicture } = this.props;
     const { fullscreen } = this.state;
-    const { signedIn } = this.context.identity;
+    const { signedIn } = this.props.identity;
 
 
     if (isLoading) {
