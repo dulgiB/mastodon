@@ -41,7 +41,6 @@ import { selectUnreadNotificationGroupsCount } from 'mastodon/selectors/notifica
 import { useAppSelector, useAppDispatch } from 'mastodon/store';
 
 import { DisabledAccountBanner } from './components/disabled_account_banner';
-import { FollowedTagsPanel } from './components/followed_tags_panel';
 import { MoreLink } from './components/more_link';
 import { SignInBanner } from './components/sign_in_banner';
 import { Trends } from './components/trends';
@@ -239,8 +238,6 @@ export const NavigationPanel: React.FC<{ multiColumn?: boolean }> = ({
             <FollowRequestsLink />
 
             <hr />
-
-            <FollowedTagsPanel />
 
             <ColumnLink
               transparent
