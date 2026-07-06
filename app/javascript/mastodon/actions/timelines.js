@@ -10,6 +10,8 @@ import {timelineDelete} from './timelines_typed';
 
 export { disconnectTimeline } from './timelines_typed';
 
+const noOp = () => {};
+
 export const TIMELINE_UPDATE  = 'TIMELINE_UPDATE';
 export const TIMELINE_CLEAR   = 'TIMELINE_CLEAR';
 
