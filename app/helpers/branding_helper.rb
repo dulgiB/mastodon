@@ -11,15 +11,15 @@ module BrandingHelper
   end
 
   def _logo_as_symbol_wordmark
-    content_tag(:img, nil, src:full_pack_url('media/images/logos/wordmark_dark.png'), alt: 'Whippy Edition', class: 'logo logo--wordmark')
+    content_tag(:img, nil, src: frontend_asset_path('images/logos/wordmark_dark.png'), alt: 'Whippy Edition', class: 'logo logo--wordmark')
   end
 
   def _logo_as_symbol_icon
-    content_tag(:img, nil, src:full_pack_url('media/images/logos/logo_dark.png'), alt: 'Whippy Edition', class: 'logo logo--icon')
+    content_tag(:img, nil, src: frontend_asset_path('images/logos/logo_dark.png'), alt: 'Whippy Edition', class: 'logo logo--icon')
   end
 
   def render_logo
-    content_tag(:img, nil, src:full_pack_url('media/images/logos/logo_dark.png'), alt: 'Whippy Edition', class: 'logo logo--icon')
+    content_tag(:img, nil, src: frontend_asset_path('images/logos/logo_dark.png'), alt: 'Whippy Edition', class: 'logo logo--icon')
   end
 
   def render_symbol(version = :icon)
