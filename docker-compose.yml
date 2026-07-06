@@ -26,7 +26,7 @@ services:
     env_file: .env.mastodon
     command: bundle exec puma -C config/puma.rb
     user: "991:991"
-    depends_on: [db, redis]
+    depends_on: [db, redis, search]
     networks: [internal, external]
     healthcheck:
       test: ['CMD-SHELL', 'wget -q --spider --proxy=off localhost:3000/health || exit 1']
@@ -47,10 +47,21 @@ services:
     env_file: .env.mastodon
     command: bundle exec sidekiq
     user: "991:991"
-    depends_on: [db, redis]
+    depends_on: [db, redis, search]
     networks: [internal, external]
     volumes:
       - mastodon_system:/mastodon/public/system
+
+  search:
+    build: ./search
+    restart: always
+    environment:
+      discovery.type: single-node
+      xpack.security.enabled: "false"
+      ES_JAVA_OPTS: "-Xms512m -Xmx512m"
+    volumes:
+      - search_data:/usr/share/elasticsearch/data
+    networks: [internal]
 
   # ── 테스트 인스턴스 ──────────────────────────────
   db_test:
@@ -80,7 +91,7 @@ services:
     user: "991:991"
     environment:
       PORT: "3001"         # 본 인스턴스(3000)와 충돌 방지
-    depends_on: [db_test, redis_test]
+    depends_on: [db_test, redis_test, search]
     networks: [internal, external]
 
   streaming_test:
@@ -102,7 +113,7 @@ services:
     env_file: .env.test
     command: bundle exec sidekiq
     user: "991:991"
-    depends_on: [db_test, redis_test]
+    depends_on: [db_test, redis_test, search]
     networks: [internal, external]
 
   # ── 공통 ─────────────────────────────────────────
@@ -142,6 +153,7 @@ volumes:
   mastodon_system:
   postgres_data_test:
   redis_data_test:
+  search_data:
 
 networks:
   internal:
