@@ -4,6 +4,7 @@
 /* CSS variables */
 :root {
   /* Brand colors */
+  --m-logo: url('../../images/theme/m_logo_dark.png');
   --color-brand-twitter: #1d9bf0;
   --color-brand-twitter-bg: #15202b;
   --color-brand-twitter-dim: #8b98a5;
@@ -196,8 +197,10 @@ body.theme-bird-ui-contrast.layout-multiple-columns {
 
 /* Light theme */
 body.theme-bird-ui-light.layout-multiple-columns {
-  
+
   --active-header-radial-gradient: radial-gradient(ellipse,rgb(239, 154, 154 / 25%) 0,rgb(255, 0 ,81 / 0%) 60%);
+
+  --m-logo: url('../../images/theme/m_logo_light.png');
 
   --color-brand-mastodon: #be2a4d;
   --color-brand-mastodon-links: #df98a2;
@@ -2212,6 +2215,10 @@ body.embed .detailed-status__meta .detailed-status__link .fa-retweet,
   font-size: var(--font-size);
   height: 42px;
   padding: 0 20px;
+  /* Preserve room for .search__icon-wrapper (starts ~14px in, 20px
+     wide) - the shorthand above was zeroing out core's inline-start
+     reservation, so the placeholder text overlapped the icon. */
+  padding-inline-start: 39px;
 }
 
 /* Input texts */
@@ -3406,16 +3413,20 @@ body.embed .button.logo-button:hover,
 /* Mobile */
 @media screen and (max-width: 630px) {
   /* Better blur overlay for ui-header */
+  /* Same fix as layout-single-column.scss: this was a full-width blur
+     backdrop for the removed .ui__header, left floating over the
+     timeline with nothing behind it. Shrunk to a small square logo. */
   .layout-multiple-columns .ui::after {
-    backdrop-filter: blur(12px);
-    background-color: var(--color-bg-75);
+    background-image: var(--m-logo);
+    background-position: center;
+    background-repeat: no-repeat;
+    background-size: contain;
     content: '';
-    /* Height is .ui__header + .tabs-bar__wrapper */
-    height: calc(48px + 56px);
-    left: 0;
+    height: 32px;
+    left: 12px;
     position: fixed;
-    top: 0;
-    width: 100%;
+    top: 12px;
+    width: 32px;
     z-index: 1;
   }
 

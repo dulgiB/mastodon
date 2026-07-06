@@ -4,6 +4,7 @@
 /* CSS variables */
 :root {
   /* Brand colors */
+  --m-logo: url('../../images/theme/m_logo_dark.png');
   --color-brand-twitter: #1d9bf0;
   --color-brand-twitter-bg: #15202b;
   --color-brand-twitter-dim: #8b98a5;
@@ -217,7 +218,8 @@ body.theme-bird-ui-light.layout-single-column {
 
   --active-header-radial-gradient: radial-gradient(ellipse,rgb(239, 154, 154 / 25%) 0,rgb(255, 0 ,81 / 0%) 60%);
 
-  
+  --m-logo: url('../../images/theme/m_logo_light.png');
+
   --color-brand-mastodon: #be2a4d;
   --color-brand-mastodon-links: #df98a2;
   --color-accent-dark-50: #be2a4d80;
@@ -2258,6 +2260,10 @@ body.embed .detailed-status__meta .detailed-status__link .fa-retweet,
   font-size: var(--font-size);
   height: 42px;
   padding: 0 20px;
+  /* Preserve room for .search__icon-wrapper (starts ~14px in, 20px
+     wide) - the shorthand above was zeroing out core's inline-start
+     reservation, so the placeholder text overlapped the icon. */
+  padding-inline-start: 39px;
 }
 
 /* Input texts */
@@ -3017,9 +3023,17 @@ body.embed .button.logo-button:hover,
     opacity: 1;
   }
 
-  /* Order of the side nav items */
+  /* Order of the side nav items.
+     Must sort before .navigation-panel__menu/.flex-spacer (the logo's
+     true flex siblings under .navigation-panel), which default to
+     order: 0 - order: 1 here sorted the logo after them, pushing it to
+     the bottom of the sidebar instead of the top. Duplicate of the
+     same block/bug in layout-multiple-columns.scss, but this one
+     governs .layout-single-column at desktop widths (>= 890px),
+     e.g. when transientSingleColumn keeps single-column layout active
+     on a wide window. */
   .layout-single-column .navigation-panel__logo {
-    order: 1;
+    order: -1;
   }
 
   .layout-single-column .column-link[href="/home"] {
@@ -3444,18 +3458,23 @@ body.embed .button.logo-button:hover,
     padding: 10px;
   }
 
+  /* This used to be a full-width, 104px-tall blurred backdrop meant to
+     sit behind .ui__header + .tabs-bar__wrapper. .ui__header was
+     removed upstream along with the old persistent header, so this was
+     just an opaque/blurred band left floating over the top of the
+     timeline with nothing displayed on it. Shrunk to a small square
+     logo badge in the corner instead, so it no longer covers content. */
   .layout-single-column .ui::after {
-    backdrop-filter: blur(12px);
-    /* stylelint-disable-next-line */
-    -webkit-backface-visibility: hidden;
-    background-color: var(--color-bg-75);
+    background-image: var(--m-logo);
+    background-position: center;
+    background-repeat: no-repeat;
+    background-size: contain;
     content: '';
-    /* Height is .ui__header + .tabs-bar__wrapper */
-    height: calc(48px + 56px);
-    left: 0;
+    height: 32px;
+    width: 32px;
+    left: 12px;
+    top: 12px;
     position: fixed;
-    top: 0;
-    width: 100%;
     z-index: 1;
   }
 
@@ -3494,14 +3513,16 @@ body.embed .button.logo-button:hover,
      is what showed as the menu collapsing into a thin strip instead of
      covering the screen. Removed so core's overlay sizing applies. */
 
+  /* Match the PC sidebar's row proportions (.layout-multiple-columns
+     .column-link: 8px top/bottom padding, left-aligned) instead of the
+     old icon-only-rail sizing (0 top/bottom padding, centered), which
+     made rows too short to comfortably tap. */
   .layout-single-column .column-link {
-    justify-content: center;
     margin-right: unset;
-    padding-bottom: 0;
+    padding-bottom: 8px;
     padding-left: var(--gap-column-link);
-    padding-right: var(--gap-column-link);
-    padding-top: 0;
-    //width: 38px;
+    padding-right: calc(var(--gap-column-link) * 1.5);
+    padding-top: 8px;
   }
 
   .layout-single-column .item-list .column-link {

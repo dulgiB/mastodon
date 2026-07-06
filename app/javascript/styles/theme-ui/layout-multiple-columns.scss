@@ -2236,6 +2236,10 @@ body.embed .detailed-status__meta .detailed-status__link .fa-retweet,
   font-size: var(--font-size);
   height: 42px;
   padding: 0 20px;
+  /* Preserve room for .search__icon-wrapper (starts ~14px in, 20px
+     wide) - the shorthand above was zeroing out core's inline-start
+     reservation, so the placeholder text overlapped the icon. */
+  padding-inline-start: 39px;
 }
 
 /* Input texts */
@@ -3430,16 +3434,20 @@ body.embed .button.logo-button:hover,
 /* Mobile */
 @media screen and (max-width: 630px) {
   /* Better blur overlay for ui-header */
+  /* Same fix as layout-single-column.scss: this was a full-width blur
+     backdrop for the removed .ui__header, left floating over the
+     timeline with nothing behind it. Shrunk to a small square logo. */
   .layout-multiple-columns .ui::after {
-    backdrop-filter: blur(12px);
-    background-color: var(--color-bg-75);
+    background-image: var(--m-logo);
+    background-position: center;
+    background-repeat: no-repeat;
+    background-size: contain;
     content: '';
-    /* Height is .ui__header + .tabs-bar__wrapper */
-    height: calc(48px + 56px);
-    left: 0;
+    height: 32px;
+    width: 32px;
+    left: 12px;
+    top: 12px;
     position: fixed;
-    top: 0;
-    width: 100%;
     z-index: 1;
   }
 
