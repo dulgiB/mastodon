@@ -203,6 +203,8 @@
   "compose.published.body": "게시하였습니다.",
   "compose.published.open": "열기",
   "compose.saved.body": "게시물이 저장되었습니다.",
+  "compose_form.content_type.markdown_disabled": "마크다운 서식이 비활성화되어 있습니다",
+  "compose_form.content_type.markdown_enabled": "마크다운 서식이 활성화되어 있습니다",
   "compose_form.direct_message_warning_learn_more": "더 알아보기",
   "compose_form.encryption_warning": "마스토돈의 게시물들은 종단간 암호화가 되지 않습니다. 민감한 정보를 마스토돈을 통해 전달하지 마세요.",
   "compose_form.hashtag_warning": "이 게시물은 전체공개가 아니기 때문에 어떤 해시태그로도 검색 되지 않습니다. 전체공개로 게시 된 게시물만이 해시태그로 검색될 수 있습니다.",

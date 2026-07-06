@@ -91,6 +91,7 @@ export interface ApiStatusJSON {
   spoiler_text?: string;
   visibility: StatusVisibility;
   language: string;
+  content_type?: string;
   uri: string;
   url: string;
   replies_count: number;
