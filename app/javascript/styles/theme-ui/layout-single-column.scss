@@ -4,9 +4,9 @@
 /* CSS variables */
 :root {
   /* Brand colors */
-  --bg-image: url('../images/theme/bg_dark.png');
-  --logo: url('../images/theme/wordmark_dark.png');
-  --m-logo: url('../images/theme/m_logo_dark.png');
+  --bg-image: url('../../images/theme/bg_dark.png');
+  --logo: url('../../images/theme/wordmark_dark.png');
+  --m-logo: url('../../images/theme/m_logo_dark.png');
   --color-column: rgba(0, 0, 0, 0.4);
   
   --color-brand-twitter: #1d9bf0;
@@ -227,9 +227,9 @@ body.theme-default.layout-single-column {
 
   --active-header-radial-gradient: radial-gradient(ellipse,rgb(239, 154, 154 / 25%) 0,rgb(255, 0 ,81 / 0%) 60%);
 
-  --bg-image : url('../images/theme/bg_light.png');
-  --logo: url('../images/theme/wordmark_light.png');
-  --m-logo: url('../images/theme/m_logo_light.png');
+  --bg-image : url('../../images/theme/bg_light.png');
+  --logo: url('../../images/theme/wordmark_light.png');
+  --m-logo: url('../../images/theme/m_logo_light.png');
   --color-column: rgba(255, 255, 255, 0.4);
 
   --color-brand-mastodon: #be2a4d;
