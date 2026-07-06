@@ -358,10 +358,6 @@ class NotifyService < BaseService
     AccountConversation.add_status(@recipient, @notification.target_status)
   end
 
-  def direct_message?
-    @notification.type == :mention && @notification.target_status.direct_visibility?
-  end
-
   def push_to_web_push_subscriptions!
     ::Web::PushNotificationWorker.push_bulk(web_push_subscriptions.select { |subscription| subscription.pushable?(@notification) }) { |subscription| [subscription.id, @notification.id] }
   end
