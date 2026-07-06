@@ -67,7 +67,7 @@ services:
   db_test:
     image: postgres:14-alpine
     restart: always
-    env_file: .env.test
+    env_file: .env.mastodon-test
     environment:
       POSTGRES_HOST_AUTH_METHOD: trust
       POSTGRES_USER: mastodon
@@ -86,7 +86,7 @@ services:
   web_test:
     build: .
     restart: always
-    env_file: .env.test
+    env_file: .env.mastodon-test
     command: bundle exec puma -C config/puma.rb
     user: "991:991"
     environment:
@@ -99,7 +99,7 @@ services:
       context: .
       dockerfile: ./streaming/Dockerfile
     restart: always
-    env_file: .env.test
+    env_file: .env.mastodon-test
     command: node ./streaming/index.js
     environment:
       PORT: "4001"
@@ -110,7 +110,7 @@ services:
   sidekiq_test:
     build: .
     restart: always
-    env_file: .env.test
+    env_file: .env.mastodon-test
     command: bundle exec sidekiq
     user: "991:991"
     depends_on: [db_test, redis_test, search]
@@ -141,7 +141,7 @@ services:
   bot_test:
     build: /home/youruser/your-bot-repo
     restart: always
-    env_file: .env.test
+    env_file: .env.mastodon-test
     environment:
       MASTODON_API_BASE_URL: http://web_test:3001
     depends_on: [web_test]

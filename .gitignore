@@ -30,6 +30,7 @@ stats.html
 .env
 .env.production
 .env.mastodon
+.env.mastodon-test
 node_modules/
 
 # Real TLS private keys/certs for this deployment (never commit these)
