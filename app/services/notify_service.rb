@@ -250,6 +250,11 @@ class NotifyService < BaseService
   def update_notification_request!
     return unless %i(mention quote).include?(@notification.type)
 
+    notification_request = NotificationRequest.find_or_initialize_by(account_id: @recipient.id, from_account_id: @notification.from_account_id)
+    notification_request.last_status_id = @notification.target_status.id
+    notification_request.save
+  end
+
   def optional_non_following?
     @recipient.user.settings['interactions.must_be_following'] && !following_sender?
   end
@@ -351,10 +356,6 @@ class NotifyService < BaseService
 
   def push_to_conversation!
     AccountConversation.add_status(@recipient, @notification.target_status)
-  end
-
-  def direct_message?
-    @notification.type == :mention && @notification.target_status.direct_visibility?
   end
 
   def push_to_web_push_subscriptions!
