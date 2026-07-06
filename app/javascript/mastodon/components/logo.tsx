@@ -1,4 +1,5 @@
 import logo from '@/images/logo.svg';
+import wordmark from '@/images/logos/wordmark_dark.png';
 
 export const WordmarkLogo: React.FC = () => (
   <img src={wordmark} alt='Whippy Edition' className='logo logo--wordmark' />
