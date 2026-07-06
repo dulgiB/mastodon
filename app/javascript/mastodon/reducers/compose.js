@@ -42,6 +42,7 @@ import {
   COMPOSE_SPOILERNESS_CHANGE,
   COMPOSE_SPOILER_TEXT_CHANGE,
   COMPOSE_LANGUAGE_CHANGE,
+  COMPOSE_CONTENT_TYPE_CHANGE,
   COMPOSE_COMPOSING_CHANGE,
   COMPOSE_EMOJI_INSERT,
   COMPOSE_RESET,
@@ -64,6 +65,7 @@ const initialState = ImmutableMap({
   sensitive: false,
   spoiler: false,
   spoiler_text: '',
+  content_type: null,
   privacy: null,
   id: null,
   text: '',
@@ -529,6 +531,7 @@ export const composeReducer = (state = initialState, action) => {
       map.set('idempotencyKey', uuid());
       map.set('sensitive', action.status.get('sensitive'));
       map.set('language', action.status.get('language'));
+      map.set('content_type', action.status.get('content_type'));
       map.set('id', null);
       map.set('quoted_status_id', action.status.getIn(['quote', 'quoted_status'], null));
       // Mastodon-authored posts can be expected to have at most one automatic approval policy
@@ -567,6 +570,7 @@ export const composeReducer = (state = initialState, action) => {
       map.set('idempotencyKey', uuid());
       map.set('sensitive', action.status.get('sensitive'));
       map.set('language', action.status.get('language'));
+      map.set('content_type', action.status.get('content_type'));
       map.set('quoted_status_id', action.status.getIn(['quote', 'quoted_status'], null));
       // Mastodon-authored posts can be expected to have at most one automatic approval policy
       map.set('quote_policy', action.status.getIn(['quote_approval', 'automatic', 0]) || 'nobody');
@@ -602,6 +606,8 @@ export const composeReducer = (state = initialState, action) => {
     return state.update('poll', poll => poll.set('expires_in', action.expiresIn).set('multiple', action.isMultiple));
   case COMPOSE_LANGUAGE_CHANGE:
     return state.set('language', action.language);
+  case COMPOSE_CONTENT_TYPE_CHANGE:
+    return state.set('content_type', action.content_type);
   case COMPOSE_FOCUS:
     return state.set('focusDate', new Date()).update('text', text => text.length > 0 ? text : action.defaultText);
   case COMPOSE_CHANGE_MEDIA_ORDER:

@@ -132,6 +132,54 @@ class Sanitize
       ]
     )
 
+    LINK_REL_TRANSFORMER = lambda do |env|
+      return unless env[:node_name] == 'a' && env[:node]['href']
+
+      node = env[:node]
+
+      rel = (node['rel'] || '').split & ['tag']
+      rel += %w(nofollow noopener) unless TagManager.instance.local_url?(node['href'])
+
+      if rel.empty?
+        node.remove_attribute('rel')
+      else
+        node['rel'] = rel.join(' ')
+      end
+    end
+
+    LINK_TARGET_TRANSFORMER = lambda do |env|
+      return unless env[:node_name] == 'a' && env[:node]['href']
+
+      node = env[:node]
+      if node['target'] != '_blank' && TagManager.instance.local_url?(node['href'])
+        node.remove_attribute('target')
+      else
+        node['target'] = '_blank'
+      end
+    end
+
+    # Like MASTODON_STRICT, but meant for locally-rendered markdown/HTML
+    # status content: link rel/target are computed per-link instead of
+    # being statically added, since AdvancedTextFormatter produces links
+    # that need this to happen after the fact.
+    MASTODON_OUTGOING = freeze_config MASTODON_STRICT.merge(
+      attributes: MASTODON_STRICT[:attributes].merge(
+        'a' => %w(href rel class target translate)
+      ),
+
+      add_attributes: {},
+
+      transformers: [
+        ALLOWED_CLASS_TRANSFORMER,
+        TRANSLATE_TRANSFORMER,
+        MATH_TRANSFORMER,
+        UNSUPPORTED_ELEMENTS_TRANSFORMER,
+        UNSUPPORTED_HREF_TRANSFORMER,
+        LINK_REL_TRANSFORMER,
+        LINK_TARGET_TRANSFORMER,
+      ]
+    )
+
     MASTODON_OEMBED = freeze_config(
       elements: %w(audio iframe source video),
 
