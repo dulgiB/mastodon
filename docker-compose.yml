@@ -1,140 +1,149 @@
-# This file is designed for production server deployment, not local development work
-# For a containerized local dev environment, see: https://github.com/mastodon/mastodon/blob/main/docs/DEVELOPMENT.md#docker
-
 services:
+
+  # ── 본 인스턴스 ─────────────────────────────────
   db:
-    restart: always
     image: postgres:14-alpine
-    shm_size: 256mb
-    networks:
-      - internal_network
-    healthcheck:
-      test: ['CMD', 'pg_isready', '-U', 'postgres']
-    volumes:
-      - ./postgres14:/var/lib/postgresql/data
+    restart: always
+    env_file: .env.mastodon
     environment:
-      - 'POSTGRES_HOST_AUTH_METHOD=trust'
+      POSTGRES_HOST_AUTH_METHOD: trust
+      POSTGRES_USER: mastodon
+      POSTGRES_DB: mastodon
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks: [internal]
 
   redis:
-    restart: always
     image: redis:7-alpine
-    networks:
-      - internal_network
-    healthcheck:
-      test: ['CMD', 'redis-cli', 'ping']
+    restart: always
     volumes:
-      - ./redis:/data
-
-  # es:
-  #   restart: always
-  #   image: docker.elastic.co/elasticsearch/elasticsearch:7.17.29
-  #   environment:
-  #     - "ES_JAVA_OPTS=-Xms512m -Xmx512m -Des.enforce.bootstrap.checks=true"
-  #     - "xpack.license.self_generated.type=basic"
-  #     - "xpack.security.enabled=false"
-  #     - "xpack.watcher.enabled=false"
-  #     - "xpack.graph.enabled=false"
-  #     - "xpack.ml.enabled=false"
-  #     - "bootstrap.memory_lock=true"
-  #     - "cluster.name=es-mastodon"
-  #     - "discovery.type=single-node"
-  #     - "thread_pool.write.queue_size=1000"
-  #   networks:
-  #      - external_network
-  #      - internal_network
-  #   healthcheck:
-  #      test: ["CMD-SHELL", "curl --silent --fail localhost:9200/_cluster/health || exit 1"]
-  #   volumes:
-  #      - ./elasticsearch:/usr/share/elasticsearch/data
-  #   ulimits:
-  #     memlock:
-  #       soft: -1
-  #       hard: -1
-  #     nofile:
-  #       soft: 65536
-  #       hard: 65536
-  #   ports:
-  #     - '127.0.0.1:9200:9200'
+      - redis_data:/data
+    networks: [internal]
 
   web:
-    # You can uncomment the following line if you want to not use the prebuilt image, for example if you have local code changes
-    # build: .
-    image: ghcr.io/mastodon/mastodon:v4.5.5
+    build: .
     restart: always
-    env_file: .env.production
+    env_file: .env.mastodon
     command: bundle exec puma -C config/puma.rb
-    networks:
-      - external_network
-      - internal_network
+    user: "991:991"
+    depends_on: [db, redis]
+    networks: [internal, external]
     healthcheck:
-      # prettier-ignore
-      test: ['CMD-SHELL',"curl -s --noproxy localhost localhost:3000/health | grep -q 'OK' || exit 1"]
-    ports:
-      - '127.0.0.1:3000:3000'
-    depends_on:
-      - db
-      - redis
-      # - es
-    volumes:
-      - ./public/system:/mastodon/public/system
+      test: ['CMD-SHELL', 'wget -q --spider --proxy=off localhost:3000/health || exit 1']
 
   streaming:
-    # You can uncomment the following lines if you want to not use the prebuilt image, for example if you have local code changes
-    # build:
-    #   dockerfile: ./streaming/Dockerfile
-    #   context: .
-    image: ghcr.io/mastodon/mastodon-streaming:v4.5.5
+    build:
+      context: .
+      dockerfile: ./streaming/Dockerfile
     restart: always
-    env_file: .env.production
+    env_file: .env.mastodon
     command: node ./streaming/index.js
-    networks:
-      - external_network
-      - internal_network
-    healthcheck:
-      # prettier-ignore
-      test: ['CMD-SHELL', "curl -s --noproxy localhost localhost:4000/api/v1/streaming/health | grep -q 'OK' || exit 1"]
-    ports:
-      - '127.0.0.1:4000:4000'
-    depends_on:
-      - db
-      - redis
+    depends_on: [db, redis]
+    networks: [internal, external]
 
   sidekiq:
-    # You can uncomment the following line if you want to not use the prebuilt image, for example if you have local code changes
-    # build: .
-    image: ghcr.io/mastodon/mastodon:v4.5.5
+    build: .
     restart: always
-    env_file: .env.production
+    env_file: .env.mastodon
     command: bundle exec sidekiq
-    depends_on:
-      - db
-      - redis
-    networks:
-      - external_network
-      - internal_network
+    user: "991:991"
+    depends_on: [db, redis]
+    networks: [internal, external]
     volumes:
-      - ./public/system:/mastodon/public/system
-    healthcheck:
-      test: ['CMD-SHELL', "ps aux | grep '[s]idekiq\ 8' || false"]
+      - mastodon_system:/mastodon/public/system
 
-  ## Uncomment to enable federation with tor instances along with adding the following ENV variables
-  ## http_hidden_proxy=http://privoxy:8118
-  ## ALLOW_ACCESS_TO_HIDDEN_SERVICE=true
-  # tor:
-  #   image: sirboops/tor
-  #   networks:
-  #      - external_network
-  #      - internal_network
-  #
-  # privoxy:
-  #   image: sirboops/privoxy
-  #   volumes:
-  #     - ./priv-config:/opt/config
-  #   networks:
-  #     - external_network
-  #     - internal_network
+  # ── 테스트 인스턴스 ──────────────────────────────
+  db_test:
+    image: postgres:14-alpine
+    restart: always
+    env_file: .env.test
+    environment:
+      POSTGRES_HOST_AUTH_METHOD: trust
+      POSTGRES_USER: mastodon
+      POSTGRES_DB: mastodon
+    volumes:
+      - postgres_data_test:/var/lib/postgresql/data
+    networks: [internal]
+
+  redis_test:
+    image: redis:7-alpine
+    restart: always
+    volumes:
+      - redis_data_test:/data
+    networks: [internal]
+
+  web_test:
+    build: .
+    restart: always
+    env_file: .env.test
+    command: bundle exec puma -C config/puma.rb
+    user: "991:991"
+    environment:
+      PORT: "3001"         # 본 인스턴스(3000)와 충돌 방지
+    depends_on: [db_test, redis_test]
+    networks: [internal, external]
+
+  streaming_test:
+    build:
+      context: .
+      dockerfile: ./streaming/Dockerfile
+    restart: always
+    env_file: .env.test
+    command: node ./streaming/index.js
+    environment:
+      PORT: "4001"
+      STREAMING_PORT: "4001"
+    depends_on: [db_test, redis_test]
+    networks: [internal, external]
+
+  sidekiq_test:
+    build: .
+    restart: always
+    env_file: .env.test
+    command: bundle exec sidekiq
+    user: "991:991"
+    depends_on: [db_test, redis_test]
+    networks: [internal, external]
+
+  # ── 공통 ─────────────────────────────────────────
+  nginx:
+    image: nginx:alpine
+    restart: always
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/conf.d:/etc/nginx/conf.d:ro
+      - ./nginx/certs:/etc/nginx/certs:ro
+    depends_on: [web, web_test]
+    networks: [external]
+
+  bot:
+    build: /home/youruser/your-bot-repo
+    restart: always
+    env_file: .env.mastodon
+    environment:
+      MASTODON_API_BASE_URL: http://web:3000
+    depends_on: [web]
+    networks: [internal]
+
+  bot_test:
+    build: /home/youruser/your-bot-repo
+    restart: always
+    env_file: .env.test
+    environment:
+      MASTODON_API_BASE_URL: http://web_test:3001
+    depends_on: [web_test]
+    networks: [internal]
+
+volumes:
+  postgres_data:
+  redis_data:
+  mastodon_system:
+  postgres_data_test:
+  redis_data_test:
 
 networks:
-  external_network:
-  internal_network:
-    internal: true
+  internal:
+    internal: true   # 외부 인터넷 차단
+  external:
