@@ -384,13 +384,6 @@ body.layout-single-column {
   width: 100%;
 }
 
-/* Fix weird horizontal overflow */
-@media (width >= 1175px) and (width <= 1330px) {
-  .layout-single-column .ui {
-    width: unset;
-  }
-}
-
 /* Text color */
 .layout-single-column .account__header__tabs__name h1,
 .layout-single-column .account__header__bio .account__header__content,
@@ -1749,27 +1742,54 @@ body.embed .detailed-status__meta .detailed-status__link .fa-retweet,
 }
 
 /* Each single-column view (Home, Notifications, ...) portals its
-   per-column title/collapse-button bar into .tabs-bar__wrapper - hidden
-   since it read as a redundant second header once .ui__header was gone.
-   .tabs-bar__wrapper itself is a single persistent element shared by
-   every single-column page (rendered once in columns_area.jsx, not
-   per-page), already position: sticky + backdrop-filter: blur from core
-   CSS above - exactly the "frosted glass" bar the old header used to be.
-   Rather than float the corner logo as its own position: fixed element
-   (which sits outside layout flow and doesn't reserve space, so the
-   timeline never gets pushed down), it's rendered as a real element
-   inside this wrapper, so it inherits the sticky/blur behavior and
-   shows identically on every single-column page. */
-.layout-single-column .tabs-bar__wrapper .column-header {
-  display: none;
+   per-column title/collapse-button bar into .tabs-bar__wrapper. Below
+   889px (the width the hamburger-menu mobile nav takes over at) there's
+   no room for a full per-view title bar, so it's hidden in favor of a
+   small corner logo - see .ui__logo-link below. .tabs-bar__wrapper
+   itself is a single persistent element shared by every single-column
+   page (rendered once in columns_area.jsx, not per-page), already
+   position: sticky + backdrop-filter: blur from core CSS above -
+   exactly the "frosted glass" bar the old header used to be.
+
+   Above 889px, .layout-single-column can still be the active layout
+   (transientSingleColumn keeps the single-column React code path even
+   at desktop widths when not on a /deck/ URL), but there's plenty of
+   room here, so the real per-view column header (title, icon, and the
+   settings/filter toggle - e.g. Home's "Show boosts/quotes/replies")
+   is shown instead of the corner logo, matching what true multi-column
+   mode looks like. */
+@media (width <= 889px) {
+  .layout-single-column .tabs-bar__wrapper .column-header {
+    display: none;
+  }
+
+  .layout-single-column .tabs-bar__wrapper {
+    align-items: center;
+    box-shadow: 0 1px 0 0 var(--background-border-color);
+    display: flex;
+    height: 44px;
+    padding-inline-start: 12px;
+  }
 }
 
-.layout-single-column .tabs-bar__wrapper {
-  align-items: center;
-  box-shadow: 0 1px 0 0 var(--background-border-color);
-  display: flex;
-  height: 44px;
-  padding-inline-start: 12px;
+@media (width > 889px) {
+  .layout-single-column .ui__logo-link {
+    display: none;
+  }
+}
+
+/* Home's column header shows this in place of the stock Mastodon "M"
+   symbol at narrower/full-width breakpoints - swap it for the same
+   square logo used everywhere else instead (light/dark handled by
+   --m-logo, same as .ui__logo-link above). */
+.logo--icon-themed {
+  background-image: var(--m-logo);
+  background-position: center;
+  background-repeat: no-repeat;
+  background-size: contain;
+  display: inline-block;
+  height: 24px;
+  width: 24px;
 }
 
 @media (width >= 1175px) {
