@@ -260,7 +260,7 @@ class NotifyService < BaseService
   end
 
   def message?
-    @notification.type == :mention || @notification.type == :direct
+    [:mention, :direct].include?(@notification.type)
   end
 
   def direct_message?

@@ -76,7 +76,7 @@ class PostStatusService < BaseService
     raise ActiveRecord::RecordInvalid
   end
 
-  def process_status! 
+  def process_status!
     @status = @account.statuses.new(status_attributes)
     process_mentions_service.call(@status, save_records: false)
     safeguard_mentions!(@status)
@@ -154,7 +154,7 @@ class PostStatusService < BaseService
     Trends.tags.register(@status)
     LinkCrawlWorker.perform_async(@status.id)
     DistributionWorker.perform_async(@status.id)
-    #ActivityPub::DistributionWorker.perform_async(@status.id)
+    # ActivityPub::DistributionWorker.perform_async(@status.id)
     PollExpirationNotifyWorker.perform_at(@status.poll.expires_at, @status.poll.id) if @status.poll
     ActivityPub::QuoteRequestWorker.perform_async(@status.quote.id) if @status.quote&.quoted_status.present? && !@status.quote&.quoted_status&.local?
   end

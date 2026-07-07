@@ -8,6 +8,10 @@
 /.bundle
 /vendor/bundle
 
+# Local Claude Code settings
+/.claude
+/CLAUDE.md
+
 # Ignore the default SQLite database.
 /db/*.sqlite3
 /db/*.sqlite3-journal
@@ -26,7 +30,13 @@
 stats.html
 .env
 .env.production
+.env.mastodon
+.env.mastodon-test
 node_modules/
+
+# Real TLS private keys/certs for this deployment (never commit these)
+nginx/certs/*.pem
+nginx/certs/*.key
 /build/
 
 # Ignore Vagrant files

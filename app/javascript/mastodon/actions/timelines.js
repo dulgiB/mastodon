@@ -115,14 +115,19 @@ export function expandTimeline(timelineId, path, params = {}) {
       dispatch(importFetchedStatuses(response.data));
       dispatch(expandTimelineSuccess(timelineId, response.data, next ? next.uri : null, response.status === 206, isLoadingRecent, isLoadingMore, isLoadingRecent && preferPendingItems));
 
-      if (timelineId === 'home' && !isLoadingMore && !isLoadingRecent) {
-        const now = new Date();
-        const fittingIndex = response.data.findIndex(status => now - (new Date(status.created_at)) > 4 * 3600 * 1000);
-
-        if (fittingIndex !== -1) {
-          dispatch(insertIntoTimeline(timelineId, TIMELINE_SUGGESTIONS, Math.max(1, fittingIndex)));
-        }
-      }
+      // Per instance policy of not surfacing other accounts, the "Who to
+      // follow" inline suggestions card is disabled - it briefly showed a
+      // loading/empty area in the middle of the home timeline before
+      // resolving to nothing (this instance has no other accounts to
+      // suggest).
+      // if (timelineId === 'home' && !isLoadingMore && !isLoadingRecent) {
+      //   const now = new Date();
+      //   const fittingIndex = response.data.findIndex(status => now - (new Date(status.created_at)) > 4 * 3600 * 1000);
+      //
+      //   if (fittingIndex !== -1) {
+      //     dispatch(insertIntoTimeline(timelineId, TIMELINE_SUGGESTIONS, Math.max(1, fittingIndex)));
+      //   }
+      // }
 
       if (timelineId === 'home') {
         dispatch(submitMarkers());

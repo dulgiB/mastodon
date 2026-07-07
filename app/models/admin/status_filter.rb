@@ -18,7 +18,7 @@ class Admin::StatusFilter
 
   def results
     scope = @account.statuses
-    
+
     params.each do |key, value|
       next if IGNORED_PARAMS.include?(key.to_s)
 

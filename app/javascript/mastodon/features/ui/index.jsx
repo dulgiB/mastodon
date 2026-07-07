@@ -70,7 +70,6 @@ import {
   Directory,
   OnboardingProfile,
   OnboardingFollows,
-  Explore,
   Search,
   About,
   PrivacyPolicy,
@@ -196,7 +195,7 @@ class SwitchingColumnsArea extends PureComponent {
             <WrappedRoute path={['/start', '/start/profile']} exact component={OnboardingProfile} content={children} />
             <WrappedRoute path='/start/follows' component={OnboardingFollows} content={children} />
             <WrappedRoute path='/directory' component={Directory} content={children} />
-            <WrappedRoute path='/search' component={Search} content={children} />
+            <WrappedRoute path={['/explore', '/search']} component={Search} content={children} />
             <WrappedRoute path={['/publish', '/statuses/new']} component={Compose} content={children} />
 
             <WrappedRoute path={['/@:acct', '/accounts/:id']} exact component={AccountTimeline} content={children} />

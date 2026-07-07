@@ -11,9 +11,6 @@ export const DECIMAL_UNITS = Object.freeze({
 });
 export type DecimalUnits = ValueOf<typeof DECIMAL_UNITS>;
 
-const TEN_THOUSAND = DECIMAL_UNITS.THOUSAND * 10;
-const TEN_MILLIONS = DECIMAL_UNITS.MILLION * 10;
-
 export type ShortNumber = [number, DecimalUnits, 0 | 1]; // Array of: shorten number, unit of shorten number and maximum fraction digits
 
 /**

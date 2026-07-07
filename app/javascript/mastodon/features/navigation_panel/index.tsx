@@ -33,15 +33,12 @@ import { Search } from 'mastodon/features/compose/components/search';
 import { ColumnLink } from 'mastodon/features/ui/components/column_link';
 import { useBreakpoint } from 'mastodon/features/ui/hooks/useBreakpoint';
 import { useIdentity } from 'mastodon/identity_context';
-import {
-  me,
-} from 'mastodon/initial_state';
+import { me } from 'mastodon/initial_state';
 import { transientSingleColumn } from 'mastodon/is_mobile';
 import { selectUnreadNotificationGroupsCount } from 'mastodon/selectors/notifications';
 import { useAppSelector, useAppDispatch } from 'mastodon/store';
 
 import { DisabledAccountBanner } from './components/disabled_account_banner';
-import { FollowedTagsPanel } from './components/followed_tags_panel';
 import { MoreLink } from './components/more_link';
 import { SignInBanner } from './components/sign_in_banner';
 import { Trends } from './components/trends';
@@ -174,7 +171,7 @@ export const NavigationPanel: React.FC<{ multiColumn?: boolean }> = ({
   multiColumn = false,
 }) => {
   const intl = useIntl();
-  const { signedIn, permissions, disabledAccountId } = useIdentity();
+  const { signedIn, disabledAccountId } = useIdentity();
   const location = useLocation();
   const showSearch = useBreakpoint('full') && !multiColumn;
 
@@ -239,8 +236,6 @@ export const NavigationPanel: React.FC<{ multiColumn?: boolean }> = ({
             <FollowRequestsLink />
 
             <hr />
-
-            <FollowedTagsPanel />
 
             <ColumnLink
               transparent

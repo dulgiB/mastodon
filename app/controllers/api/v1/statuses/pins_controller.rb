@@ -6,17 +6,14 @@ class Api::V1::Statuses::PinsController < Api::V1::Statuses::BaseController
 
   def create
     StatusPin.create!(account: current_account, status: @status)
-    #distribute_add_activity!
+    # distribute_add_activity!
     render json: @status, serializer: REST::StatusSerializer
   end
 
   def destroy
     pin = StatusPin.find_by(account: current_account, status: @status)
-
-    if pin
-      pin.destroy!
-      #distribute_remove_activity!
-    end
+    pin&.destroy!
+    # distribute_remove_activity!
 
     render json: @status, serializer: REST::StatusSerializer
   end

@@ -44,6 +44,7 @@ class UserSettings
     setting :reblog, default: false
     setting :favourite, default: false
     setting :mention, default: false
+    setting :quote, default: false
     setting :follow_request, default: false
     setting :report, default: false
     setting :pending_account, default: false
@@ -57,7 +58,6 @@ class UserSettings
     setting :must_be_following, default: false
     setting :must_be_following_dm, default: false
   end
-
 
   def initialize(original_hash)
     @original_hash = original_hash || {}

@@ -130,11 +130,11 @@ class AccountStatusesFilter
   def pinned?
     truthy_param?(:pinned)
   end
-  
- def only_direct?
+
+  def only_direct?
     truthy_param?(:only_direct)
   end
-  
+
   def no_direct?
     truthy_param?(:no_direct)
   end
