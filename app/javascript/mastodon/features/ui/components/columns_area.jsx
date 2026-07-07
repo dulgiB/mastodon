@@ -1,6 +1,8 @@
 import PropTypes from 'prop-types';
 import { Children, cloneElement, useCallback } from 'react';
 
+import { Link } from 'react-router-dom';
+
 import ImmutablePropTypes from 'react-immutable-proptypes';
 import ImmutablePureComponent from 'react-immutable-pure-component';
 
@@ -129,7 +131,7 @@ export default class ColumnsArea extends ImmutablePureComponent {
           </div>
 
           <div className='columns-area__panels__main'>
-            <div className='tabs-bar__wrapper'><TabsBarPortal /></div>
+            <div className='tabs-bar__wrapper'><Link to='/' className='ui__logo-link' /><TabsBarPortal /></div>
             <div className='columns-area columns-area--mobile'>{children}</div>
           </div>
 
