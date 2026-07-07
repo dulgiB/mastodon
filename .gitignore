@@ -10,6 +10,7 @@
 
 # Local Claude Code settings
 /.claude
+/CLAUDE.md
 
 # Ignore the default SQLite database.
 /db/*.sqlite3
