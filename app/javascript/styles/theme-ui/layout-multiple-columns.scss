@@ -2996,9 +2996,13 @@ body.embed .button.logo-button:hover,
   }
 
 
-  /* Order of the side nav items */
+  /* Order of the side nav items.
+     Must sort before .navigation-panel__menu/.flex-spacer (the logo's
+     true flex siblings under .navigation-panel), which default to
+     order: 0 - order: 1 here sorted the logo after them, pushing it to
+     the bottom of the sidebar instead of the top. */
   .layout-multiple-columns .navigation-panel__logo {
-    order: 1;
+    order: -1;
   }
 
   .layout-multiple-columns .column-link[href="/home"] {

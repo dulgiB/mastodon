@@ -446,6 +446,16 @@ body.layout-single-column {
   display: none;
 }
 
+/* Restore the wordmark logo overlay in the mobile slide-out menu.
+   Upstream (v4.5.5 nav redesign) hides .navigation-panel__logo on
+   screens <= 759px since the old persistent header.jsx is gone; this
+   theme still wants it shown at the top of the panel. */
+@media screen and (width <= 759px) {
+  .layout-single-column .navigation-panel__logo {
+    display: block;
+  }
+}
+
 /* Things that should have the default font-size */
 .layout-single-column .notification__message,
 .layout-single-column .status__content,
@@ -2837,6 +2847,13 @@ body.embed .button.logo-button:hover,
 .link-footer {
   position: relative;
   z-index: 5;
+}
+
+/* Fix: the mobile slide-out navigation menu (opened via the bottom-bar
+   hamburger button) was rendering behind .compose-form (z-index: 4) and
+   .link-footer (z-index: 5) above, instead of on top of them. */
+.layout-single-column .columns-area__panels__pane--overlay {
+  z-index: 20;
 }
 
 .layout-single-column .compose-panel .compose-form,
