@@ -15,9 +15,11 @@
   overflow: hidden;
   position: relative;
 }
-.batch-table__row .media-gallery{
+
+.batch-table__row .media-gallery {
   max-height: 500px;
 }
+
 .inline-alert {
   color: $valid-value-color;
   font-weight: 400;
@@ -1833,7 +1835,7 @@
   .media-gallery,
   .video-player,
   .audio-player {
-    max-height:unset;
+    max-height: unset;
     margin-top: 16px;
   }
 
@@ -3409,9 +3411,8 @@ a.account__display-name {
   }
 
   .ui__header__logo img.logo {
-    content: url("../../images/logos/m_logo_dark.png");
+    content: url('../../images/logos/m_logo_dark.png');
   }
-
 }
 
 @media screen and (width <= 759px) {

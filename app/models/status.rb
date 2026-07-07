@@ -126,7 +126,7 @@ class Status < ApplicationRecord
   scope :without_reblogs, -> { where(statuses: { reblog_of_id: nil }) }
   scope :with_public_visibility, -> { where(visibility: :public) }
   scope :with_unlisted_visibility, -> { where(visibility: :unlisted) }
-  scope :without_direct_visibility, -> { where(visibility: [:unlisted ,:public,:private]) }
+  scope :without_direct_visibility, -> { where(visibility: [:unlisted, :public, :private]) }
   scope :with_direct_visibility, -> { where(visibility: :direct) }
   scope :tagged_with, ->(tag_ids) { joins(:statuses_tags).where(statuses_tags: { tag_id: tag_ids }) }
   scope :not_excluded_by_account, ->(account) { where.not(account_id: account.excluded_from_timeline_account_ids) }
@@ -368,7 +368,6 @@ class Status < ApplicationRecord
       visibilities.keys - %w(direct limited public)
     end
 
-
     def favourites_map(status_ids, account_id)
       Favourite.select(:status_id).where(status_id: status_ids).where(account_id: account_id).each_with_object({}) { |f, h| h[f.status_id] = true }
     end
@@ -489,6 +488,7 @@ class Status < ApplicationRecord
 
   def increment_counter_caches
     return if direct_visibility?
+
     account&.increment_count!(:statuses_count)
     reblog&.increment_count!(:reblogs_count) if reblog?
     thread&.increment_count!(:replies_count) if in_reply_to_id.present?

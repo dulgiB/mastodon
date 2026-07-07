@@ -255,7 +255,6 @@ RSpec.describe ApplicationHelper do
     end
   end
 
-
   describe 'title' do
     it 'returns site title on production environment' do
       Setting.site_title = 'site title'

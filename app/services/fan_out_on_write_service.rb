@@ -39,19 +39,16 @@ class FanOutOnWriteService < BaseService
   end
 
   def fan_out_to_local_recipients!
-
     notify_about_update! if update?
+    notify_mentioned_accounts!
 
     case @status.visibility.to_sym
     when :public, :unlisted, :private
-      notify_mentioned_accounts!
       deliver_to_self!
       deliver_to_all_followers!
       deliver_to_lists!
     else
-      notify_mentioned_accounts!
       deliver_to_conversation!
-  
     end
   end
 

@@ -51,7 +51,7 @@ class Notification < ApplicationRecord
   TARGET_STATUS_INCLUDES_BY_TYPE = {
     status: :status,
     reblog: [status: :reblog],
-    direct: [mention: :status], 
+    direct: [mention: :status],
     mention: [mention: :status],
     quote: [quote: :status],
     favourite: [favourite: :status],
@@ -93,12 +93,10 @@ class Notification < ApplicationRecord
     when :status, :update, :quoted_update
       status
     when :reblog
-      status&.reblog  
+      status&.reblog
     when :favourite
       favourite&.status
-    when :mention
-      mention&.status
-    when :direct
+    when :mention, :direct
       mention&.status
     when :poll
       poll&.status

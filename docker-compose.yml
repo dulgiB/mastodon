@@ -1,5 +1,4 @@
 services:
-
   # ── 본 인스턴스 ─────────────────────────────────
   db:
     image: postgres:14-alpine
@@ -25,11 +24,15 @@ services:
     restart: always
     env_file: .env.mastodon
     command: bundle exec puma -C config/puma.rb
-    user: "991:991"
+    user: '991:991'
     depends_on: [db, redis, search]
     networks: [internal, external]
     healthcheck:
-      test: ['CMD-SHELL', 'wget -q --spider --proxy=off localhost:3000/health || exit 1']
+      test:
+        [
+          'CMD-SHELL',
+          'wget -q --spider --proxy=off localhost:3000/health || exit 1',
+        ]
 
   streaming:
     build:
@@ -46,7 +49,7 @@ services:
     restart: always
     env_file: .env.mastodon
     command: bundle exec sidekiq
-    user: "991:991"
+    user: '991:991'
     depends_on: [db, redis, search]
     networks: [internal, external]
     volumes:
@@ -57,8 +60,8 @@ services:
     restart: always
     environment:
       discovery.type: single-node
-      xpack.security.enabled: "false"
-      ES_JAVA_OPTS: "-Xms512m -Xmx512m"
+      xpack.security.enabled: 'false'
+      ES_JAVA_OPTS: '-Xms512m -Xmx512m'
     volumes:
       - search_data:/usr/share/elasticsearch/data
     networks: [internal]
@@ -88,9 +91,9 @@ services:
     restart: always
     env_file: .env.mastodon-test
     command: bundle exec puma -C config/puma.rb
-    user: "991:991"
+    user: '991:991'
     environment:
-      PORT: "3001"         # 본 인스턴스(3000)와 충돌 방지
+      PORT: '3001' # 본 인스턴스(3000)와 충돌 방지
     depends_on: [db_test, redis_test, search]
     networks: [internal, external]
 
@@ -102,8 +105,8 @@ services:
     env_file: .env.mastodon-test
     command: node ./streaming/index.js
     environment:
-      PORT: "4001"
-      STREAMING_PORT: "4001"
+      PORT: '4001'
+      STREAMING_PORT: '4001'
     depends_on: [db_test, redis_test]
     networks: [internal, external]
 
@@ -112,7 +115,7 @@ services:
     restart: always
     env_file: .env.mastodon-test
     command: bundle exec sidekiq
-    user: "991:991"
+    user: '991:991'
     depends_on: [db_test, redis_test, search]
     networks: [internal, external]
 
@@ -121,8 +124,8 @@ services:
     image: nginx:alpine
     restart: always
     ports:
-      - "80:80"
-      - "443:443"
+      - '80:80'
+      - '443:443'
     volumes:
       - ./nginx/conf.d:/etc/nginx/conf.d:ro
       - ./nginx/certs:/etc/nginx/certs:ro
@@ -157,5 +160,5 @@ volumes:
 
 networks:
   internal:
-    internal: true   # 외부 인터넷 차단
+    internal: true # 외부 인터넷 차단
   external:

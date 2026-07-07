@@ -13,6 +13,9 @@ import {
   BOOKMARKED_STATUSES_EXPAND_FAIL,
 } from '../actions/bookmarks';
 import {
+  DIRECT_STATUSES_FETCH_SUCCESS,
+} from '../actions/direct_statuses';
+import {
   FAVOURITED_STATUSES_FETCH_REQUEST,
   FAVOURITED_STATUSES_FETCH_SUCCESS,
   FAVOURITED_STATUSES_FETCH_FAIL,
@@ -34,9 +37,6 @@ import {
 import {
   PINNED_STATUSES_FETCH_SUCCESS,
 } from '../actions/pin_statuses';
-import {
-  DIRECT_STATUSES_FETCH_SUCCESS,
-} from '../actions/direct_statuses';
 import {
   TRENDS_STATUSES_FETCH_REQUEST,
   TRENDS_STATUSES_FETCH_SUCCESS,

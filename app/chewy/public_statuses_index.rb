@@ -21,10 +21,10 @@ class PublicStatusesIndex < Chewy::Index
       },
     },
     tokenizer: {
-        nori_user_dict: {
-            type: 'nori_tokenizer',
-            decompound_mode: 'mixed',
-        },
+      nori_user_dict: {
+        type: 'nori_tokenizer',
+        decompound_mode: 'mixed',
+      },
     },
     analyzer: {
       verbatim: {
