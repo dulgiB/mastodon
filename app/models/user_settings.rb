@@ -44,6 +44,7 @@ class UserSettings
     setting :reblog, default: false
     setting :favourite, default: false
     setting :mention, default: false
+    setting :quote, default: false
     setting :follow_request, default: false
     setting :report, default: false
     setting :pending_account, default: false

@@ -48,6 +48,25 @@ class Notification < ApplicationRecord
     admin.report
   ).freeze
 
+  PROPERTIES = {
+    direct: { filterable: true }.freeze,
+    mention: { filterable: true }.freeze,
+    status: { filterable: false }.freeze,
+    reblog: { filterable: true }.freeze,
+    follow: { filterable: true }.freeze,
+    follow_request: { filterable: true }.freeze,
+    favourite: { filterable: true }.freeze,
+    poll: { filterable: false }.freeze,
+    update: { filterable: false }.freeze,
+    severed_relationships: { filterable: false }.freeze,
+    moderation_warning: { filterable: false }.freeze,
+    annual_report: { filterable: false }.freeze,
+    'admin.sign_up': { filterable: false }.freeze,
+    'admin.report': { filterable: false }.freeze,
+    quote: { filterable: true }.freeze,
+    quoted_update: { filterable: false }.freeze,
+  }.freeze
+
   TARGET_STATUS_INCLUDES_BY_TYPE = {
     status: :status,
     reblog: [status: :reblog],
