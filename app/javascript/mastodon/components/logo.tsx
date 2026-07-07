@@ -1,4 +1,3 @@
-import logo from '@/images/logo.svg';
 import wordmark from '@/images/logos/wordmark_dark.png';
 
 export const WordmarkLogo: React.FC = () => (
@@ -13,5 +12,9 @@ export const IconLogo: React.FC = () => (
 );
 
 export const SymbolLogo: React.FC = () => (
-  <img src={logo} alt='Whippy Edition' className='logo logo--icon' />
+  <span
+    role='img'
+    aria-label='Whippy Edition'
+    className='logo logo--icon logo--icon-themed'
+  />
 );
