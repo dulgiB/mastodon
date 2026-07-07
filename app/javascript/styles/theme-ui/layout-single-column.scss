@@ -851,24 +851,33 @@ body.layout-single-column {
   border-color: var(--color-border);
 }
 
-/* Change panel order */
-.layout-single-column .columns-area__panels__pane {
-  order: 3;
-}
+/* Change panel order.
+   Scoped to width > 759px: below that, core CSS turns
+   .columns-area__panels__pane--navigational into a fixed full-screen
+   overlay for the mobile hamburger menu (see components.scss's
+   `@media screen and (width <= 759px)` block). These order/width rules
+   were unconditional and fought with that - forcing the overlay pane
+   down to a 260px flex item and letting it wrap below the main
+   content instead of covering the screen, on both mobile and desktop. */
+@media screen and (width > 759px) {
+  .layout-single-column .columns-area__panels__pane {
+    order: 3;
+  }
 
-.layout-single-column .columns-area__panels__main {
-  order: 2;
-}
+  .layout-single-column .columns-area__panels__main {
+    order: 2;
+  }
 
-.layout-single-column .columns-area__panels__pane.columns-area__panels__pane--start.columns-area__panels__pane--navigational {
-  order: 1;
-}
+  .layout-single-column .columns-area__panels__pane.columns-area__panels__pane--start.columns-area__panels__pane--navigational {
+    order: 1;
+  }
 
-.layout-single-column .columns-area__panels__pane,
-.layout-single-column .columns-area__panels__pane__inner,
-.layout-single-column .compose-panel {
-  min-width: var(--width-side-panel);
-  width: var(--width-side-panel);
+  .layout-single-column .columns-area__panels__pane,
+  .layout-single-column .columns-area__panels__pane__inner,
+  .layout-single-column .compose-panel {
+    min-width: var(--width-side-panel);
+    width: var(--width-side-panel);
+  }
 }
 
 .layout-single-column .columns-area__panels__pane--compositional {
@@ -3525,27 +3534,13 @@ body.embed .button.logo-button:hover,
     display: none;
   }
 
-  .layout-single-column .columns-area__panels__pane--navigational .columns-area__panels__pane__inner {
-    background-color: var(--color-bg);
-    border-top: 1px solid var(--color-border);
-    bottom: 0;
-    height: 3.5rem;
-    left: 0;
-    max-height: 16vh;
-    width: 100vw;
-  }
-
-  .layout-single-column .columns-area__panels__pane--navigational .navigation-panel {
-    flex-direction: row;
-    gap: 0;
-    height: 100%;
-    overflow-x: auto;
-    padding: 0;
-  }
-
-  .layout-single-column .columns-area__panels__pane--navigational .navigation-panel .flex-spacer {
-    display: none;
-  }
+  /* These three rules used to squash the slide-out hamburger menu into
+     a 3.5rem-tall horizontal bar pinned to the bottom of the screen -
+     leftover from an older bottom-toolbar design that predates the
+     current CollapsibleNavigationPanel (side-sliding overlay). They
+     fought its position: fixed/full-height treatment directly, which
+     is what showed as the menu collapsing into a thin strip instead of
+     covering the screen. Removed so core's overlay sizing applies. */
 
   .layout-single-column .column-link {
     justify-content: center;
