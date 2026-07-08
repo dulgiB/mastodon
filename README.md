@@ -65,12 +65,13 @@
 
 ### Requirements
 
-- **PostgreSQL** 12.16
-- **Redis** 5.0.7
-- **Ruby** 3.2.2
-- **Node.js** 16.20.2
+- **Ruby** 3.3+
+- **PostgreSQL** 14+
+- **Redis** 7.0+
+- **Node.js** 22+
+- **FFmpeg** 5.1+
 
-기입되어있는 버전은 휘핑 에디션 설치 당시의 버전으로, 휘핑 에디션은 2023년 10월 11일 릴리즈된 마스토돈 v4.2.1을 기반으로 합니다. 자세한 내용은 [마스토돈 홈페이지 설치 가이드](https://docs.joinmastodon.org/admin/install/)를 참고해주세요.
+휘핑 에디션은 마스토돈 v4.6.0을 기반으로 합니다. 자세한 내용은 [마스토돈 홈페이지 설치 가이드](https://docs.joinmastodon.org/admin/install/)를 참고해주세요.
 
 ## Contributing
 

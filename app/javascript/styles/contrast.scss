@@ -1,3 +1,17 @@
-@use 'contrast/variables';
+// High-contrast theme, forcing Mastodon 4.6.0's built-in
+// [data-contrast='high'] token overrides regardless of the user's stored
+// contrast preference, so this remains selectable as its own bundle from
+// config/themes.yml.
+
 @use 'application';
-@use 'contrast/diff';
+@use 'mastodon/theme/dark';
+@use 'mastodon/theme/light';
+
+[data-color-scheme='dark'],
+html:not([data-color-scheme]) {
+  @include dark.contrast-overrides;
+}
+
+[data-color-scheme='light'] {
+  @include light.contrast-overrides;
+}

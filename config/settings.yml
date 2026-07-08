@@ -20,6 +20,7 @@ defaults: &defaults
   preview_sensitive_media: false
   noindex: true
   theme: 'default'
+  thumbnail_description: ''
   trends: false
   timeline_preview: false
   trends_as_landing_page: false
@@ -35,6 +36,7 @@ defaults: &defaults
   captcha_enabled: false
   allow_referrer_origin: false
   landing_page: 'trends'
+  wrapstodon: true
 
 development:
   <<: *defaults

@@ -5,9 +5,10 @@ import ImmutablePureComponent from 'react-immutable-pure-component';
 
 import { debounce } from 'lodash';
 
-import { TIMELINE_GAP, TIMELINE_SUGGESTIONS } from 'mastodon/actions/timelines';
+import { TIMELINE_GAP, TIMELINE_PINNED_VIEW_ALL, TIMELINE_SUGGESTIONS } from 'mastodon/actions/timelines';
 import { RegenerationIndicator } from 'mastodon/components/regeneration_indicator';
 import { InlineFollowSuggestions } from 'mastodon/features/home_timeline/components/inline_follow_suggestions';
+import { PinnedShowAllButton } from '@/mastodon/features/account_timeline/components/pinned_statuses';
 
 import { StatusQuoteManager } from '../components/status_quoted';
 import StatusContainerWithoutDm from '../containers/status_container_without_dm';
@@ -37,6 +38,7 @@ export default class StatusList extends ImmutablePureComponent {
     timelineId: PropTypes.string,
     lastId: PropTypes.string,
     bindToDocument: PropTypes.bool,
+    statusProps: PropTypes.object,
   };
 
   static defaultProps = {
@@ -68,7 +70,7 @@ export default class StatusList extends ImmutablePureComponent {
   };
 
   render() {
-    const { statusIds, featuredStatusIds, onLoadMore, timelineId, ...other } = this.props;
+    const { statusIds, featuredStatusIds, onLoadMore, timelineId, statusProps, ...other } = this.props;
     const { isLoading, isPartial } = other;
 
     if (isPartial) {
@@ -80,9 +82,7 @@ export default class StatusList extends ImmutablePureComponent {
         switch(statusId) {
         case TIMELINE_SUGGESTIONS:
           return (
-            <InlineFollowSuggestions
-              key='inline-follow-suggestions'
-            />
+            <InlineFollowSuggestions key={TIMELINE_SUGGESTIONS} />
           );
         case TIMELINE_GAP:
           return (
@@ -129,6 +129,7 @@ export default class StatusList extends ImmutablePureComponent {
               scrollKey={this.props.scrollKey}
               showThread
               withCounters={this.props.withCounters}
+              {...statusProps}
             />
           );
         }
@@ -136,16 +137,21 @@ export default class StatusList extends ImmutablePureComponent {
     ) : null;
 
     if (scrollableContent && featuredStatusIds) {
-      scrollableContent = featuredStatusIds.map(statusId => (
-        <StatusQuoteManager
-          key={`f-${statusId}`}
-          id={statusId}
-          featured
-          contextType={timelineId}
-          showThread
-          withCounters={this.props.withCounters}
-        />
-      )).concat(scrollableContent);
+      scrollableContent = featuredStatusIds.map(statusId => {
+        if (statusId === TIMELINE_PINNED_VIEW_ALL) {
+          return <PinnedShowAllButton key={TIMELINE_PINNED_VIEW_ALL} />
+        }
+        return (
+          <StatusQuoteManager
+            key={`f-${statusId}`}
+            id={statusId}
+            featured
+            contextType={timelineId}
+            showThread
+            withCounters={this.props.withCounters}
+            {...statusProps} />
+        );
+      }).concat(scrollableContent);
     }
 
     return (

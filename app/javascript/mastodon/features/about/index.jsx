@@ -1,22 +1,27 @@
 import PropTypes from 'prop-types';
 import { PureComponent } from 'react';
 
-import { defineMessages, injectIntl, FormattedMessage } from 'react-intl';
+import { defineMessages, FormattedMessage } from 'react-intl';
 
-import { Helmet } from 'react-helmet';
+import { Helmet } from '@unhead/react/helmet';
 
 import ImmutablePropTypes from 'react-immutable-proptypes';
 import { connect } from 'react-redux';
 
+import { domain } from 'mastodon/initial_state';
+
+import { injectIntl } from '@/mastodon/components/intl';
 import { fetchServer, fetchExtendedDescription, fetchDomainBlocks  } from 'mastodon/actions/server';
 import { Account } from 'mastodon/components/account';
 import Column from 'mastodon/components/column';
+import { NavigationFocusTarget } from 'mastodon/components/navigation_focus_target';
 import { ServerHeroImage } from 'mastodon/components/server_hero_image';
 import { Skeleton } from 'mastodon/components/skeleton';
 import { LinkFooter} from 'mastodon/features/ui/components/link_footer';
 
 import { Section } from './components/section';
 import { RulesSection } from './components/rules';
+import { getColumnSkipLinkId } from '../ui/components/skip_links';
 
 const messages = defineMessages({
   title: { id: 'column.about', defaultMessage: 'About' },
@@ -40,10 +45,10 @@ const severityMessages = {
 };
 
 const mapStateToProps = state => ({
-  server: state.getIn(['server', 'server']),
+  server: state.server.server,
   locale: state.getIn(['meta', 'locale']),
-  extendedDescription: state.getIn(['server', 'extendedDescription']),
-  domainBlocks: state.getIn(['server', 'domainBlocks']),
+  extendedDescription: state.server.extendedDescription,
+  domainBlocks: state.server.domainBlocks,
 });
 
 class About extends PureComponent {
@@ -75,14 +80,23 @@ class About extends PureComponent {
 
   render () {
     const { multiColumn, intl, server, extendedDescription, domainBlocks, locale } = this.props;
-    const isLoading = server.get('isLoading');
+    const isLoading = server.isLoading;
 
     return (
       <Column bindToDocument={!multiColumn} label={intl.formatMessage(messages.title)}>
-        <div className='scrollable about'>
+        <div className='scrollable about' id={getColumnSkipLinkId(1)}>
           <div className='about__header'>
-            <ServerHeroImage blurhash={server.getIn(['thumbnail', 'blurhash'])} src={server.getIn(['thumbnail', 'url'])} srcSet={server.getIn(['thumbnail', 'versions'])?.map((value, key) => `${value} ${key.replace('@', '')}`).join(', ')} className='about__header__hero' />
-            <h1>{isLoading ? <Skeleton width='10ch' /> : server.get('title')}</h1>
+            <ServerHeroImage
+              withAltBadge
+              alt={server.item?.thumbnail.description ?? ''}
+              blurhash={server.item?.thumbnail.blurhash}
+              src={server.item?.thumbnail.url}
+              srcSet={Object.keys(server.item?.thumbnail.versions ?? {}).map((key) => `${server.item?.thumbnail.versions && server.item.thumbnail.versions[key]} ${key.replace('@', '')}`).join(', ')}
+              className='about__header__hero'
+            />
+            <NavigationFocusTarget as='h1'>
+              {isLoading ? <Skeleton width='10ch' /> : server.item?.title}
+            </NavigationFocusTarget>
             <p><FormattedMessage id='about.powered_by' defaultMessage='Decentralized social media powered by {mastodon}' values={{ WhippyEdition: <a href='https://whippy.postype.com' className='about__mail' target='_blank' rel='noopener'>휘핑 에디션</a> }} /></p>
           </div>
 
@@ -90,7 +104,7 @@ class About extends PureComponent {
             <div className='about__meta__column'>
               <h4><FormattedMessage id='server_banner.administered_by' defaultMessage='Administered by:' /></h4>
 
-              <Account id={server.getIn(['contact', 'account', 'id'])} size={36} minimal />
+              <Account id={server.item?.contact?.account?.id} size={36} minimal />
             </div>
 
             <hr className='about__meta__divider' />
@@ -98,12 +112,12 @@ class About extends PureComponent {
             <div className='about__meta__column'>
               <h4><FormattedMessage id='about.contact' defaultMessage='Contact:' /></h4>
 
-              {isLoading ? <Skeleton width='10ch' /> : <a className='about__mail' href={`mailto:${server.getIn(['contact', 'email'])}`}>{server.getIn(['contact', 'email'])}</a>}
+              {isLoading ? <Skeleton width='10ch' /> : <a className='about__mail' href={`mailto:${server.item?.contact?.email}`}>{server.item?.contact?.email}</a>}
             </div>
           </div>
 
           <Section open title={intl.formatMessage(messages.title)}>
-            {extendedDescription.get('isLoading') ? (
+            {extendedDescription.isLoading ? (
               <>
                 <Skeleton width='100%' />
                 <br />
@@ -113,10 +127,10 @@ class About extends PureComponent {
                 <br />
                 <Skeleton width='70%' />
               </>
-            ) : (extendedDescription.get('content')?.length > 0 ? (
+            ) : (extendedDescription.item?.content?.length > 0 ? (
               <div
                 className='prose'
-                dangerouslySetInnerHTML={{ __html: extendedDescription.get('content') }}
+                dangerouslySetInnerHTML={{ __html: extendedDescription.item?.content }}
               />
             ) : (
               <p><FormattedMessage id='about.not_available' defaultMessage='This information has not been made available on this server.' /></p>
@@ -125,10 +139,10 @@ class About extends PureComponent {
 
           <RulesSection />
 
-          <LinkFooter />
+          <LinkFooter context='about' />
 
           <div className='about__footer'>
-            <p><FormattedMessage id='about.disclaimer' defaultMessage='Mastodon is free, open-source software, and a trademark of Mastodon gGmbH.' /></p>
+            <p><FormattedMessage id='about.disclaimer' defaultMessage='Mastodon is free, open-source software, and a trademark of Mastodon GmbH.' /></p>
           </div>
         </div>
 

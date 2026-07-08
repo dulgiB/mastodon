@@ -1,4 +1,3 @@
-# default: styles/mastodon-bird-ui-dark.scss
 default: styles/theme-ui-light.scss
 theme-ui-dark: styles/theme-ui-dark.scss
 bird-ui-light: styles/bird-ui-light.scss

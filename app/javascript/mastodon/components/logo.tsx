@@ -1,11 +1,17 @@
+import classNames from 'classnames';
+
 import wordmark from '@/images/logos/wordmark_dark.png';
 
 export const WordmarkLogo: React.FC = () => (
   <img src={wordmark} alt='Whippy Edition' className='logo logo--wordmark' />
 );
 
-export const IconLogo: React.FC = () => (
-  <svg viewBox='0 0 79 79' className='logo logo--icon' role='img'>
+export const IconLogo: React.FC<{ className?: string }> = ({ className }) => (
+  <svg
+    viewBox='0 0 79 79'
+    className={classNames('logo logo--icon', className)}
+    role='img'
+  >
     <title>Mastodon</title>
     <use xlinkHref='#logo-symbol-icon' />
   </svg>

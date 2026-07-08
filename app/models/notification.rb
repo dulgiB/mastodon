@@ -5,15 +5,15 @@
 # Table name: notifications
 #
 #  id              :bigint(8)        not null, primary key
-#  activity_id     :bigint(8)        not null
 #  activity_type   :string           not null
+#  filtered        :boolean          default(FALSE), not null
+#  group_key       :string
+#  type            :string
 #  created_at      :datetime         not null
 #  updated_at      :datetime         not null
 #  account_id      :bigint(8)        not null
+#  activity_id     :bigint(8)        not null
 #  from_account_id :bigint(8)        not null
-#  type            :string
-#  filtered        :boolean          default(FALSE), not null
-#  group_key       :string
 #
 
 class Notification < ApplicationRecord
@@ -34,38 +34,83 @@ class Notification < ApplicationRecord
     'Quote' => :quote,
   }.freeze
 
-  TYPES = %i(
-    direct
-    mention
-    status
-    reblog
-    follow
-    follow_request
-    favourite
-    poll
-    update
-    admin.sign_up
-    admin.report
-  ).freeze
-
+  # Please update app/javascript/mastodon/api_types/notifications.ts if you change this
   PROPERTIES = {
-    direct: { filterable: true }.freeze,
-    mention: { filterable: true }.freeze,
-    status: { filterable: false }.freeze,
-    reblog: { filterable: true }.freeze,
-    follow: { filterable: true }.freeze,
-    follow_request: { filterable: true }.freeze,
-    favourite: { filterable: true }.freeze,
-    poll: { filterable: false }.freeze,
-    update: { filterable: false }.freeze,
-    severed_relationships: { filterable: false }.freeze,
-    moderation_warning: { filterable: false }.freeze,
-    annual_report: { filterable: false }.freeze,
-    'admin.sign_up': { filterable: false }.freeze,
-    'admin.report': { filterable: false }.freeze,
-    quote: { filterable: true }.freeze,
-    quoted_update: { filterable: false }.freeze,
+    direct: {
+      filterable: true,
+      baseline: true,
+    }.freeze,
+    mention: {
+      filterable: true,
+      baseline: true,
+    }.freeze,
+    status: {
+      filterable: false,
+      baseline: true,
+    }.freeze,
+    reblog: {
+      filterable: true,
+      baseline: true,
+    }.freeze,
+    follow: {
+      filterable: true,
+      baseline: true,
+    }.freeze,
+    follow_request: {
+      filterable: true,
+      baseline: true,
+    }.freeze,
+    favourite: {
+      filterable: true,
+      baseline: true,
+    }.freeze,
+    poll: {
+      filterable: false,
+      baseline: true,
+    }.freeze,
+    update: {
+      filterable: false,
+      baseline: true,
+    }.freeze,
+    severed_relationships: {
+      filterable: false,
+      baseline: false,
+    }.freeze,
+    moderation_warning: {
+      filterable: false,
+      baseline: false,
+    }.freeze,
+    annual_report: {
+      filterable: false,
+      baseline: true,
+    }.freeze,
+    'admin.sign_up': {
+      filterable: false,
+      baseline: false,
+    }.freeze,
+    'admin.report': {
+      filterable: false,
+      baseline: false,
+    }.freeze,
+    quote: {
+      filterable: true,
+      baseline: true,
+    }.freeze,
+    quoted_update: {
+      filterable: false,
+      baseline: true,
+    }.freeze,
+    added_to_collection: {
+      filterable: true,
+      baseline: false,
+    }.freeze,
+    collection_update: {
+      filterable: false,
+      baseline: false,
+    }.freeze,
   }.freeze
+
+  TYPES = PROPERTIES.keys.freeze
 
   TARGET_STATUS_INCLUDES_BY_TYPE = {
     status: :status,
@@ -97,6 +142,8 @@ class Notification < ApplicationRecord
     belongs_to :account_warning, inverse_of: false
     belongs_to :generated_annual_report, inverse_of: false
     belongs_to :quote, inverse_of: :notification
+    belongs_to :collection_item, inverse_of: false # TODO: have an inverse?
+    belongs_to :collection, inverse_of: :notifications
   end
 
   validates :type, inclusion: { in: TYPES }
@@ -117,8 +164,19 @@ class Notification < ApplicationRecord
       favourite&.status
     when :mention, :direct
       mention&.status
+    when :quote
+      quote&.status
     when :poll
       poll&.status
+    end
+  end
+
+  def target_collection
+    case type
+    when :added_to_collection
+      collection_item&.collection
+    when :collection_update
+      collection
     end
   end
 
@@ -191,8 +249,10 @@ class Notification < ApplicationRecord
     case activity_type
     when 'Status'
       self.from_account_id = type == :quoted_update ? activity&.quote&.quoted_account_id : activity&.account_id
-    when 'Follow', 'Favourite', 'FollowRequest', 'Poll', 'Report', 'Quote'
+    when 'Follow', 'Favourite', 'FollowRequest', 'Poll', 'Report', 'Quote', 'Collection'
       self.from_account_id = activity&.account_id
+    when 'CollectionItem'
+      self.from_account_id = activity&.collection&.account_id
     when 'Mention', 'Direct'
       self.from_account_id = activity&.status&.account_id
     when 'Account'
