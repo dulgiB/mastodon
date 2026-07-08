@@ -12,69 +12,37 @@ function renderShortNumber(value: number) {
   );
 }
 
+// Whippy Edition always shows exact figures instead of abbreviating them
+// (see the commented-out branches in `toShortNumber`), so these assert the
+// locale-grouped exact number rather than a K/M abbreviation.
 describe('ShortNumber Component', () => {
   it('does not abbreviate numbers under 1000', () => {
     renderShortNumber(999);
     expect(screen.getByText('999')).toBeDefined();
   });
 
-  it('formats thousands correctly for 1000', () => {
+  it('shows the exact figure for 1000', () => {
     renderShortNumber(1000);
-    expect(screen.getByText('1K')).toBeDefined();
+    expect(screen.getByText('1,000')).toBeDefined();
   });
 
-  it('truncates decimals for 1051', () => {
-    renderShortNumber(1051);
-    expect(screen.getByText('1K')).toBeDefined();
-  });
-
-  it('truncates decimals for 2999', () => {
-    renderShortNumber(2999);
-    expect(screen.getByText('2.9K')).toBeDefined();
-  });
-
-  it('truncates decimals for 9999', () => {
-    renderShortNumber(9999);
-    expect(screen.getByText('9.9K')).toBeDefined();
-  });
-
-  it('truncates decimals for 10501', () => {
-    renderShortNumber(10501);
-    expect(screen.getByText('10K')).toBeDefined();
-  });
-
-  it('truncates decimals for 11000', () => {
-    renderShortNumber(11000);
-    expect(screen.getByText('11K')).toBeDefined();
-  });
-
-  it('truncates decimals for 99999', () => {
-    renderShortNumber(99999);
-    expect(screen.getByText('99K')).toBeDefined();
-  });
-
-  it('truncates decimals for 100501', () => {
-    renderShortNumber(100501);
-    expect(screen.getByText('100K')).toBeDefined();
-  });
-
-  it('truncates decimals for 101000', () => {
+  it('shows the exact figure for 101000', () => {
     renderShortNumber(101000);
-    expect(screen.getByText('101K')).toBeDefined();
+    expect(screen.getByText('101,000')).toBeDefined();
   });
 
-  it('truncates decimals for 999999', () => {
+  it('shows the exact figure for 999999', () => {
     renderShortNumber(999999);
-    expect(screen.getByText('999K')).toBeDefined();
+    expect(screen.getByText('999,999')).toBeDefined();
   });
 
-  it('truncates decimals for 2999999', () => {
+  it('shows the exact figure for 2999999', () => {
     renderShortNumber(2999999);
-    expect(screen.getByText('2.9M')).toBeDefined();
+    expect(screen.getByText('2,999,999')).toBeDefined();
   });
 
-  it('truncates decimals for 9999999', () => {
+  it('shows the exact figure for 9999999', () => {
     renderShortNumber(9999999);
-    expect(screen.getByText('9.9M')).toBeDefined();
+    expect(screen.getByText('9,999,999')).toBeDefined();
   });
 });
