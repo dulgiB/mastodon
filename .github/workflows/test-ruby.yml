@@ -380,6 +380,17 @@ jobs:
       - name: Set up Javascript environment
         uses: ./.github/actions/setup-javascript
 
+      - name: Install analysis-nori plugin (Whippy Edition uses it for Korean-aware status search)
+        run: |
+          container_id=$(docker ps -q --filter "publish=9200")
+          if docker exec "$container_id" sh -c 'command -v elasticsearch-plugin' >/dev/null 2>&1; then
+            docker exec "$container_id" elasticsearch-plugin install --batch analysis-nori
+          else
+            docker exec "$container_id" opensearch-plugin install --batch analysis-nori
+          fi
+          docker restart "$container_id"
+          timeout 60 bash -c 'until curl -sf http://localhost:9200/_cluster/health >/dev/null 2>&1; do sleep 2; done'
+
       - name: Load database schema
         run: './bin/rails db:create db:schema:load db:seed'
 
