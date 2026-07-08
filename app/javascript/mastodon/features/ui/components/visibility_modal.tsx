@@ -154,15 +154,13 @@ export const VisibilityModal: FC<VisibilityModalProps> = forwardRef(
       ];
 
       if (!disablePublicVisibilities) {
-        items.unshift(
-          {
-            value: 'unlisted',
-            text: intl.formatMessage(privacyMessages.unlisted_short),
-            meta: intl.formatMessage(privacyMessages.unlisted_long),
-            icon: 'unlock',
-            iconComponent: QuietTimeIcon,
-          },
-        );
+        items.unshift({
+          value: 'unlisted',
+          text: intl.formatMessage(privacyMessages.unlisted_short),
+          meta: intl.formatMessage(privacyMessages.unlisted_long),
+          icon: 'unlock',
+          iconComponent: QuietTimeIcon,
+        });
       }
 
       return items;

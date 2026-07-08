@@ -1,17 +1,8 @@
-// Whippy Edition: "mastodon-light" brand palette.
-//
-// Ported from the pre-4.6.0 SCSS variable overrides
-// ($blurple-600/500/400/300 in the old mastodon-light/variables.scss) onto the
-// new CSS custom property token system introduced in Mastodon 4.6.0
-// (app/javascript/styles/mastodon/theme/). Overriding the shared --color-indigo-*
-// palette swatches (rather than the derived --color-text-brand/--color-bg-brand-*
-// tokens) is enough, since every brand token resolves through var(--color-indigo-*)
-// at render time.
-//
-// This partial also forces the light color-scheme tokens regardless of the
-// [data-color-scheme] attribute, since these themes are selected as separate
-// compiled bundles (via config/themes.yml) rather than through the runtime
-// light/dark switcher.
+// Whippy Edition "mastodon-light" brand palette: overrides the shared
+// --color-indigo-* palette swatches (every brand token resolves through
+// var(--color-indigo-*)) and forces light tokens regardless of
+// [data-color-scheme], since this theme is its own compiled bundle rather
+// than a runtime light/dark switch.
 
 @use '../mastodon/theme/light';
 @use '../mastodon/theme/utils';
