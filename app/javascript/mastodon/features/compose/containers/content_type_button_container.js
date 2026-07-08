@@ -1,6 +1,8 @@
-import { injectIntl, defineMessages } from 'react-intl';
+import { defineMessages } from 'react-intl';
 
 import { connect } from 'react-redux';
+
+import { injectIntl } from '@/mastodon/components/intl';
 
 import { changeComposeContentType } from '../../../actions/compose';
 import TextIconButton from '../components/text_icon_button';

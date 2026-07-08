@@ -7,7 +7,7 @@ import { NavLink } from 'react-router-dom';
 import ImmutablePropTypes from 'react-immutable-proptypes';
 import ImmutablePureComponent from 'react-immutable-pure-component';
 
-import { AccountHeader } from '../../account_timeline/components/account_header';
+import { AccountHeader } from '@/mastodon/components/account_header';
 
 import MemorialNote from './memorial_note';
 import MovedNote from './moved_note';
@@ -33,7 +33,7 @@ export default class Header extends ImmutablePureComponent {
         {(!hidden && account?.get('memorial')) && <MemorialNote />}
         {(!hidden && account?.get('moved')) && <MovedNote from={account} to={account.get('moved')} />}
 
-        <AccountHeader accountId={accountId} />
+        <AccountHeader accountId={accountId} hideTabs />
 
         {!(hideTabs || hidden) && (
           <div className='account__section-headline'>

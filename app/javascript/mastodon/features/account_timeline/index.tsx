@@ -165,7 +165,7 @@ const EmptyMessage: FC<{ accountId: string }> = ({ accountId }) => {
     return (
       <FormattedMessage
         id='empty_column.visitor'
-        defaultMessage='You must be logged in to view this.'
+        defaultMessage='Account suspended'
       />
     );
   } else if (suspended) {

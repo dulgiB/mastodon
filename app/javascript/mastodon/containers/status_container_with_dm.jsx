@@ -1,11 +1,10 @@
-import { injectIntl } from 'react-intl';
-
 import { connect } from 'react-redux';
 
 import {
   unmuteAccount,
   unblockAccount,
 } from '../actions/accounts';
+import { injectIntl } from '../components/intl';
 import { initBlockModal } from '../actions/blocks';
 import {
   replyCompose,
