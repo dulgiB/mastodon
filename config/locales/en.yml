@@ -958,6 +958,7 @@ en:
         public_timelines: Public timelines
         publish_statistics: Publish statistics
         title: Discovery
+        trends: Trends
         wrapstodon: Wrapstodon
       domain_blocks:
         all: To everyone

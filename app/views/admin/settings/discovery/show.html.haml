@@ -10,6 +10,19 @@
 
   %p.lead= t('admin.settings.discovery.preamble')
 
+  %h2= t('admin.settings.discovery.trends')
+
+  .fields-group
+    = f.input :trends,
+              as: :boolean,
+              wrapper: :with_label
+
+  .fields-group
+    = f.input :trendable_by_default,
+              as: :boolean,
+              wrapper: :with_label,
+              recommended: :not_recommended
+
   %h2= t('admin.settings.discovery.public_timelines')
 
   .fields-row
