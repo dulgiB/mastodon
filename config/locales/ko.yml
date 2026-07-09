@@ -1016,8 +1016,8 @@ ko:
       view_publicly: 공개시점으로 보기
       view_quoted_post: 인용된 게시물 보기
       visibility: 공개 설정
-      with_media: 미디어 있음
       with_direct: DM 보기
+      with_media: 미디어 있음
     strikes:
       actions:
         delete_statuses: "%{name} 님이 %{target} 님의 게시물을 삭제했습니다"
@@ -2118,13 +2118,13 @@ ko:
     review_link: 이용 약관 검토하기
     title: "%{domain} 도메인의 이용 약관에 변경 있음"
   themes:
+    bird-ui-dark: 파란새풍 테마 (어두움)
+    bird-ui-light: 파란새풍 테마 (밝음)
     contrast: 마스토돈 (고대비)
     default: 휘핑 에디션 커스텀 테마 (밝음)
-    theme-ui-dark: 휘핑 에디션 커스텀 테마 (어두움)
-    mastodon-light: 마스토돈 (밝음)
     mastodon-dark: 마스토돈 (어두움)
-    bird-ui-light: 파란새풍 테마 (밝음)
-    bird-ui-dark: 파란새풍 테마 (어두움)
+    mastodon-light: 마스토돈 (밝음)
+    theme-ui-dark: 휘핑 에디션 커스텀 테마 (어두움)
   time:
     formats:
       default: "%Y-%m-%d %H:%M"

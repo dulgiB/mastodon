@@ -2193,12 +2193,12 @@ en:
     review_link: Review terms of service
     title: The terms of service of %{domain} are changing
   themes:
+    bird-ui-dark: Mastodon Bird UI (dark)
+    bird-ui-light: Mastodon Bird UI (Light)
     contrast: Mastodon (High contrast)
     default: Mastodon Bird UI (Dark)
-    bird-ui-light: Mastodon Bird UI (Light)
-    bird-ui-dark: Mastodon Bird UI (dark)
-    mastodon-light: Mastodon (Light)
     mastodon-dark: Mastodon (Dark)
+    mastodon-light: Mastodon (Light)
     theme-ui-dark: Mastodon Bird UI - vanila (dark)
   time:
     formats:

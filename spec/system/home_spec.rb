@@ -40,6 +40,7 @@ RSpec.describe 'Home page' do
 
     context 'when the landing page is set to trends' do
       before do
+        Setting.trends = true
         Setting.landing_page = 'trends'
       end
 
