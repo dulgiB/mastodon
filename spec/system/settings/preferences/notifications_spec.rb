@@ -3,7 +3,12 @@
 require 'rails_helper'
 
 RSpec.describe 'Settings preferences notifications page' do
-  let(:user) { Fabricate(:user).tap { |u| u.settings.update('notification_emails.follow': true); u.save! } }
+  let(:user) do
+    Fabricate(:user).tap do |u|
+      u.settings.update('notification_emails.follow': true)
+      u.save!
+    end
+  end
 
   before { sign_in user }
 

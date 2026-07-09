@@ -10,7 +10,12 @@ RSpec.describe 'Reports' do
       post '/api/v1/reports', headers: headers, params: params
     end
 
-    let!(:admin)         { Fabricate(:admin_user).tap { |u| u.settings.update('notification_emails.report': true); u.save! } }
+    let!(:admin) do
+      Fabricate(:admin_user).tap do |u|
+        u.settings.update('notification_emails.report': true)
+        u.save!
+      end
+    end
     let(:target_account) { Fabricate(:account) }
     let(:category)       { 'other' }
     let(:forward)        { nil }
