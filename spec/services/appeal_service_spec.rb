@@ -4,7 +4,7 @@ require 'rails_helper'
 
 RSpec.describe AppealService, :inline_jobs do
   describe '#call' do
-    let!(:admin) { Fabricate(:admin_user) }
+    let!(:admin) { Fabricate(:admin_user).tap { |u| u.settings.update('notification_emails.appeal': true) } }
 
     context 'with an existing strike' do
       let(:strike) { Fabricate(:account_warning) }

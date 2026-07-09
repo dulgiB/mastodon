@@ -68,12 +68,6 @@
       = link_to t('appearance.localization.guide_link_text'), t('appearance.localization.guide_link'), target: '_blank', rel: 'noopener'
 
   = f.simple_fields_for :settings, current_user.settings do |ff|
-    %h2= t 'appearance.advanced_web_interface'
-
-    %p.hint= t 'appearance.advanced_web_interface_hint'
-
-    .fields-group
-      = ff.input :'web.advanced_layout', wrapper: :with_label, hint: false, label: I18n.t('simple_form.labels.defaults.setting_advanced_layout')
     %h2= t 'appearance.animations_and_accessibility'
 
     .fields-group

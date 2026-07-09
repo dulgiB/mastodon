@@ -4,7 +4,7 @@ require 'rails_helper'
 
 RSpec.describe 'Dispute Appeals' do
   let(:user) { Fabricate(:user) }
-  let!(:admin) { Fabricate(:admin_user) }
+  let!(:admin) { Fabricate(:admin_user).tap { |u| u.settings.update('notification_emails.appeal': true) } }
 
   before { sign_in user }
 
