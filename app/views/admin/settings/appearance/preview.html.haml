@@ -1,0 +1,35 @@
+!!! 5
+%html{ lang: I18n.locale }
+  %head
+    %meta{ charset: 'utf-8' }/
+    %meta{ name: 'viewport', content: 'width=device-width, initial-scale=1' }/
+    %title= t('admin.settings.appearance.preview', default: 'Theme preview')
+    = theme_style_tags current_theme
+    %style{ nonce: request.content_security_policy_nonce }
+      :plain
+        body { margin: 0; background: var(--color-bg-primary); color: var(--color-text-primary); font-family: system-ui, -apple-system, sans-serif; }
+        .theme-preview-doc { padding: 24px; display: grid; gap: 18px; max-width: 760px; }
+        .theme-preview-doc__bar { background: var(--color-bg-brand-base); color: var(--color-text-on-brand-base); padding: 14px 18px; border-radius: 8px; font-weight: 700; }
+        .theme-preview-doc__card { background: var(--color-bg-secondary); border: 1px solid var(--color-border-brand); border-radius: 8px; padding: 18px; display: grid; gap: 12px; }
+        .theme-preview-doc__actions { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+        .theme-preview-doc__swatches { display: flex; gap: 10px; flex-wrap: wrap; }
+        .theme-preview-doc__swatch { width: 84px; height: 52px; border-radius: 6px; font-size: 10px; padding: 5px; box-sizing: border-box; color: var(--color-text-on-brand-base); text-shadow: 0 1px 2px rgba(0, 0, 0, 0.55); }
+        .theme-preview-doc a { color: var(--color-text-brand); }
+      = raw @preview_css
+  %body
+    .theme-preview-doc
+      .theme-preview-doc__bar= t('admin.settings.appearance.title')
+      %p
+        = t('admin.settings.appearance.preview_intro', default: 'This is how your brand colors look across common interface elements.')
+        %a{ href: '#' }= t('admin.settings.appearance.preview_sample_link', default: 'Sample link')
+      .theme-preview-doc__actions
+        %button.button{ type: 'button' }= t('generic.save_changes')
+        %button.button.button-secondary{ type: 'button' }= t('admin.site_uploads.delete')
+        %button.button.button-tertiary{ type: 'button' }= t('admin.settings.appearance.title')
+      .theme-preview-doc__card
+        %strong= t('admin.settings.appearance.preamble')
+        %p= t('admin.settings.appearance.theme_branding_hint', default: 'Pick a few brand colors and upload a background image.')
+      .theme-preview-doc__swatches
+        %span.theme-preview-doc__swatch{ style: 'background: var(--color-bg-brand-base)' } brand
+        %span.theme-preview-doc__swatch{ style: 'background: var(--color-bg-secondary)' } surface
+        %span.theme-preview-doc__swatch{ style: 'background: var(--color-text-brand); color: var(--color-bg-primary)' } text-brand

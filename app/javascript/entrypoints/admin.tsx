@@ -5,6 +5,59 @@ import { on } from 'delegated-events';
 
 import ready from '../mastodon/ready';
 
+const THEME_PREVIEW_COLOR_FIELDS = [
+  'theme_color_brand',
+  'theme_color_background',
+  'theme_color_background_secondary',
+  'theme_color_text',
+];
+
+const openThemePreview = (trigger: HTMLElement) => {
+  const baseUrl = trigger.dataset.previewUrl;
+  if (!baseUrl) return;
+
+  const form = trigger.closest('form');
+  const params = new URLSearchParams();
+  THEME_PREVIEW_COLOR_FIELDS.forEach((name) => {
+    const input = form?.querySelector<HTMLInputElement>(
+      `[name="form_admin_settings[${name}]"]`,
+    );
+    if (input?.value) params.set(name, input.value);
+  });
+
+  const overlay = document.createElement('div');
+  overlay.className = 'theme-preview-overlay';
+
+  const frame = document.createElement('iframe');
+  frame.className = 'theme-preview-overlay__frame';
+  frame.src = `${baseUrl}?${params.toString()}`;
+
+  const close = document.createElement('button');
+  close.type = 'button';
+  close.className = 'theme-preview-overlay__close';
+  close.setAttribute('aria-label', 'Close');
+  close.textContent = '×';
+
+  const dismiss = () => {
+    overlay.remove();
+  };
+  close.addEventListener('click', dismiss);
+  overlay.addEventListener('click', (event) => {
+    if (event.target === overlay) dismiss();
+  });
+
+  overlay.append(frame, close);
+  document.body.append(overlay);
+};
+
+on('click', '#theme-preview-button', (event) => {
+  event.preventDefault();
+  const trigger = (event.target as HTMLElement).closest<HTMLElement>(
+    '#theme-preview-button',
+  );
+  if (trigger) openThemePreview(trigger);
+});
+
 const setAnnouncementEndsAttributes = (target: HTMLInputElement) => {
   const valid = target.value && target.validity.valid;
   const element = document.querySelector<HTMLInputElement>(

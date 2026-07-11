@@ -77,4 +77,6 @@
           = t('admin.site_uploads.delete')
 
   .actions
+    %button#theme-preview-button.button.button-tertiary{ type: 'button', data: { preview_url: preview_admin_settings_appearance_path } }
+      = t('admin.settings.appearance.preview', default: 'Preview')
     = f.button :button, t('generic.save_changes'), type: :submit
