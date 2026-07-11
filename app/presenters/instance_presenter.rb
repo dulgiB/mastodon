@@ -93,4 +93,10 @@ class InstancePresenter < ActiveModelSerializers::Model
 
     @app_icon ||= Rails.cache.fetch('site_uploads/app_icon') { SiteUpload.find_by(var: 'app_icon') }
   end
+
+  def hero
+    return @hero if defined?(@hero)
+
+    @hero = Rails.cache.fetch('site_uploads/hero') { SiteUpload.find_by(var: 'hero') }
+  end
 end

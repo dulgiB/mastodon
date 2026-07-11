@@ -25,6 +25,7 @@ class Form::AdminSettings
     theme_color_background_secondary
     theme_color_text
     theme_custom_css
+    hero
     profile_directory
     thumbnail
     thumbnail_description
@@ -82,6 +83,7 @@ class Form::AdminSettings
     mascot
     app_icon
     favicon
+    hero
   ).freeze
 
   DIGEST_KEYS = %i(
