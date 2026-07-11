@@ -23,6 +23,46 @@
               input_html: { rows: 8 },
               wrapper: :with_block_label
 
+  %h4= t('admin.settings.appearance.theme_branding', default: 'Theme branding')
+  %p.lead= t('admin.settings.appearance.theme_branding_hint', default: 'Pick a few brand colors and upload a background image. Leave a color blank to keep the default. Changes apply live with no downtime.')
+
+  .fields-row
+    .fields-row__column.fields-row__column-6.fields-group
+      = f.input :theme_color_brand,
+                as: :string,
+                input_html: { placeholder: '#6364ff' },
+                wrapper: :with_label
+    .fields-row__column.fields-row__column-6.fields-group
+      = f.input :theme_color_text,
+                as: :string,
+                input_html: { placeholder: '#f6f6f9' },
+                wrapper: :with_label
+
+  .fields-row
+    .fields-row__column.fields-row__column-6.fields-group
+      = f.input :theme_color_background,
+                as: :string,
+                input_html: { placeholder: '#181820' },
+                wrapper: :with_label
+    .fields-row__column.fields-row__column-6.fields-group
+      = f.input :theme_color_background_secondary,
+                as: :string,
+                input_html: { placeholder: '#21212c' },
+                wrapper: :with_label
+
+  .fields-row
+    .fields-row__column.fields-row__column-6.fields-group
+      = f.input :hero,
+                as: :file,
+                wrapper: :with_block_label
+
+    .fields-row__column.fields-row__column-6.fields-group
+      - if @admin_settings.hero.persisted?
+        = image_tag @admin_settings.hero.file.url, class: 'fields-group__thumbnail'
+        = link_to admin_site_upload_path(@admin_settings.hero), data: { method: :delete }, class: 'link-button link-button--destructive' do
+          = material_symbol 'delete'
+          = t('admin.site_uploads.delete')
+
   .fields-row
     .fields-row__column.fields-row__column-6.fields-group
       = f.input :mascot,
