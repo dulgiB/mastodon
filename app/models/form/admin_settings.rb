@@ -20,6 +20,11 @@ class Form::AdminSettings
     peers_api_enabled
     preview_sensitive_media
     custom_css
+    theme_color_brand
+    theme_color_background
+    theme_color_background_secondary
+    theme_color_text
+    theme_custom_css
     profile_directory
     thumbnail
     thumbnail_description
@@ -81,7 +86,17 @@ class Form::AdminSettings
 
   DIGEST_KEYS = %i(
     custom_css
+    theme_custom_css
   ).freeze
+
+  THEME_COLOR_KEYS = %i(
+    theme_color_brand
+    theme_color_background
+    theme_color_background_secondary
+    theme_color_text
+  ).freeze
+
+  HEX_COLOR_FORMAT = /\A#(?:\h{3}|\h{6})\z/
 
   OVERRIDEN_SETTINGS = {
     authorized_fetch: :authorized_fetch_mode?,
@@ -113,6 +128,9 @@ class Form::AdminSettings
   validates :site_short_description, length: { maximum: DESCRIPTION_LIMIT }, if: -> { defined?(@site_short_description) }
   validates :thumbnail_description, length: { maximum: DESCRIPTION_LIMIT }, if: -> { defined?(@thumbnail_description) }
   validates :status_page_url, url: true, allow_blank: true
+  validates_each THEME_COLOR_KEYS, allow_blank: true do |record, attr, value|
+    record.errors.add(attr, :invalid) if record.instance_variable_defined?(:"@#{attr}") && value.present? && !HEX_COLOR_FORMAT.match?(value)
+  end
   validate :validate_site_uploads
   validates :landing_page, inclusion: { in: LANDING_PAGE }, if: -> { defined?(@landing_page) }
 
