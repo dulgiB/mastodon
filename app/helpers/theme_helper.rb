@@ -46,6 +46,17 @@ module ThemeHelper
     )
   end
 
+  def custom_theme_stylesheet
+    return if active_custom_theme_stylesheet.blank?
+
+    stylesheet_link_tag(
+      custom_theme_path(active_custom_theme_stylesheet),
+      host: root_url,
+      media: :all,
+      skip_pipeline: true
+    )
+  end
+
   def current_theme
     available_themes = Themes.instance.names
 
@@ -83,6 +94,20 @@ module ThemeHelper
   def cached_custom_css_digest
     Rails.cache.fetch(:setting_digest_custom_css) do
       Setting.custom_css&.then { |content| Digest::SHA256.hexdigest(content) }
+    end
+  end
+
+  def active_custom_theme_stylesheet
+    return if cached_custom_theme_digest.blank?
+
+    [:custom, cached_custom_theme_digest.to_s.first(8)]
+      .compact_blank
+      .join('-')
+  end
+
+  def cached_custom_theme_digest
+    Rails.cache.fetch(:setting_digest_theme_custom_css) do
+      Setting.theme_custom_css.presence&.then { |content| Digest::SHA256.hexdigest(content) }
     end
   end
 end

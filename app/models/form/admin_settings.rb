@@ -167,18 +167,10 @@ class Form::AdminSettings
     # So for now, return early if errors aren't empty.
     return false unless errors.empty? && valid?
 
-    KEYS.each do |key|
-      next unless instance_variable_defined?(:"@#{key}")
-
-      cache_digest_value(key) if DIGEST_KEYS.include?(key)
-
-      if UPLOAD_KEYS.include?(key)
-        public_send(key).save
-      else
-        setting = Setting.where(var: key).first_or_initialize(var: key)
-        setting.update(value: typecast_value(key, instance_variable_get(:"@#{key}")))
-      end
-    end
+    # Persist uploads first so the generated theme CSS can reference their URLs.
+    persist_uploads
+    regenerate_theme_custom_css if theme_customizer_submitted?
+    persist_settings
   end
 
   def persisted?
@@ -186,6 +178,52 @@ class Form::AdminSettings
   end
 
   private
+
+  def persist_uploads
+    KEYS.each do |key|
+      next unless UPLOAD_KEYS.include?(key)
+      next unless instance_variable_defined?(:"@#{key}")
+
+      public_send(key).save
+    end
+  end
+
+  def persist_settings
+    KEYS.each do |key|
+      next if UPLOAD_KEYS.include?(key)
+      next unless instance_variable_defined?(:"@#{key}")
+
+      cache_digest_value(key) if DIGEST_KEYS.include?(key)
+
+      setting = Setting.where(var: key).first_or_initialize(var: key)
+      setting.update(value: typecast_value(key, instance_variable_get(:"@#{key}")))
+    end
+  end
+
+  def theme_customizer_submitted?
+    (THEME_COLOR_KEYS + %i(hero)).any? { |key| instance_variable_defined?(:"@#{key}") }
+  end
+
+  # Rebuilds theme_custom_css from the picked brand colors and hero upload so it
+  # rides the existing hashed custom-CSS pipeline (DIGEST_KEYS) for zero-downtime
+  # updates. Assigning @theme_custom_css makes persist_settings store it.
+  def regenerate_theme_custom_css
+    @theme_custom_css = ThemeCssGenerator.new(
+      brand: stored_or_submitted(:theme_color_brand),
+      background: stored_or_submitted(:theme_color_background),
+      background_secondary: stored_or_submitted(:theme_color_background_secondary),
+      text: stored_or_submitted(:theme_color_text),
+      hero_url: SiteUpload.find_by(var: :hero)&.file&.url
+    ).to_css
+  end
+
+  # Reads a submitted value if present on this form, otherwise the stored Setting,
+  # without memoizing through the KEYS getter (which would flag it for re-saving).
+  def stored_or_submitted(key)
+    return instance_variable_get(:"@#{key}") if instance_variable_defined?(:"@#{key}")
+
+    Setting.public_send(key)
+  end
 
   def cache_digest_value(key)
     Rails.cache.delete(:"setting_digest_#{key}")

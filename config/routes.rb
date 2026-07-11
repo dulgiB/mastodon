@@ -56,6 +56,7 @@ Rails.application.routes.draw do
   get 'intent', to: 'intents#show'
   get 'custom.css', to: 'custom_css#show'
   resources :custom_css, only: :show, path: :css
+  resources :custom_theme, only: :show, path: :theme_css
 
   get 'remote_interaction_helper', to: 'remote_interaction_helper#index'
 

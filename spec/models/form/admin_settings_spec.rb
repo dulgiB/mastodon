@@ -52,6 +52,42 @@ RSpec.describe Form::AdminSettings do
         end
       end
     end
+
+    describe 'generating theme custom CSS from brand colors' do
+      context 'when a brand color is provided' do
+        subject { described_class.new(theme_color_brand: '#ff0000') }
+
+        it 'stores generated CSS and refreshes its digest' do
+          expect { subject.save }
+            .to(change { Setting.theme_custom_css }.to(include('--color-bg-brand-base: #ff0000;')))
+          expect(Rails.cache.read(:setting_digest_theme_custom_css)).to be_present
+        end
+      end
+
+      context 'when brand colors are cleared' do
+        subject { described_class.new(theme_color_brand: '') }
+
+        before do
+          Setting.theme_custom_css = 'stale'
+          Rails.cache.write(:setting_digest_theme_custom_css, 'previous-value')
+        end
+
+        it 'clears generated CSS and its digest' do
+          expect { subject.save }
+            .to(change { Setting.theme_custom_css }.to(be_blank))
+          expect(Rails.cache.read(:setting_digest_theme_custom_css)).to be_blank
+        end
+      end
+
+      context 'when an invalid hex color is provided' do
+        subject { described_class.new(theme_color_brand: 'notacolor') }
+
+        it 'is invalid and does not save' do
+          expect(subject.save).to be false
+          expect(subject.errors[:theme_color_brand]).to be_present
+        end
+      end
+    end
   end
 
   describe '#persisted?' do
