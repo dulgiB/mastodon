@@ -66,6 +66,8 @@ const normalizeHexColor = (value: string): string | null => {
   if (!match) return null;
 
   const hex = match[1];
+  if (!hex) return null;
+
   const expanded =
     hex.length === 3
       ? hex

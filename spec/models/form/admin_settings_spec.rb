@@ -59,7 +59,7 @@ RSpec.describe Form::AdminSettings do
 
         it 'stores generated CSS and refreshes its digest' do
           expect { subject.save }
-            .to(change { Setting.theme_custom_css }.to(include('--color-bg-brand-base: #ff0000;')))
+            .to(change(Setting, :theme_custom_css).to(include('--color-bg-brand-base: #ff0000;')))
           expect(Rails.cache.read(:setting_digest_theme_custom_css)).to be_present
         end
       end
@@ -74,7 +74,7 @@ RSpec.describe Form::AdminSettings do
 
         it 'clears generated CSS and its digest' do
           expect { subject.save }
-            .to(change { Setting.theme_custom_css }.to(be_blank))
+            .to(change(Setting, :theme_custom_css).to(be_blank))
           expect(Rails.cache.read(:setting_digest_theme_custom_css)).to be_blank
         end
       end

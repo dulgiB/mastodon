@@ -1,0 +1,39 @@
+{
+  "ignored_warnings": [
+    {
+      "warning_type": "Cross-Site Scripting",
+      "warning_code": 2,
+      "fingerprint": "86d8f0c3a1ddf4e9143b50660fefa6d33c9e920f3cddcaa677f9c86686701f52",
+      "check_name": "CrossSiteScripting",
+      "message": "Unescaped parameter value",
+      "file": "app/views/admin/settings/appearance/preview.html.haml",
+      "line": 18,
+      "link": "https://brakemanscanner.org/docs/warning_types/cross_site_scripting",
+      "code": "ThemeCssGenerator.new(:brand => sanitized_color(params[:theme_color_brand]), :background => sanitized_color(params[:theme_color_background]), :background_secondary => sanitized_color(params[:theme_color_background_secondary]), :text => sanitized_color(params[:theme_color_text]), :hero_url => InstancePresenter.new.hero.file.url, :wordmark_light_url => InstancePresenter.new.wordmark_light.file.url, :wordmark_dark_url => InstancePresenter.new.wordmark_dark.file.url).to_css",
+      "render_path": [
+        {
+          "type": "controller",
+          "class": "Admin::Settings::AppearanceController",
+          "method": "preview",
+          "line": 22,
+          "file": "app/controllers/admin/settings/appearance_controller.rb",
+          "rendered": {
+            "name": "admin/settings/appearance/preview",
+            "file": "app/views/admin/settings/appearance/preview.html.haml"
+          }
+        }
+      ],
+      "location": {
+        "type": "template",
+        "template": "admin/settings/appearance/preview"
+      },
+      "user_input": "params[:theme_color_brand]",
+      "confidence": "Weak",
+      "cwe_id": [
+        79
+      ],
+      "note": "Admin-only theme preview. Color values are strictly validated to hex by Admin::Settings::AppearanceController#sanitized_color (returns nil for anything else) and image URLs come from SiteUpload, so ThemeCssGenerator#to_css never emits user-controlled markup."
+    }
+  ],
+  "brakeman_version": "8.0.4"
+}
