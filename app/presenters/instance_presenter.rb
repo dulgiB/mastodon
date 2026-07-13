@@ -99,4 +99,16 @@ class InstancePresenter < ActiveModelSerializers::Model
 
     @hero = Rails.cache.fetch('site_uploads/hero') { SiteUpload.find_by(var: 'hero') }
   end
+
+  def wordmark_light
+    return @wordmark_light if defined?(@wordmark_light)
+
+    @wordmark_light = Rails.cache.fetch('site_uploads/wordmark_light') { SiteUpload.find_by(var: 'wordmark_light') }
+  end
+
+  def wordmark_dark
+    return @wordmark_dark if defined?(@wordmark_dark)
+
+    @wordmark_dark = Rails.cache.fetch('site_uploads/wordmark_dark') { SiteUpload.find_by(var: 'wordmark_dark') }
+  end
 end

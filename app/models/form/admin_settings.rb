@@ -26,6 +26,8 @@ class Form::AdminSettings
     theme_color_text
     theme_custom_css
     hero
+    wordmark_light
+    wordmark_dark
     profile_directory
     thumbnail
     thumbnail_description
@@ -84,6 +86,8 @@ class Form::AdminSettings
     app_icon
     favicon
     hero
+    wordmark_light
+    wordmark_dark
   ).freeze
 
   DIGEST_KEYS = %i(
