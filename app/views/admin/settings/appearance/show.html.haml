@@ -23,16 +23,16 @@
               input_html: { rows: 8 },
               wrapper: :with_block_label
 
-  %h4= t('admin.settings.appearance.theme_branding', default: 'Theme branding')
-  %p.lead= t('admin.settings.appearance.theme_branding_hint', default: 'Pick a few brand colors and upload a background image. Leave a color blank to keep the default. Changes apply live with no downtime.')
+  %h4= t('admin.settings.appearance.theme_branding')
+  %p.lead= t('admin.settings.appearance.theme_branding_hint')
 
   .fields-row
-    = render 'theme_color_field', f: f, attribute: :theme_color_brand, placeholder: '#6364ff'
-    = render 'theme_color_field', f: f, attribute: :theme_color_text, placeholder: '#f6f6f9'
+    = render 'theme_color_field', f: f, admin_settings: @admin_settings, attribute: :theme_color_brand, placeholder: '#6364ff'
+    = render 'theme_color_field', f: f, admin_settings: @admin_settings, attribute: :theme_color_text, placeholder: '#f6f6f9'
 
   .fields-row
-    = render 'theme_color_field', f: f, attribute: :theme_color_background, placeholder: '#181820'
-    = render 'theme_color_field', f: f, attribute: :theme_color_background_secondary, placeholder: '#21212c'
+    = render 'theme_color_field', f: f, admin_settings: @admin_settings, attribute: :theme_color_background, placeholder: '#181820'
+    = render 'theme_color_field', f: f, admin_settings: @admin_settings, attribute: :theme_color_background_secondary, placeholder: '#21212c'
 
   .fields-row
     .fields-row__column.fields-row__column-6.fields-group
@@ -87,6 +87,6 @@
           = t('admin.site_uploads.delete')
 
   .actions
-    %button#theme-preview-button.button.button-tertiary{ type: 'button', data: { preview_url: preview_admin_settings_appearance_path } }
-      = t('admin.settings.appearance.preview', default: 'Preview')
+    %button.button.button-tertiary#theme-preview-button{ type: 'button', data: { preview_url: preview_admin_settings_appearance_path } }
+      = t('admin.settings.appearance.preview')
     = f.button :button, t('generic.save_changes'), type: :submit

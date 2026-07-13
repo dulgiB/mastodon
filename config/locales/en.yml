@@ -939,6 +939,9 @@ en:
         preview: Preview
         preview_intro: This is how your brand colors look across common interface elements.
         preview_sample_link: Sample link
+        preview_swatch_brand: Brand
+        preview_swatch_surface: Surface
+        preview_swatch_text: Text
         theme_branding: Theme branding
         theme_branding_hint: Pick a few brand colors and upload a background image. Leave a color blank to keep the default. Changes apply live with no downtime.
         title: Appearance
