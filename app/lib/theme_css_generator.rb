@@ -13,16 +13,28 @@ class ThemeCssGenerator
   DARK_SELECTOR = "[data-color-scheme='dark'], html:not([data-color-scheme])"
   LIGHT_SELECTOR = "[data-color-scheme='light']"
 
-  def initialize(brand: nil, background: nil, background_secondary: nil, text: nil, hero_url: nil)
+  # Contexts that render a "light" wordmark: the light color scheme plus the
+  # legacy fixed-appearance light theme bundles (theme-ui/bird-ui/mastodon-light
+  # pick their look from a body theme class rather than [data-color-scheme]).
+  LIGHT_WORDMARK_SELECTORS = [
+    "[data-color-scheme='light']",
+    'body.theme-default',
+    'body.theme-bird-ui-light',
+    'body.theme-mastodon-light',
+  ].freeze
+
+  def initialize(brand: nil, background: nil, background_secondary: nil, text: nil, hero_url: nil, wordmark_light_url: nil, wordmark_dark_url: nil)
     @brand = brand.presence
     @background = background.presence
     @background_secondary = background_secondary.presence
     @text = text.presence
     @hero_url = hero_url.presence
+    @wordmark_light_url = wordmark_light_url.presence
+    @wordmark_dark_url = wordmark_dark_url.presence
   end
 
   def to_css
-    blocks = [dark_block, light_block, hero_block].compact
+    blocks = [dark_block, light_block, hero_block, wordmark_block].compact
     blocks.join("\n\n")
   end
 
@@ -82,6 +94,32 @@ class ThemeCssGenerator
         background-size: cover;
         background-position: center;
         background-attachment: fixed;
+      }
+    CSS
+  end
+
+  # Overrides the sidebar wordmark across every theme. theme-ui/bird-ui render it
+  # as a `background-image: var(--logo)`, stock/token themes as an <img> we swap
+  # with `content`. A single --admin-wordmark var carries the per-scheme choice.
+  # An unset variant falls back to the other so uploading one still shows a logo.
+  def wordmark_block
+    return if @wordmark_dark_url.blank? && @wordmark_light_url.blank?
+
+    dark_url = @wordmark_dark_url || @wordmark_light_url
+    light_url = @wordmark_light_url || @wordmark_dark_url
+
+    <<~CSS.strip
+      :root {
+        --admin-wordmark: url(#{dark_url});
+        --logo: var(--admin-wordmark) !important;
+      }
+
+      #{LIGHT_WORDMARK_SELECTORS.join(",\n")} {
+        --admin-wordmark: url(#{light_url});
+      }
+
+      img.logo--wordmark {
+        content: var(--admin-wordmark) !important;
       }
     CSS
   end

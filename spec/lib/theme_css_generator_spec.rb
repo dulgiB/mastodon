@@ -48,5 +48,38 @@ RSpec.describe ThemeCssGenerator do
         expect(subject).to include('background-image: url(https://cdn.example/hero.png);')
       end
     end
+
+    context 'when both wordmark urls are provided' do
+      subject { described_class.new(wordmark_light_url: 'https://cdn.example/light.png', wordmark_dark_url: 'https://cdn.example/dark.png').to_css }
+
+      it 'drives both the --logo variable and the img content, per scheme' do
+        expect(subject).to include('--admin-wordmark: url(https://cdn.example/dark.png);')
+        expect(subject).to include('--admin-wordmark: url(https://cdn.example/light.png);')
+        expect(subject).to include('--logo: var(--admin-wordmark) !important;')
+        expect(subject).to include('img.logo--wordmark {')
+        expect(subject).to include('content: var(--admin-wordmark) !important;')
+      end
+
+      it 'targets both token themes and legacy theme body classes' do
+        expect(subject).to include("[data-color-scheme='light']")
+        expect(subject).to include('body.theme-default')
+      end
+    end
+
+    context 'when only one wordmark url is provided' do
+      subject { described_class.new(wordmark_dark_url: 'https://cdn.example/dark.png').to_css }
+
+      it 'falls back to the provided one for both schemes' do
+        expect(subject.scan('url(https://cdn.example/dark.png)').size).to eq(2)
+      end
+    end
+
+    context 'when no wordmark urls are provided' do
+      subject { described_class.new(brand: '#ff0000').to_css }
+
+      it 'does not emit a wordmark override' do
+        expect(subject).to_not include('--admin-wordmark')
+      end
+    end
   end
 end

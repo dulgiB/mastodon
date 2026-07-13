@@ -205,19 +205,22 @@ class Form::AdminSettings
   end
 
   def theme_customizer_submitted?
-    (THEME_COLOR_KEYS + %i(hero)).any? { |key| instance_variable_defined?(:"@#{key}") }
+    (THEME_COLOR_KEYS + %i(hero wordmark_light wordmark_dark)).any? { |key| instance_variable_defined?(:"@#{key}") }
   end
 
-  # Rebuilds theme_custom_css from the picked brand colors and hero upload so it
-  # rides the existing hashed custom-CSS pipeline (DIGEST_KEYS) for zero-downtime
-  # updates. Assigning @theme_custom_css makes persist_settings store it.
+  # Rebuilds theme_custom_css from the picked brand colors and image uploads so
+  # it rides the existing hashed custom-CSS pipeline (DIGEST_KEYS) for
+  # zero-downtime updates. Assigning @theme_custom_css makes persist_settings
+  # store it.
   def regenerate_theme_custom_css
     @theme_custom_css = ThemeCssGenerator.new(
       brand: stored_or_submitted(:theme_color_brand),
       background: stored_or_submitted(:theme_color_background),
       background_secondary: stored_or_submitted(:theme_color_background_secondary),
       text: stored_or_submitted(:theme_color_text),
-      hero_url: SiteUpload.find_by(var: :hero)&.file&.url
+      hero_url: SiteUpload.find_by(var: :hero)&.file&.url,
+      wordmark_light_url: SiteUpload.find_by(var: :wordmark_light)&.file&.url,
+      wordmark_dark_url: SiteUpload.find_by(var: :wordmark_dark)&.file&.url
     ).to_css
   end
 
