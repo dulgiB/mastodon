@@ -65,6 +65,32 @@
 
   .fields-row
     .fields-row__column.fields-row__column-6.fields-group
+      = f.input :wordmark_dark,
+                as: :file,
+                wrapper: :with_block_label
+
+    .fields-row__column.fields-row__column-6.fields-group
+      - if @admin_settings.wordmark_dark.persisted?
+        = image_tag @admin_settings.wordmark_dark.file.url, class: 'fields-group__thumbnail'
+        = link_to admin_site_upload_path(@admin_settings.wordmark_dark), data: { method: :delete }, class: 'link-button link-button--destructive' do
+          = material_symbol 'delete'
+          = t('admin.site_uploads.delete')
+
+  .fields-row
+    .fields-row__column.fields-row__column-6.fields-group
+      = f.input :wordmark_light,
+                as: :file,
+                wrapper: :with_block_label
+
+    .fields-row__column.fields-row__column-6.fields-group
+      - if @admin_settings.wordmark_light.persisted?
+        = image_tag @admin_settings.wordmark_light.file.url, class: 'fields-group__thumbnail'
+        = link_to admin_site_upload_path(@admin_settings.wordmark_light), data: { method: :delete }, class: 'link-button link-button--destructive' do
+          = material_symbol 'delete'
+          = t('admin.site_uploads.delete')
+
+  .fields-row
+    .fields-row__column.fields-row__column-6.fields-group
       = f.input :mascot,
                 as: :file,
                 wrapper: :with_block_label
