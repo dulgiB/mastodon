@@ -2546,3 +2546,38 @@ a.sparkline {
     border-radius: 50%;
   }
 }
+
+.theme-color-field {
+  position: relative;
+
+  .theme-color-input {
+    padding-inline-end: 48px;
+  }
+
+  .theme-color-picker {
+    position: absolute;
+    inset-inline-end: 10px;
+    inset-block-end: 9px;
+    width: 30px;
+    height: 30px;
+    padding: 0;
+    cursor: pointer;
+    background: none;
+    border: 1px solid var(--color-border-primary, #393f4f);
+    border-radius: 4px;
+
+    &::-webkit-color-swatch-wrapper {
+      padding: 2px;
+    }
+
+    &::-webkit-color-swatch {
+      border: 0;
+      border-radius: 2px;
+    }
+
+    &::-moz-color-swatch {
+      border: 0;
+      border-radius: 2px;
+    }
+  }
+}

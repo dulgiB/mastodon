@@ -27,28 +27,12 @@
   %p.lead= t('admin.settings.appearance.theme_branding_hint', default: 'Pick a few brand colors and upload a background image. Leave a color blank to keep the default. Changes apply live with no downtime.')
 
   .fields-row
-    .fields-row__column.fields-row__column-6.fields-group
-      = f.input :theme_color_brand,
-                as: :string,
-                input_html: { placeholder: '#6364ff' },
-                wrapper: :with_label
-    .fields-row__column.fields-row__column-6.fields-group
-      = f.input :theme_color_text,
-                as: :string,
-                input_html: { placeholder: '#f6f6f9' },
-                wrapper: :with_label
+    = render 'theme_color_field', f: f, attribute: :theme_color_brand, placeholder: '#6364ff'
+    = render 'theme_color_field', f: f, attribute: :theme_color_text, placeholder: '#f6f6f9'
 
   .fields-row
-    .fields-row__column.fields-row__column-6.fields-group
-      = f.input :theme_color_background,
-                as: :string,
-                input_html: { placeholder: '#181820' },
-                wrapper: :with_label
-    .fields-row__column.fields-row__column-6.fields-group
-      = f.input :theme_color_background_secondary,
-                as: :string,
-                input_html: { placeholder: '#21212c' },
-                wrapper: :with_label
+    = render 'theme_color_field', f: f, attribute: :theme_color_background, placeholder: '#181820'
+    = render 'theme_color_field', f: f, attribute: :theme_color_background_secondary, placeholder: '#21212c'
 
   .fields-row
     .fields-row__column.fields-row__column-6.fields-group

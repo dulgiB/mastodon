@@ -58,6 +58,46 @@ on('click', '#theme-preview-button', (event) => {
   if (trigger) openThemePreview(trigger);
 });
 
+// Two-way sync between a hex text field and its native color-picker swatch.
+// The text field stays the submitted source of truth (it can be blank); the
+// picker is a convenience that only writes a value when the admin uses it.
+const normalizeHexColor = (value: string): string | null => {
+  const match = /^#([0-9a-f]{3}|[0-9a-f]{6})$/i.exec(value.trim());
+  if (!match) return null;
+
+  const hex = match[1];
+  const expanded =
+    hex.length === 3
+      ? hex
+          .split('')
+          .map((char) => char + char)
+          .join('')
+      : hex;
+
+  return `#${expanded.toLowerCase()}`;
+};
+
+on('input', '.theme-color-picker', ({ target }) => {
+  if (!(target instanceof HTMLInputElement)) return;
+
+  const fieldId = target.dataset.themeColorPicker;
+  const field = fieldId ? document.getElementById(fieldId) : null;
+  if (field instanceof HTMLInputElement) {
+    field.value = target.value;
+    field.dispatchEvent(new Event('input', { bubbles: true }));
+  }
+});
+
+on('input', '.theme-color-input', ({ target }) => {
+  if (!(target instanceof HTMLInputElement)) return;
+
+  const picker = document.querySelector<HTMLInputElement>(
+    `.theme-color-picker[data-theme-color-picker="${target.id}"]`,
+  );
+  const normalized = normalizeHexColor(target.value);
+  if (picker && normalized) picker.value = normalized;
+});
+
 const setAnnouncementEndsAttributes = (target: HTMLInputElement) => {
   const valid = target.value && target.validity.valid;
   const element = document.querySelector<HTMLInputElement>(
