@@ -1,0 +1,40 @@
+!!! 5
+%html{ lang: I18n.locale }
+  %head
+    %meta{ charset: 'utf-8' }/
+    %meta{ name: 'viewport', content: 'width=device-width, initial-scale=1' }/
+    %title= t('admin.settings.appearance.preview')
+    = theme_style_tags current_theme
+    %style{ nonce: request.content_security_policy_nonce }
+      :plain
+        body { margin: 0; background: var(--color-bg-primary); color: var(--color-text-primary); font-family: system-ui, -apple-system, sans-serif; }
+        .theme-preview-doc { padding: 24px; display: grid; gap: 18px; max-width: 760px; }
+        .theme-preview-doc__bar { background: var(--color-bg-brand-base); color: var(--color-text-on-brand-base); padding: 14px 18px; border-radius: 8px; font-weight: 700; }
+        .theme-preview-doc__card { background: var(--color-bg-secondary); border: 1px solid var(--color-border-brand); border-radius: 8px; padding: 18px; display: grid; gap: 12px; }
+        .theme-preview-doc__actions { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+        .theme-preview-doc__swatches { display: flex; gap: 10px; flex-wrap: wrap; }
+        .theme-preview-doc__swatch { width: 84px; height: 52px; border-radius: 6px; font-size: 10px; padding: 5px; box-sizing: border-box; color: var(--color-text-on-brand-base); text-shadow: 0 1px 2px rgba(0, 0, 0, 0.55); }
+        .theme-preview-doc__swatch--brand { background: var(--color-bg-brand-base); }
+        .theme-preview-doc__swatch--surface { background: var(--color-bg-secondary); }
+        .theme-preview-doc__swatch--text { background: var(--color-text-brand); color: var(--color-bg-primary); }
+        .theme-preview-doc a { color: var(--color-text-brand); }
+      -# rubocop:disable Rails/OutputSafety
+      = raw @preview_css
+      -# rubocop:enable Rails/OutputSafety
+  %body
+    .theme-preview-doc
+      .theme-preview-doc__bar= t('admin.settings.appearance.title')
+      %p
+        = t('admin.settings.appearance.preview_intro')
+        %a{ href: '#' }= t('admin.settings.appearance.preview_sample_link')
+      .theme-preview-doc__actions
+        %button.button{ type: 'button' }= t('generic.save_changes')
+        %button.button.button-secondary{ type: 'button' }= t('admin.site_uploads.delete')
+        %button.button.button-tertiary{ type: 'button' }= t('admin.settings.appearance.title')
+      .theme-preview-doc__card
+        %strong= t('admin.settings.appearance.preamble')
+        %p= t('admin.settings.appearance.theme_branding_hint')
+      .theme-preview-doc__swatches
+        %span.theme-preview-doc__swatch.theme-preview-doc__swatch--brand= t('admin.settings.appearance.preview_swatch_brand')
+        %span.theme-preview-doc__swatch.theme-preview-doc__swatch--surface= t('admin.settings.appearance.preview_swatch_surface')
+        %span.theme-preview-doc__swatch.theme-preview-doc__swatch--text= t('admin.settings.appearance.preview_swatch_text')

@@ -39,6 +39,7 @@
     %meta{ name: 'style-nonce', content: request.content_security_policy_nonce, property: 'csp-nonce', nonce: request.content_security_policy_nonce }
 
     = custom_stylesheet
+    = custom_theme_stylesheet
 
     = yield :header_tags
 

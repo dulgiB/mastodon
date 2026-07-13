@@ -936,6 +936,14 @@ en:
         title: Allow external sites to see your Mastodon server as a traffic source
       appearance:
         preamble: Customize Mastodon's web interface.
+        preview: Preview
+        preview_intro: This is how your brand colors look across common interface elements.
+        preview_sample_link: Sample link
+        preview_swatch_brand: Brand
+        preview_swatch_surface: Surface
+        preview_swatch_text: Text
+        theme_branding: Theme branding
+        theme_branding_hint: Pick a few brand colors and upload a background image. Leave a color blank to keep the default. Changes apply live with no downtime.
         title: Appearance
       branding:
         preamble: Your server's branding differentiates it from other servers in the network. This information may be displayed across a variety of environments, such as Mastodon's web interface, native applications, in link previews on other websites and within messaging apps, and so on. For this reason, it is best to keep this information clear, short and concise.
