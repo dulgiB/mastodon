@@ -12,6 +12,8 @@ import {
   CONVERSATIONS_UPDATE,
   CONVERSATIONS_READ,
   CONVERSATIONS_DELETE_SUCCESS,
+  CONVERSATIONS_TYPING_SET,
+  CONVERSATIONS_TYPING_CLEAR,
 } from '../actions/conversations';
 import { compareId } from '../compare_id';
 
@@ -20,6 +22,8 @@ const initialState = ImmutableMap({
   isLoading: false,
   hasMore: true,
   mounted: false,
+  // Ephemeral typing presence: accountId => timestamp of the latest signal.
+  typing: ImmutableMap(),
 });
 
 const conversationToMap = item => ImmutableMap({
@@ -112,6 +116,15 @@ export default function conversations(state = initialState, action) {
     return filterConversations(state, action.payload.accounts);
   case CONVERSATIONS_DELETE_SUCCESS:
     return state.update('items', list => list.filterNot(item => item.get('id') === action.id));
+  case CONVERSATIONS_TYPING_SET:
+    return state.setIn(['typing', action.accountId], action.at);
+  case CONVERSATIONS_TYPING_CLEAR:
+    // Only expire if no fresher signal arrived in the meantime.
+    if (state.getIn(['typing', action.accountId]) === action.at) {
+      return state.deleteIn(['typing', action.accountId]);
+    }
+
+    return state;
   default:
     return state;
   }

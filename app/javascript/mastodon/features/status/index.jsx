@@ -62,7 +62,7 @@ import { setStatusQuotePolicy } from '../../actions/statuses_typed';
 import ColumnHeader from '../../components/column_header';
 import { textForScreenReader, defaultMediaVisibility } from '../../components/status';
 import { StatusQuoteManager } from '../../components/status_quoted';
-import { deleteModal } from '../../initial_state';
+import { deleteModal, me } from '../../initial_state';
 import { makeGetStatus, makeGetPictureInPicture } from '../../selectors';
 import { getAncestorsIds, getDescendantsIds } from 'mastodon/selectors/contexts';
 import Column from '../ui/components/column';
@@ -72,6 +72,7 @@ import ActionBar from './components/action_bar';
 import { DetailedStatus } from './components/detailed_status';
 import { DmBubble } from './components/dm_bubble';
 import { RefreshController } from './components/refresh_controller';
+import { TypingIndicator } from './components/typing_indicator';
 import { quoteComposeById } from '@/mastodon/actions/compose_typed';
 import { FOCUS_TARGET, NavigationFocusTarget } from '@/mastodon/components/navigation_focus_target';
 
@@ -92,9 +93,24 @@ const makeMapStateToProps = () => {
     let ancestorsIds   = [];
     let descendantsIds = [];
 
+    let participantAccountIds = [];
+
     if (status) {
       ancestorsIds   = getAncestorsIds(state, status.get('in_reply_to_id'));
       descendantsIds = getDescendantsIds(state, status.get('id'));
+
+      // For direct conversations, collect the other participants so the typing
+      // indicator only reacts to people in this conversation.
+      if (status.get('visibility') === 'direct') {
+        const seen = new Set();
+        [status.get('id'), ...ancestorsIds, ...descendantsIds].forEach(id => {
+          const accountId = state.getIn(['statuses', id, 'account']);
+          if (accountId && accountId !== me) {
+            seen.add(accountId);
+          }
+        });
+        participantAccountIds = Array.from(seen);
+      }
     }
 
     return {
@@ -102,6 +118,7 @@ const makeMapStateToProps = () => {
       status,
       ancestorsIds,
       descendantsIds,
+      participantAccountIds,
       askReplyConfirmation: state.getIn(['compose', 'text']).trim().length !== 0,
       domain: state.getIn(['meta', 'domain']),
       pictureInPicture: getPictureInPicture(state, { id: props.params.statusId }),
@@ -139,6 +156,7 @@ class Status extends ImmutablePureComponent {
     isLoading: PropTypes.bool,
     ancestorsIds: PropTypes.arrayOf(PropTypes.string).isRequired,
     descendantsIds: PropTypes.arrayOf(PropTypes.string).isRequired,
+    participantAccountIds: PropTypes.arrayOf(PropTypes.string),
     intl: PropTypes.object.isRequired,
     askReplyConfirmation: PropTypes.bool,
     multiColumn: PropTypes.bool,
@@ -657,6 +675,8 @@ class Status extends ImmutablePureComponent {
             </Hotkeys>
 
             {descendants}
+
+            {isDirect && <TypingIndicator accountIds={this.props.participantAccountIds} />}
 
             <RefreshController
               isLocal={isLocal}

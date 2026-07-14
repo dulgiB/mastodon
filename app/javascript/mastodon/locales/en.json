@@ -579,6 +579,7 @@
   "content_warning.show_more": "Show more",
   "content_warning.show_short": "Show",
   "conversation.delete": "Delete conversation",
+  "conversation.is_typing": "{name} is typing…",
   "conversation.mark_as_read": "Mark as read",
   "conversation.open": "View conversation",
   "conversation.with": "With {names}",

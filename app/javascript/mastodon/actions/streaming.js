@@ -9,7 +9,7 @@ import {
   updateReaction as updateAnnouncementsReaction,
   deleteAnnouncement,
 } from './announcements';
-import { updateConversations } from './conversations';
+import { updateConversations, updateTyping } from './conversations';
 import { processNewNotificationForGroups, refreshStaleNotificationGroups, pollRecentNotifications as pollRecentGroupNotifications } from './notification_groups';
 import { updateNotifications } from './notifications';
 import { updateStatus } from './statuses';
@@ -125,6 +125,12 @@ export const connectTimelineStream = (timelineId, channelName, params = {}, opti
           // @ts-expect-error
           dispatch(updateConversations(JSON.parse(data.payload)));
           break;
+        case 'conversation.typing': {
+          // @ts-expect-error data.payload is a JSON string here
+          const { account_id: accountId } = JSON.parse(data.payload);
+          dispatch(updateTyping({ accountId }));
+          break;
+        }
         case 'announcement':
           // @ts-expect-error
           dispatch(updateAnnouncements(JSON.parse(data.payload)));
