@@ -103,6 +103,7 @@ namespace :api, format: false do
       member do
         post :read
         post :unread
+        post :typing
       end
     end
 
