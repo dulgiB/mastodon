@@ -8438,6 +8438,73 @@ noscript {
   }
 }
 
+// Twitter/X-style chat view for an opened direct conversation. The thread view
+// (features/status) switches to this layout when the root status is a direct
+// message, rendering each message as an aligned bubble via <DmBubble>.
+.conversation-thread {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 16px;
+
+  // Strip the detailed-status chrome so the focused message reads as a bubble.
+  .detailed-status__wrapper {
+    border: 0;
+    padding: 0;
+    background: transparent;
+  }
+}
+
+.conversation-bubble {
+  display: flex;
+  align-items: flex-end;
+  gap: 8px;
+  width: fit-content;
+  max-width: 85%;
+  margin-inline-end: auto;
+
+  &__avatar {
+    flex: 0 0 auto;
+  }
+
+  &__body {
+    min-width: 0;
+    padding: 10px 14px;
+    border-radius: 18px;
+    background: var(--color-bg-secondary);
+    color: var(--color-text-primary);
+
+    .status__content {
+      color: inherit;
+    }
+  }
+
+  &__time {
+    display: block;
+    margin-top: 4px;
+    font-size: 12px;
+    color: var(--color-text-secondary);
+    text-align: end;
+  }
+
+  // Own messages sit on the trailing (right) edge with a brand-colored bubble.
+  &--own {
+    flex-direction: row-reverse;
+    margin-inline-start: auto;
+    margin-inline-end: 0;
+
+    .conversation-bubble__body {
+      background: var(--color-bg-brand-base);
+      color: var(--color-text-on-brand-base);
+    }
+
+    .conversation-bubble__time {
+      color: var(--color-text-on-brand-base);
+      opacity: 0.7;
+    }
+  }
+}
+
 .conversation {
   display: flex;
   border-bottom: 1px solid var(--color-border-primary);

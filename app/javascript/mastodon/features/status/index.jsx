@@ -70,6 +70,7 @@ import { attachFullscreenListener, detachFullscreenListener, isFullscreen } from
 
 import ActionBar from './components/action_bar';
 import { DetailedStatus } from './components/detailed_status';
+import { DmBubble } from './components/dm_bubble';
 import { RefreshController } from './components/refresh_controller';
 import { quoteComposeById } from '@/mastodon/actions/compose_typed';
 import { FOCUS_TARGET, NavigationFocusTarget } from '@/mastodon/components/navigation_focus_target';
@@ -459,7 +460,15 @@ class Status extends ImmutablePureComponent {
   };
 
   renderChildren (list, ancestors) {
-    const { params: { statusId } } = this.props;
+    const { status, params: { statusId } } = this.props;
+
+    // Direct conversations are rendered as a chat thread of aligned bubbles
+    // instead of the standard stacked status cards.
+    if (status && status.get('visibility') === 'direct') {
+      return list.map(id => (
+        <DmBubble key={id} id={id} />
+      ));
+    }
 
     return list.map((id, i) => (
       <StatusQuoteManager
@@ -559,6 +568,7 @@ class Status extends ImmutablePureComponent {
 
     const isLocal = status.getIn(['account', 'acct'], '').indexOf('@') === -1;
     const isIndexable = !status.getIn(['account', 'noindex']);
+    const isDirect = status.get('visibility') === 'direct';
 
     const handlers = {
       reply: this.handleHotkeyReply,
@@ -584,7 +594,7 @@ class Status extends ImmutablePureComponent {
         />
 
         <ScrollContainer scrollKey='thread' shouldUpdateScroll={this.shouldUpdateScroll} childRef={this.setContainerRef}>
-          <div className={classNames('item-list scrollable scrollable--flex', { fullscreen })} ref={this.setContainerRef}>
+          <div className={classNames('item-list scrollable scrollable--flex', { fullscreen, 'conversation-thread': isDirect })} ref={this.setContainerRef}>
             {ancestors}
 
             <Hotkeys handlers={handlers}>
@@ -595,20 +605,28 @@ class Status extends ImmutablePureComponent {
                 tabIndex={0}
                 aria-label={textForScreenReader({intl, status})} ref={this.setStatusRef}
               >
-                <DetailedStatus
-                  key={`details-${status.get('id')}`}
-                  status={status}
-                  onOpenVideo={this.handleOpenVideo}
-                  onOpenMedia={this.handleOpenMedia}
-                  onToggleHidden={this.handleToggleHidden}
-                  onTranslate={this.handleTranslate}
-                  domain={domain}
-                  showMedia={this.state.showMedia}
-                  onToggleMediaVisibility={this.handleToggleMediaVisibility}
-                  pictureInPicture={pictureInPicture}
-                  ancestors={this.props.ancestorsIds.length}
-                  multiColumn={multiColumn}
-                />
+                {isDirect ? (
+                  <DmBubble
+                    key={`bubble-${status.get('id')}`}
+                    id={status.get('id')}
+                    focused
+                  />
+                ) : (
+                  <DetailedStatus
+                    key={`details-${status.get('id')}`}
+                    status={status}
+                    onOpenVideo={this.handleOpenVideo}
+                    onOpenMedia={this.handleOpenMedia}
+                    onToggleHidden={this.handleToggleHidden}
+                    onTranslate={this.handleTranslate}
+                    domain={domain}
+                    showMedia={this.state.showMedia}
+                    onToggleMediaVisibility={this.handleToggleMediaVisibility}
+                    pictureInPicture={pictureInPicture}
+                    ancestors={this.props.ancestorsIds.length}
+                    multiColumn={multiColumn}
+                  />
+                )}
 
                 <ActionBar
                   key={`action-bar-${status.get('id')}`}
