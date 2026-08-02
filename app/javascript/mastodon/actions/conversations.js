@@ -145,7 +145,7 @@ const requestTyping = throttle(conversationId => {
   api().post(`/api/v1/conversations/${conversationId}/typing`);
 }, 3000, { leading: true, trailing: false });
 
-const findConversationIdForStatus = (state, statusId) => {
+export const findConversationIdForStatus = (state, statusId) => {
   const items = state.getIn(['conversations', 'items']);
   const targetAccountId = state.getIn(['statuses', statusId, 'account']);
 

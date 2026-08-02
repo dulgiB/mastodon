@@ -32,6 +32,7 @@ import {
   mentionCompose,
   directCompose,
 } from '../../actions/compose';
+import { markConversationRead, findConversationIdForStatus } from '../../actions/conversations';
 import {
   initDomainBlockModal,
   unblockDomain,
@@ -44,8 +45,10 @@ import {
   pin,
   unpin,
 } from '../../actions/interactions';
+import { submitMarkers } from '../../actions/markers';
 import { openModal } from '../../actions/modal';
 import { initMuteModal } from '../../actions/mutes';
+import { markNotificationsAsRead } from '../../actions/notification_groups';
 import { initReport } from '../../actions/reports';
 import {
   fetchStatus,
@@ -97,6 +100,8 @@ const makeMapStateToProps = () => {
     let descendantsIds = [];
 
     let participantAccountIds = [];
+    let conversationId = null;
+    let conversationUnread = false;
 
     if (status) {
       ancestorsIds   = getAncestorsIds(state, status.get('in_reply_to_id'));
@@ -113,6 +118,13 @@ const makeMapStateToProps = () => {
           }
         });
         participantAccountIds = Array.from(seen);
+
+        conversationId = findConversationIdForStatus(state, status.get('id'));
+
+        if (conversationId) {
+          const conversation = state.getIn(['conversations', 'items']).find(item => item.get('id') === conversationId);
+          conversationUnread = conversation ? conversation.get('unread') : false;
+        }
       }
     }
 
@@ -122,6 +134,8 @@ const makeMapStateToProps = () => {
       ancestorsIds,
       descendantsIds,
       participantAccountIds,
+      conversationId,
+      conversationUnread,
       askReplyConfirmation: state.getIn(['compose', 'text']).trim().length !== 0,
       domain: state.getIn(['meta', 'domain']),
       pictureInPicture: getPictureInPicture(state, { id: props.params.statusId }),
@@ -162,6 +176,8 @@ class Status extends ImmutablePureComponent {
     ancestorsIds: PropTypes.arrayOf(PropTypes.string).isRequired,
     descendantsIds: PropTypes.arrayOf(PropTypes.string).isRequired,
     participantAccountIds: PropTypes.arrayOf(PropTypes.string),
+    conversationId: PropTypes.string,
+    conversationUnread: PropTypes.bool,
     composeInReplyTo: PropTypes.string,
     composeIsSubmitting: PropTypes.bool,
     intl: PropTypes.object.isRequired,
@@ -529,6 +545,7 @@ class Status extends ImmutablePureComponent {
   handleScrollToBottomClick = () => {
     this.setState({ isAtBottom: true, newMessageCount: 0 });
     this.scrollToBottom();
+    this.maybeMarkConversationRead(true);
   };
 
   handleScroll = () => {
@@ -541,6 +558,25 @@ class Status extends ImmutablePureComponent {
 
     if (isAtBottom !== this.state.isAtBottom) {
       this.setState({ isAtBottom, ...(isAtBottom ? { newMessageCount: 0 } : {}) });
+    }
+
+    if (isAtBottom) {
+      this.maybeMarkConversationRead(true);
+    }
+  };
+
+  // Reaching the bottom of a fully-read DM thread clears both the DM inbox's
+  // own unread flag and the bell-icon mention-notification badge. The latter
+  // only supports a single "mark everything up to now as read" cursor (no
+  // per-notification read API), so this mirrors what "mark all as read"
+  // already does elsewhere rather than introducing a new mechanism.
+  maybeMarkConversationRead = (isAtBottom = this.state.isAtBottom) => {
+    const { dispatch, conversationId, conversationUnread } = this.props;
+
+    if (isAtBottom && conversationUnread && conversationId) {
+      dispatch(markConversationRead(conversationId));
+      dispatch(markNotificationsAsRead());
+      dispatch(submitMarkers({ immediate: true }));
     }
   };
 
@@ -560,6 +596,7 @@ class Status extends ImmutablePureComponent {
         if (isDirect) {
           if (this.state.isAtBottom) {
             this.scrollToBottom();
+            this.maybeMarkConversationRead(true);
           } else {
             this.setState(({ newMessageCount }) => ({ newMessageCount: newMessageCount + newRepliesIds.length }));
           }
@@ -584,6 +621,9 @@ class Status extends ImmutablePureComponent {
     if (status && status.get('id') !== this.state.loadedStatusId) {
       this.setState({ showMedia: defaultMediaVisibility(this.props.status), loadedStatusId: status.get('id') });
       this.updateDirectStreamSubscription(status.get('visibility') === 'direct');
+      // Covers opening a thread that's already scrolled to the bottom (the
+      // default) with unread messages waiting.
+      this.maybeMarkConversationRead();
     }
   }
 
