@@ -1812,6 +1812,34 @@ body.embed .detailed-status__meta .detailed-status__link .fa-retweet,
 }
 
 /* Notifications */
+
+/* Ungrouped notifications (mentions, replies etc.) already indent the status
+   content, action bar and media by the avatar gutter (--status-gutter-width)
+   in Mastodon core. The theme indents the same elements by
+   var(--size-avatar) + var(--gap-default) too, so the two stacked up and
+   pushed notification statuses to the right. Zero out the core gutter so
+   only the theme indent applies, exactly like in regular timelines. */
+.layout-multiple-columns .notification-ungrouped .status {
+  --status-gutter-width: 0px;
+}
+
+/* Core also sets an explicit width (100% minus the gutter) on these, which
+   overflows once the theme's left padding is added. Let them size naturally
+   like statuses in regular timelines. Media players are left out on purpose:
+   the theme already sizes them with its own !important width. */
+.layout-multiple-columns .notification-ungrouped .status .status__content,
+.layout-multiple-columns .notification-ungrouped .status .status__action-bar,
+.layout-multiple-columns .notification-ungrouped .status .attachment-list,
+.layout-multiple-columns .notification-ungrouped .status .picture-in-picture-placeholder,
+.layout-multiple-columns .notification-ungrouped .status .more-from-author,
+.layout-multiple-columns .notification-ungrouped .status .status-card,
+.layout-multiple-columns .notification-ungrouped .status .collection-preview,
+.layout-multiple-columns .notification-ungrouped .status .hashtag-bar,
+.layout-multiple-columns .notification-ungrouped .status .content-warning,
+.layout-multiple-columns .notification-ungrouped .status .filter-warning {
+  width: auto;
+}
+
 .layout-multiple-columns .notification__message {
   display: grid;
   gap: var(--gap-default);
