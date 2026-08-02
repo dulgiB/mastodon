@@ -8455,6 +8455,41 @@ noscript {
   }
 }
 
+// Floating "jump to latest message" button for an open DM thread. Positioned
+// against `.column` (already `position: relative`), independent of the
+// scrollable `.conversation-thread` content so it stays put while scrolling.
+.scroll-to-bottom-button {
+  position: absolute;
+  inset-inline-end: 16px;
+  bottom: 16px;
+  z-index: 5;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: var(--color-bg-primary);
+  color: var(--color-text-primary);
+  box-shadow: 0 2px 8px var(--color-shadow-primary);
+
+  &:hover,
+  &:focus-visible {
+    background: var(--color-bg-secondary);
+  }
+
+  .icon-button__counter {
+    position: absolute;
+    inset-inline-end: -4px;
+    top: -4px;
+    color: var(--color-text-on-brand-base);
+    background: var(--color-bg-brand-base);
+    border: 2px solid var(--color-bg-primary);
+    padding: 1px 5px;
+    border-radius: 6px;
+    font-size: 10px;
+    font-weight: 500;
+    line-height: 14px;
+  }
+}
+
 .conversation-bubble {
   display: flex;
   align-items: flex-end;

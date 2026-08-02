@@ -582,6 +582,7 @@
   "conversation.is_typing": "{name} is typing…",
   "conversation.mark_as_read": "Mark as read",
   "conversation.open": "View conversation",
+  "conversation.scroll_to_bottom": "Scroll to latest message",
   "conversation.with": "With {names}",
   "copy_icon_button.copied": "Copied to clipboard",
   "copy_icon_button.copy_this_text": "Copy link to clipboard",

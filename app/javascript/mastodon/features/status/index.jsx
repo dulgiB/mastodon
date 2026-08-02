@@ -61,6 +61,7 @@ import {
 import { setStatusQuotePolicy } from '../../actions/statuses_typed';
 import { connectDirectStream } from '../../actions/streaming';
 import ColumnHeader from '../../components/column_header';
+import { scrollBottom } from '../../scroll';
 import { textForScreenReader, defaultMediaVisibility } from '../../components/status';
 import { StatusQuoteManager } from '../../components/status_quoted';
 import { deleteModal, me } from '../../initial_state';
@@ -73,6 +74,7 @@ import ActionBar from './components/action_bar';
 import { DetailedStatus } from './components/detailed_status';
 import { DmBubble } from './components/dm_bubble';
 import { RefreshController } from './components/refresh_controller';
+import { ScrollToBottomButton } from './components/scroll_to_bottom_button';
 import { TypingIndicator } from './components/typing_indicator';
 import { quoteComposeById } from '@/mastodon/actions/compose_typed';
 import { FOCUS_TARGET, NavigationFocusTarget } from '@/mastodon/components/navigation_focus_target';
@@ -123,6 +125,8 @@ const makeMapStateToProps = () => {
       askReplyConfirmation: state.getIn(['compose', 'text']).trim().length !== 0,
       domain: state.getIn(['meta', 'domain']),
       pictureInPicture: getPictureInPicture(state, { id: props.params.statusId }),
+      composeInReplyTo: state.getIn(['compose', 'in_reply_to']),
+      composeIsSubmitting: state.getIn(['compose', 'is_submitting']),
     };
   };
 
@@ -158,6 +162,8 @@ class Status extends ImmutablePureComponent {
     ancestorsIds: PropTypes.arrayOf(PropTypes.string).isRequired,
     descendantsIds: PropTypes.arrayOf(PropTypes.string).isRequired,
     participantAccountIds: PropTypes.arrayOf(PropTypes.string),
+    composeInReplyTo: PropTypes.string,
+    composeIsSubmitting: PropTypes.bool,
     intl: PropTypes.object.isRequired,
     askReplyConfirmation: PropTypes.bool,
     multiColumn: PropTypes.bool,
@@ -178,6 +184,10 @@ class Status extends ImmutablePureComponent {
      * Used to highlight newly added replies in the UI
      */
     newRepliesIds: [],
+    /** Whether the DM thread's scroll container is scrolled to the bottom. */
+    isAtBottom: true,
+    /** Count of new messages that arrived while scrolled away from the bottom. */
+    newMessageCount: 0,
   };
 
   componentDidMount() {
@@ -510,10 +520,35 @@ class Status extends ImmutablePureComponent {
     this.statusNode = c;
   };
 
+  scrollToBottom = () => {
+    if (this.node) {
+      scrollBottom(this.node);
+    }
+  };
+
+  handleScrollToBottomClick = () => {
+    this.setState({ isAtBottom: true, newMessageCount: 0 });
+    this.scrollToBottom();
+  };
+
+  handleScroll = () => {
+    if (!this.node || this.props.status?.get('visibility') !== 'direct') {
+      return;
+    }
+
+    const { scrollTop, scrollHeight, clientHeight } = this.node;
+    const isAtBottom = scrollHeight - scrollTop - clientHeight < 40;
+
+    if (isAtBottom !== this.state.isAtBottom) {
+      this.setState({ isAtBottom, ...(isAtBottom ? { newMessageCount: 0 } : {}) });
+    }
+  };
+
   componentDidUpdate(prevProps) {
-    const { status, descendantsIds, params } = this.props;
+    const { status, ancestorsIds, descendantsIds, params } = this.props;
 
     const isSameStatus = status && (prevProps.status?.get('id') === status.get('id'));
+    const isDirect = status && status.get('visibility') === 'direct';
 
     // Only highlight replies after the initial load
     if (prevProps.descendantsIds.length && isSameStatus) {
@@ -521,7 +556,25 @@ class Status extends ImmutablePureComponent {
 
       if (newRepliesIds.length) {
         this.setState({newRepliesIds});
+
+        if (isDirect) {
+          if (this.state.isAtBottom) {
+            this.scrollToBottom();
+          } else {
+            this.setState(({ newMessageCount }) => ({ newMessageCount: newMessageCount + newRepliesIds.length }));
+          }
+        }
       }
+    }
+
+    // Force-scroll to the bottom once our own reply to this thread finishes submitting.
+    if (
+      isDirect &&
+      prevProps.composeIsSubmitting && !this.props.composeIsSubmitting &&
+      prevProps.composeInReplyTo && [status.get('id'), ...ancestorsIds, ...descendantsIds].includes(prevProps.composeInReplyTo)
+    ) {
+      this.setState({ isAtBottom: true, newMessageCount: 0 });
+      this.scrollToBottom();
     }
 
     if (params.statusId && prevProps.params.statusId !== params.statusId) {
@@ -624,7 +677,7 @@ class Status extends ImmutablePureComponent {
         />
 
         <ScrollContainer scrollKey='thread' shouldUpdateScroll={this.shouldUpdateScroll} childRef={this.setContainerRef}>
-          <div className={classNames('item-list scrollable scrollable--flex', { fullscreen, 'conversation-thread': isDirect })} ref={this.setContainerRef}>
+          <div className={classNames('item-list scrollable scrollable--flex', { fullscreen, 'conversation-thread': isDirect })} ref={this.setContainerRef} onScroll={isDirect ? this.handleScroll : undefined}>
             {ancestors}
 
             <Hotkeys handlers={handlers}>
@@ -697,6 +750,10 @@ class Status extends ImmutablePureComponent {
             />
           </div>
         </ScrollContainer>
+
+        {isDirect && !this.state.isAtBottom && (
+          <ScrollToBottomButton count={this.state.newMessageCount} onClick={this.handleScrollToBottomClick} />
+        )}
 
         <Helmet>
           <title>{titleFromStatus(intl, status)}</title>

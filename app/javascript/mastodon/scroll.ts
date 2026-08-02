@@ -55,3 +55,12 @@ export const scrollTop = (node: Element) =>
       scroll(node, 'scrollTop', 0);
     }
   });
+
+export const scrollBottom = (node: Element) =>
+  requestIdleCallback(() => {
+    if (isScrollBehaviorSupported) {
+      node.scrollTo({ top: node.scrollHeight, behavior: 'smooth' });
+    } else {
+      scroll(node, 'scrollTop', node.scrollHeight);
+    }
+  });
