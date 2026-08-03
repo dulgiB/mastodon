@@ -96,7 +96,7 @@ export default function conversations(state = initialState, action) {
   case CONVERSATIONS_FETCH_SUCCESS:
     return expandNormalizedConversations(state, action.conversations, action.next, action.isLoadingRecent);
   case CONVERSATIONS_UPDATE:
-    return updateConversation(state, action.conversation);
+    return action.conversation ? updateConversation(state, action.conversation) : state;
   case CONVERSATIONS_MOUNT:
     return state.update('mounted', count => count + 1);
   case CONVERSATIONS_UNMOUNT:

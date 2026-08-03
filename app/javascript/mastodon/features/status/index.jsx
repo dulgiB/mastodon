@@ -59,6 +59,7 @@ import {
   undoStatusTranslation,
 } from '../../actions/statuses';
 import { setStatusQuotePolicy } from '../../actions/statuses_typed';
+import { connectDirectStream } from '../../actions/streaming';
 import ColumnHeader from '../../components/column_header';
 import { textForScreenReader, defaultMediaVisibility } from '../../components/status';
 import { StatusQuoteManager } from '../../components/status_quoted';
@@ -529,12 +530,23 @@ class Status extends ImmutablePureComponent {
 
     if (status && status.get('id') !== this.state.loadedStatusId) {
       this.setState({ showMedia: defaultMediaVisibility(this.props.status), loadedStatusId: status.get('id') });
+      this.updateDirectStreamSubscription(status.get('visibility') === 'direct');
     }
   }
 
   componentWillUnmount () {
     detachFullscreenListener(this.onFullScreenChange);
+    this.directStreamDisconnect?.();
   }
+
+  // Direct-visibility statuses are never fanned out over the regular
+  // `update` stream, so a DM thread needs its own subscription to the
+  // `direct` channel to receive new messages (and typing events) live —
+  // otherwise only the DM inbox column (if also mounted) would get them.
+  updateDirectStreamSubscription = (isDirect) => {
+    this.directStreamDisconnect?.();
+    this.directStreamDisconnect = isDirect ? this.props.dispatch(connectDirectStream()) : undefined;
+  };
 
   onFullScreenChange = () => {
     this.setState({ fullscreen: isFullscreen() });
