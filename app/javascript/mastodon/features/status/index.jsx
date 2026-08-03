@@ -270,6 +270,10 @@ class Status extends ImmutablePureComponent {
   componentDidMount() {
     this.props.dispatch(fetchStatus(this.props.params.statusId, { forceFetch: true }));
     attachFullscreenListener(this.onFullScreenChange);
+    // The container's own onScroll (below) only fires in multi-column
+    // layout, where it's the actual overflow element — single-column
+    // layout scrolls the page instead, so this is needed too.
+    window.addEventListener('scroll', this.handleScroll);
   }
 
   handleToggleMediaVisibility = () => {
@@ -602,9 +606,28 @@ class Status extends ImmutablePureComponent {
     this.statusNode = c;
   };
 
+  // `.columns-area--mobile .scrollable` (single-column layout) sets
+  // `overflow: visible` on this container so the page itself scrolls
+  // instead — only multi-column desktop layout makes the container the
+  // actual overflow/scroll element. Both the container's own `onScroll`
+  // and window `scroll` events are wired up (see componentDidMount), and
+  // this checks which one is actually live at call time.
+  isContainerScrollable = () => {
+    const node = this.node;
+    return !!node && node.scrollHeight > node.clientHeight;
+  };
+
   scrollToBottom = () => {
-    if (this.node) {
+    if (!this.node) {
+      return;
+    }
+
+    if (this.isContainerScrollable()) {
       scrollBottom(this.node);
+    } else {
+      requestIdleCallback(() => {
+        window.scrollTo({ top: document.documentElement.scrollHeight, behavior: 'smooth' });
+      });
     }
   };
 
@@ -619,8 +642,14 @@ class Status extends ImmutablePureComponent {
       return;
     }
 
-    const { scrollTop, scrollHeight, clientHeight } = this.node;
-    const isAtBottom = scrollHeight - scrollTop - clientHeight < 40;
+    let isAtBottom;
+
+    if (this.isContainerScrollable()) {
+      const { scrollTop, scrollHeight, clientHeight } = this.node;
+      isAtBottom = scrollHeight - scrollTop - clientHeight < 40;
+    } else {
+      isAtBottom = this.node.getBoundingClientRect().bottom - window.innerHeight < 40;
+    }
 
     if (isAtBottom !== this.state.isAtBottom) {
       this.setState({ isAtBottom, ...(isAtBottom ? { newMessageCount: 0 } : {}) });
@@ -670,6 +699,17 @@ class Status extends ImmutablePureComponent {
       }
     }
 
+    // The thread's replies (descendantsIds) arrive from a separate context
+    // fetch than the status itself, landing a render or two after it — by
+    // which point the loadedStatusId scroll below already ran with nothing
+    // yet to scroll to. Catches that transition specifically (excluded from
+    // the "new replies" branch above since prevProps.descendantsIds.length
+    // is 0 here, by design, to avoid highlighting the whole initial load
+    // as "new").
+    if (isDirect && prevProps.descendantsIds.length === 0 && descendantsIds.length > 0 && this.state.isAtBottom) {
+      this.scrollToBottom();
+    }
+
     // Force-scroll to the bottom once our own reply to this thread finishes submitting.
     if (
       isDirect &&
@@ -687,6 +727,16 @@ class Status extends ImmutablePureComponent {
     if (status && status.get('id') !== this.state.loadedStatusId) {
       this.setState({ showMedia: defaultMediaVisibility(this.props.status), loadedStatusId: status.get('id') });
       this.updateDirectStreamSubscription(status.get('visibility') === 'direct');
+
+      if (isDirect) {
+        // ScrollContainer's own restore-on-navigate (shouldUpdateScroll,
+        // above) sets scrollTop directly on this component's own div —
+        // a no-op in single-column layout, where the page scrolls instead
+        // (see scrollToBottom/handleScroll). Covers that case explicitly,
+        // rather than opening a thread scrolled to its very top there.
+        this.scrollToBottom();
+      }
+
       // Covers opening a thread that's already scrolled to the bottom (the
       // default) with unread messages waiting.
       this.maybeMarkConversationRead();
@@ -696,6 +746,7 @@ class Status extends ImmutablePureComponent {
   componentWillUnmount () {
     detachFullscreenListener(this.onFullScreenChange);
     this.directStreamDisconnect?.();
+    window.removeEventListener('scroll', this.handleScroll);
   }
 
   // Direct-visibility statuses are never fanned out over the regular
@@ -862,8 +913,6 @@ class Status extends ImmutablePureComponent {
 
             {descendants}
 
-            {isDirect && <TypingIndicator accountIds={this.props.participantAccountIds} />}
-
             <RefreshController
               isLocal={isLocal}
               statusId={status.get('id')}
@@ -872,11 +921,17 @@ class Status extends ImmutablePureComponent {
           </div>
         </ScrollContainer>
 
-        {isDirect && !this.state.isAtBottom && (
-          <ScrollToBottomButton count={this.state.newMessageCount} onClick={this.handleScrollToBottomClick} />
-        )}
+        {isDirect && (
+          <div className='dm-composer-anchor'>
+            {!this.state.isAtBottom && (
+              <ScrollToBottomButton count={this.state.newMessageCount} onClick={this.handleScrollToBottomClick} />
+            )}
 
-        {isDirect && <DmComposer rootId={status.get('id')} />}
+            <TypingIndicator accountIds={this.props.participantAccountIds} />
+
+            <DmComposer rootId={status.get('id')} />
+          </div>
+        )}
 
         <Helmet>
           <title>{titleFromStatus(intl, status)}</title>

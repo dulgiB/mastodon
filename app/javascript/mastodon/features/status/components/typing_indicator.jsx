@@ -4,9 +4,12 @@ import { FormattedMessage } from 'react-intl';
 
 import { useSelector } from 'react-redux';
 
-// Shows an animated "… is typing" bubble for participants of the currently open
-// direct conversation. Typing state is ephemeral and auto-expires (see the
-// conversations reducer / actions), so this simply reflects whatever is fresh.
+// A thin status line pinned above the reply composer for the currently open
+// direct conversation — deliberately understated (no avatar, no bubble)
+// rather than inserted into the message flow, since a full chat bubble for
+// an ephemeral, no-content signal read as too heavy. Typing state is
+// ephemeral and auto-expires (see the conversations reducer / actions), so
+// this simply reflects whatever is fresh.
 export const TypingIndicator = ({ accountIds = [] }) => {
   const typing = useSelector(state => state.getIn(['conversations', 'typing']));
   const accounts = useSelector(state => state.get('accounts'));
@@ -25,21 +28,12 @@ export const TypingIndicator = ({ accountIds = [] }) => {
     .join(', ');
 
   return (
-    <div className='conversation-bubble conversation-bubble--typing' aria-live='polite'>
-      <div className='conversation-bubble__body'>
-        <span className='typing-indicator__dots' aria-hidden='true'>
-          <span />
-          <span />
-          <span />
-        </span>
-        <span className='typing-indicator__label'>
-          <FormattedMessage
-            id='conversation.is_typing'
-            defaultMessage='{name} is typing…'
-            values={{ name: names }}
-          />
-        </span>
-      </div>
+    <div className='typing-indicator' aria-live='polite'>
+      <FormattedMessage
+        id='conversation.is_typing'
+        defaultMessage='{name} is typing…'
+        values={{ name: names }}
+      />
     </div>
   );
 };
