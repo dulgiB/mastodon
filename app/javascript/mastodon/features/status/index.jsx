@@ -7,6 +7,7 @@ import { Helmet } from '@unhead/react/helmet';
 import { withRouter } from 'react-router-dom';
 import { difference } from 'lodash';
 
+import { createSelector } from '@reduxjs/toolkit';
 import ImmutablePropTypes from 'react-immutable-proptypes';
 import ImmutablePureComponent from 'react-immutable-pure-component';
 import { connect } from 'react-redux';
@@ -77,6 +78,7 @@ import { attachFullscreenListener, detachFullscreenListener, isFullscreen } from
 import ActionBar from './components/action_bar';
 import { DetailedStatus } from './components/detailed_status';
 import { DmBubble } from './components/dm_bubble';
+import { DmComposer } from './components/dm_composer';
 import { RefreshController } from './components/refresh_controller';
 import { ScrollToBottomButton } from './components/scroll_to_bottom_button';
 import { TypingIndicator } from './components/typing_indicator';
@@ -90,18 +92,61 @@ const messages = defineMessages({
   detailedStatus: { id: 'status.detailed_status', defaultMessage: 'Detailed conversation view' },
 });
 
+const NO_IDS = [];
+
 const makeMapStateToProps = () => {
   const getStatus = makeGetStatus();
   const getPictureInPicture = makeGetPictureInPicture();
   const getLatestStatus = makeGetStatus();
 
+  // Memoized so it only recomputes (and returns a new array) when the
+  // thread's participants might actually have changed, rather than on every
+  // store update — mapStateToProps runs on every dispatch app-wide, and an
+  // always-fresh array here made connect() see "changed" props every time,
+  // forcing this whole page to re-render (and any effect keyed off its
+  // props, like the direct-stream connection, to spuriously re-run) on
+  // completely unrelated activity elsewhere in the app.
+  const getParticipantAccountIds = createSelector(
+    [
+      (_state, statusId) => statusId,
+      (_state, _statusId, ancestorsIds) => ancestorsIds,
+      (_state, _statusId, _ancestorsIds, descendantsIds) => descendantsIds,
+      (_state, _statusId, _ancestorsIds, _descendantsIds, conversationAccountIds) => conversationAccountIds,
+      state => state.statuses,
+    ],
+    (statusId, ancestorsIds, descendantsIds, conversationAccountIds, statuses) => {
+      const seen = new Set();
+
+      [statusId, ...ancestorsIds, ...descendantsIds].forEach(id => {
+        const accountId = statuses.getIn([id, 'account']);
+        if (accountId && accountId !== me) {
+          seen.add(accountId);
+        }
+      });
+
+      // A brand-new conversation's other participant has, by definition,
+      // never posted in it yet — deriving participants purely from message
+      // authors above would then never recognize their typing signal for
+      // their own first reply. The conversation's own account list (from
+      // AccountConversation, keyed by the mention graph rather than by who
+      // has actually posted) covers that gap.
+      (conversationAccountIds ?? []).forEach(accountId => {
+        if (accountId && accountId !== me) {
+          seen.add(accountId);
+        }
+      });
+
+      return Array.from(seen);
+    },
+  );
+
   const mapStateToProps = (state, props) => {
     const status = getStatus(state, { id: props.params.statusId, contextType: 'detailed' });
 
-    let ancestorsIds   = [];
-    let descendantsIds = [];
+    let ancestorsIds   = NO_IDS;
+    let descendantsIds = NO_IDS;
 
-    let participantAccountIds = [];
+    let participantAccountIds = NO_IDS;
     let conversationId = null;
     let conversationUnread = false;
     let latestStatus = null;
@@ -124,21 +169,15 @@ const makeMapStateToProps = () => {
         ancestorsIds = sortedIds.filter(id => compareId(id, status.get('id')) < 0);
         descendantsIds = sortedIds.filter(id => compareId(id, status.get('id')) > 0);
 
-        const seen = new Set();
-        [status.get('id'), ...ancestorsIds, ...descendantsIds].forEach(id => {
-          const accountId = state.getIn(['statuses', id, 'account']);
-          if (accountId && accountId !== me) {
-            seen.add(accountId);
-          }
-        });
-        participantAccountIds = Array.from(seen);
-
         conversationId = findConversationIdForStatus(state, status.get('id'));
 
+        let conversation = null;
         if (conversationId) {
-          const conversation = state.getIn(['conversations', 'items']).find(item => item.get('id') === conversationId);
+          conversation = state.getIn(['conversations', 'items']).find(item => item.get('id') === conversationId);
           conversationUnread = conversation ? conversation.get('unread') : false;
         }
+
+        participantAccountIds = getParticipantAccountIds(state, status.get('id'), ancestorsIds, descendantsIds, conversation?.get('accounts'));
 
         // Replies composed from this thread should always attach to the
         // thread's true latest message, not the status the page happened to
@@ -678,6 +717,16 @@ class Status extends ImmutablePureComponent {
       return false;
     }
 
+    // Direct threads open scrolled to the newest message, like a
+    // messenger, rather than to the focused post's own position — for a
+    // conversation opened from the list the focused post already is the
+    // newest message, but scrolling to just its offset can still leave it
+    // (and everything below it, like the composer) out of view when there
+    // are ancestors above it.
+    if (this.props.status?.get('visibility') === 'direct') {
+      return this.node ? [0, this.node.scrollHeight] : false;
+    }
+
     // Scroll to focused post if it is loaded
     if (this.statusNode) {
       return [0, this.statusNode.offsetTop];
@@ -778,31 +827,36 @@ class Status extends ImmutablePureComponent {
                   />
                 )}
 
-                <ActionBar
-                  key={`action-bar-${status.get('id')}`}
-                  status={status}
-                  onReply={this.handleReplyClick}
-                  onFavourite={this.handleFavouriteClick}
-                  onReblog={this.handleReblogClick}
-                  onBookmark={this.handleBookmarkClick}
-                  onDelete={this.handleDeleteClick}
-                  onRevokeQuote={this.handleRevokeQuoteClick}
-                  onQuotePolicyChange={this.handleQuotePolicyChange}
-                  onQuote={this.handleQuote}
-                  onEdit={this.handleEditClick}
-                  onDirect={this.handleDirectClick}
-                  onMention={this.handleMentionClick}
-                  onMute={this.handleMuteClick}
-                  onUnmute={this.handleUnmuteClick}
-                  onMuteConversation={this.handleConversationMuteClick}
-                  onBlock={this.handleBlockClick}
-                  onUnblock={this.handleUnblockClick}
-                  onBlockDomain={this.handleBlockDomainClick}
-                  onUnblockDomain={this.handleUnblockDomainClick}
-                  onReport={this.handleReport}
-                  onPin={this.handlePin}
-                  onEmbed={this.handleEmbed}
-                />
+                {/* Direct messages use the per-bubble ellipsis menu in DmBubble
+                    instead of the full action bar, which reads as out of
+                    place under a chat-style message. */}
+                {!isDirect && (
+                  <ActionBar
+                    key={`action-bar-${status.get('id')}`}
+                    status={status}
+                    onReply={this.handleReplyClick}
+                    onFavourite={this.handleFavouriteClick}
+                    onReblog={this.handleReblogClick}
+                    onBookmark={this.handleBookmarkClick}
+                    onDelete={this.handleDeleteClick}
+                    onRevokeQuote={this.handleRevokeQuoteClick}
+                    onQuotePolicyChange={this.handleQuotePolicyChange}
+                    onQuote={this.handleQuote}
+                    onEdit={this.handleEditClick}
+                    onDirect={this.handleDirectClick}
+                    onMention={this.handleMentionClick}
+                    onMute={this.handleMuteClick}
+                    onUnmute={this.handleUnmuteClick}
+                    onMuteConversation={this.handleConversationMuteClick}
+                    onBlock={this.handleBlockClick}
+                    onUnblock={this.handleUnblockClick}
+                    onBlockDomain={this.handleBlockDomainClick}
+                    onUnblockDomain={this.handleUnblockDomainClick}
+                    onReport={this.handleReport}
+                    onPin={this.handlePin}
+                    onEmbed={this.handleEmbed}
+                  />
+                )}
               </NavigationFocusTarget>
             </Hotkeys>
 
@@ -821,6 +875,8 @@ class Status extends ImmutablePureComponent {
         {isDirect && !this.state.isAtBottom && (
           <ScrollToBottomButton count={this.state.newMessageCount} onClick={this.handleScrollToBottomClick} />
         )}
+
+        {isDirect && <DmComposer rootId={status.get('id')} />}
 
         <Helmet>
           <title>{titleFromStatus(intl, status)}</title>

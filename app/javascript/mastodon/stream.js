@@ -213,6 +213,7 @@ const KNOWN_EVENT_TYPES = [
   'delete',
   'notification',
   'conversation',
+  'conversation.typing',
   'filters_changed',
   'announcement',
   'announcement.delete',

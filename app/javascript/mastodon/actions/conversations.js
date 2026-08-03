@@ -2,12 +2,15 @@ import { throttle } from 'lodash';
 
 import api, { getLinks } from '../api';
 import { me } from '../initial_state';
+import { getDescendantsIds } from '../selectors/contexts';
+import { uuid } from '../uuid';
 
 import {
   importFetchedAccounts,
   importFetchedStatuses,
   importFetchedStatus,
 } from './importer';
+import { updateTimeline } from './timelines';
 
 export const CONVERSATIONS_MOUNT   = 'CONVERSATIONS_MOUNT';
 export const CONVERSATIONS_UNMOUNT = 'CONVERSATIONS_UNMOUNT';
@@ -89,7 +92,19 @@ export const updateConversations = conversation => dispatch => {
   dispatch(importFetchedAccounts(conversation.accounts));
 
   if (conversation.last_status) {
-    dispatch(importFetchedStatus(conversation.last_status));
+    if (conversation.last_status.in_reply_to_id) {
+      // The 'direct' stream only ever pushes a 'conversation' event (this
+      // one) for a new message, never an 'update' for the status itself —
+      // see PushConversationWorker. Importing the status alone isn't
+      // enough to make it show up in an already-open thread: nothing else
+      // links it under its parent in contexts.replies, which is what
+      // getDescendantsIds reads. updateTimeline does both (import +
+      // link), the same way submitDirectReply already does for our own
+      // outgoing replies.
+      dispatch(updateTimeline('direct', conversation.last_status));
+    } else {
+      dispatch(importFetchedStatus(conversation.last_status));
+    }
   }
 
   dispatch({
@@ -177,4 +192,69 @@ export const sendComposeTyping = () => (dispatch, getState) => {
   if (conversationId) {
     requestTyping(conversationId);
   }
+};
+
+// Same as sendComposeTyping, but for the DM thread's own chat-style reply bar,
+// which keeps its draft outside of the `compose` state (see submitDirectReply)
+// and so has no `compose.in_reply_to` to read the conversation from.
+export const sendDirectReplyTyping = statusId => (dispatch, getState) => {
+  const conversationId = findConversationIdForStatus(getState(), statusId);
+
+  if (conversationId) {
+    requestTyping(conversationId);
+  }
+};
+
+// Builds the "@acct " mention prefix a direct reply needs so it reaches the
+// same participants as the message it's replying to (the API infers a
+// status's audience from @-mentions in the text, not from in_reply_to_id).
+const mentionsPrefix = (state, status) => {
+  const accts = [];
+  const authorId = status.get('account');
+
+  if (authorId !== me) {
+    const author = state.accounts.get(authorId);
+    if (author) {
+      accts.push(author.get('acct'));
+    }
+  }
+
+  status.get('mentions').forEach(mention => {
+    const acct = mention.get('acct');
+    if (mention.get('id') !== me && !accts.includes(acct)) {
+      accts.push(acct);
+    }
+  });
+
+  return accts.map(acct => `@${acct} `).join('');
+};
+
+// Posts `text` as a direct reply to whatever is currently the last message in
+// the thread rooted at `rootId`. The target is resolved from the store right
+// before the request is built (not captured earlier by the caller), so a
+// message that arrived while the user was typing is still the one replied
+// to. This bypasses the global `compose` state entirely — reusing it would
+// mean a reply typed here could be clobbered by, or clobber, an unrelated
+// draft open in the main composer.
+export const submitDirectReply = (rootId, text) => (dispatch, getState) => {
+  const state = getState();
+  const descendantsIds = getDescendantsIds(state, rootId);
+  const targetId = descendantsIds.length > 0 ? descendantsIds[descendantsIds.length - 1] : rootId;
+  const targetStatus = state.statuses.get(targetId);
+
+  if (!targetStatus) {
+    return Promise.reject(new Error(`Unknown status ${targetId}`));
+  }
+
+  return api().post('/api/v1/statuses', {
+    status: `${mentionsPrefix(state, targetStatus)}${text}`,
+    in_reply_to_id: targetId,
+    visibility: 'direct',
+  }, {
+    headers: { 'Idempotency-Key': uuid() },
+  }).then(({ data }) => {
+    dispatch(importFetchedStatus(data));
+    dispatch(updateTimeline('direct', data));
+    return data;
+  });
 };

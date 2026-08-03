@@ -8516,15 +8516,37 @@ noscript {
     flex: 0 0 auto;
   }
 
+  // Per-message actions (delete, report, favourite, copy link) live behind
+  // an ellipsis instead of a full action bar under every bubble. Faint by
+  // default rather than hover-only, since hover reveal isn't reachable on
+  // touch devices.
+  &__menu {
+    align-self: center;
+    flex: 0 0 auto;
+    opacity: 0.5;
+
+    &:hover,
+    &:focus-within {
+      opacity: 1;
+    }
+  }
+
+  // Background stays theme-driven (--color-bg-primary, the same surface
+  // .dropdown-menu uses). Only the base text color is pinned to #000 —
+  // theme-token pairings for it kept ending up low/no-contrast, and this
+  // is the one piece that actually needs guaranteed contrast. !important
+  // is scoped to .status__content itself, not its descendants: a mention
+  // or hashtag link has its own explicit color rule elsewhere, which an
+  // ancestor's color (however it's set) never overrides through
+  // inheritance — only text with no color of its own picks this up.
   &__body {
     min-width: 0;
     padding: 10px 14px;
     border-radius: 18px;
-    background: var(--color-bg-secondary);
-    color: var(--color-text-primary);
+    background: var(--color-bg-primary);
 
     .status__content {
-      color: inherit;
+      color: #000 !important;
     }
   }
 
@@ -8536,7 +8558,11 @@ noscript {
     text-align: end;
   }
 
-  // Own messages sit on the trailing (right) edge with a brand-colored bubble.
+  // Own messages sit on the trailing (right) edge with a brand-colored
+  // bubble. --color-bg-brand-base/--color-text-on-brand-base are a real
+  // "on-X" pair (guaranteed to be readable together by design), unlike the
+  // pairings that caused trouble for the other party's bubble above, so
+  // this one stays theme-driven.
   &--own {
     flex-direction: row-reverse;
     margin-inline-start: auto;
@@ -8600,6 +8626,54 @@ noscript {
   30% {
     opacity: 1;
     transform: translateY(-3px);
+  }
+}
+
+// Messenger-style reply bar pinned under the thread, used only for direct
+// conversations (see DmComposer). Sits as a flex sibling after the
+// scrollable message list, not overlaid, so it never covers the last bubble.
+.dm-composer {
+  position: sticky;
+  bottom: 0;
+  z-index: 2;
+  flex: 0 0 auto;
+  display: flex;
+  align-items: flex-end;
+  gap: 8px;
+  padding: 10px 16px;
+  border-top: 1px solid var(--color-border-primary);
+  background: var(--color-bg-primary);
+
+  // Below $mobile-menu-breakpoint the fixed .ui__navigation-bar sits on top
+  // of a scrolling page rather than a bounded column, so "sticky to the
+  // bottom of the scroll container" alone would end up underneath it —
+  // same reserved-height variable that bar's own layout already uses.
+  @media screen and (max-width: #{$mobile-menu-breakpoint - 1}) {
+    bottom: var(--mobile-bottom-nav-height);
+  }
+
+  &__textarea {
+    flex: 1 1 auto;
+    resize: none;
+    max-height: 160px;
+    padding: 8px 14px;
+    border: 1px solid var(--color-border-primary);
+    border-radius: 18px;
+    background: var(--color-bg-secondary);
+    color: var(--color-text-primary);
+    font: inherit;
+    line-height: 1.4;
+
+    &:focus {
+      outline: 0;
+      border-color: var(--color-border-brand);
+    }
+  }
+
+  &__error {
+    flex-basis: 100%;
+    font-size: 13px;
+    color: var(--color-text-error);
   }
 }
 
