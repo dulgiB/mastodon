@@ -20,6 +20,7 @@ import { IconWithBadge } from 'mastodon/components/icon_with_badge';
 import type { MastodonLocationDescriptor } from 'mastodon/components/router';
 import { useIdentity } from 'mastodon/identity_context';
 import { registrationsOpen, sso_redirect } from 'mastodon/initial_state';
+import { selectUnreadConversationsCount } from 'mastodon/selectors/conversations';
 import { selectUnreadNotificationGroupsCount } from 'mastodon/selectors/notifications';
 import { useAppDispatch, useAppSelector } from 'mastodon/store';
 
@@ -162,6 +163,12 @@ export const NavigationBar: React.FC = () => {
   const { signedIn } = useIdentity();
   const dispatch = useAppDispatch();
   const open = useAppSelector((state) => state.navigation.open);
+  // Single-column mode has no direct-messages icon of its own in this bar
+  // (see below), so its unread count surfaces on the menu button that
+  // opens the sidebar containing that link instead.
+  const unreadConversationsCount = useAppSelector(
+    selectUnreadConversationsCount,
+  );
   const intl = useIntl();
 
   const handleClick = useCallback(() => {
@@ -205,7 +212,12 @@ export const NavigationBar: React.FC = () => {
           aria-label={intl.formatMessage(messages.menu)}
           type='button'
         >
-          <Icon id='' icon={MenuIcon} />
+          <IconWithBadge
+            id='menu'
+            icon={MenuIcon}
+            count={unreadConversationsCount}
+            className=''
+          />
         </button>
       </div>
     </div>

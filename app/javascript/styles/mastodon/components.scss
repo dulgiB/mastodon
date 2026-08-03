@@ -1779,13 +1779,27 @@ body > [data-popper-placement] {
 }
 
 .status__wrapper-direct,
-.notification-ungrouped--direct,
-.notification-group--direct,
 .notification-group--annual-report {
   background: var(--color-bg-brand-softest);
 
   &:focus {
     background: var(--color-bg-brand-soft);
+  }
+}
+
+// Being a private-reply notification alone no longer paints an opaque
+// background (it used to, unconditionally, via this same selector) — that
+// looked flatly out of place next to every other card's translucent tint
+// on this fork's frosted-glass surfaces, and stayed on even once read,
+// unlike every other "new" indicator in the app. Only actually-unread
+// notifications get a background now (translucent, not the opaque token
+// above), same as any other unread item.
+.notification-group--unread,
+.notification-ungrouped--unread {
+  background: rgb(from var(--color-bg-brand-softest) r g b / 35%);
+
+  &:focus {
+    background: rgb(from var(--color-bg-brand-soft) r g b / 45%);
   }
 }
 

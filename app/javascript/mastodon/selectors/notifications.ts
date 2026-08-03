@@ -11,21 +11,38 @@ import {
   selectSettingsNotificationsQuickFilterShow,
 } from './settings';
 
+// A reply to a direct message is still delivered as an ordinary 'mention'
+// notification server-side (there's no separate type for it), but it
+// belongs in the Direct Messages tab, not mixed into Notifications — so it
+// never reaches the list, the unread count, or the badge here.
+const isDirectMessageMention = (
+  item: NotificationGroup | NotificationGap,
+  statuses: RootState['statuses'],
+) =>
+  item.type === 'mention' &&
+  !!item.statusId &&
+  statuses.get(item.statusId)?.get('visibility') === 'direct';
+
 const filterNotificationsByAllowedTypes = (
   showFilterBar: boolean,
   allowedType: string,
   excludedTypes: string[],
   notifications: (NotificationGroup | NotificationGap)[],
+  statuses: RootState['statuses'],
 ) => {
+  const withoutDirectMessages = notifications.filter(
+    (item) => !isDirectMessageMention(item, statuses),
+  );
+
   if (!showFilterBar || allowedType === 'all') {
     // used if user changed the notification settings after loading the notifications from the server
     // otherwise a list of notifications will come pre-filtered from the backend
     // we need to turn it off for FilterBar in order not to block ourselves from seeing a specific category
-    return notifications.filter(
+    return withoutDirectMessages.filter(
       (item) => item.type === 'gap' || !excludedTypes.includes(item.type),
     );
   }
-  return notifications.filter(
+  return withoutDirectMessages.filter(
     (item) =>
       item.type === 'gap' ||
       allowedType === item.type ||
@@ -42,6 +59,7 @@ export const selectNotificationGroups = createSelector(
     selectSettingsNotificationsQuickFilterActive,
     selectSettingsNotificationsExcludedTypes,
     (state: RootState) => state.notificationGroups.groups,
+    (state: RootState) => state.statuses,
   ],
   filterNotificationsByAllowedTypes,
 );
@@ -52,6 +70,7 @@ const selectPendingNotificationGroups = createSelector(
     selectSettingsNotificationsQuickFilterActive,
     selectSettingsNotificationsExcludedTypes,
     (state: RootState) => state.notificationGroups.pendingGroups,
+    (state: RootState) => state.statuses,
   ],
   filterNotificationsByAllowedTypes,
 );
