@@ -6,7 +6,7 @@ import { Route } from 'react-router-dom';
 import { Provider as ReduxProvider } from 'react-redux';
 
 import { hydrateStore } from 'mastodon/actions/store';
-import { connectUserStream } from 'mastodon/actions/streaming';
+import { connectDirectStream, connectUserStream } from 'mastodon/actions/streaming';
 import ErrorBoundary from 'mastodon/components/error_boundary';
 import { FocusTargetProvider } from '@/mastodon/components/navigation_focus_target';
 import { Router } from 'mastodon/components/router';
@@ -32,6 +32,18 @@ export default class Mastodon extends PureComponent {
   componentDidMount() {
     if (this.identity.signedIn) {
       this.disconnect = store.dispatch(connectUserStream());
+
+      // Connected here (once, for the whole session) rather than from the
+      // direct-message thread view itself: tying it to that route
+      // component's mount/update lifecycle meant every unrelated store
+      // update while a thread was open could re-run the connect/disconnect
+      // logic, and connecting can itself synchronously dispatch further
+      // actions — the two together produced a rapid subscribe/unsubscribe
+      // loop on the streaming server instead of a single stable
+      // connection, so messages arriving during a "disconnected" sliver
+      // never rendered live. Matching connectUserStream's always-on
+      // pattern here sidesteps that whole class of problem.
+      this.disconnectDirectStream = store.dispatch(connectDirectStream());
     }
   }
 
@@ -39,6 +51,11 @@ export default class Mastodon extends PureComponent {
     if (this.disconnect) {
       this.disconnect();
       this.disconnect = null;
+    }
+
+    if (this.disconnectDirectStream) {
+      this.disconnectDirectStream();
+      this.disconnectDirectStream = null;
     }
   }
 
