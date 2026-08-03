@@ -895,6 +895,14 @@ body.layout-single-column {
   margin-inline: 10px;
 }
 
+/* See theme-ui/layout-single-column.scss: unconditional (not just at the
+   desktop breakpoint below), otherwise this parent stays opaque below
+   1175px. bird-ui has no separate wallpaper/tint for the main panel, so
+   this is a no-op here in practice, kept for consistency with theme-ui. */
+.layout-single-column .columns-area__panels__main {
+  background: transparent;
+}
+
 /* stylelint-disable-next-line -- ported bird-ui/theme-ui override, not worth reformatting */
 @media (min-width: 1175px) {
   .layout-single-column .columns-area__panels__main {
@@ -1058,11 +1066,15 @@ body.embed .status__content a,
 }
 
 /* Unread message */
+
+/* See theme-ui/layout-single-column.scss: --color-dark is an opaque solid
+   that doesn't match this theme's translucent surfaces; reuse the same
+   soft translucent hover tint instead. */
 .layout-single-column .conversation--unread,
 .layout-single-column .notification.unread:hover,
 .layout-single-column .notification.unread,
 .layout-single-column .status__wrapper.unread {
-  background-color: var(--color-dark);
+  background-color: var(--color-column-link-hover);
 }
 
 .layout-single-column .notification:hover .notification__message {

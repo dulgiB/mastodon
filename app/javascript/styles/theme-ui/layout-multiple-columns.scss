@@ -915,6 +915,14 @@ body.layout-multiple-columns {
   margin-inline: 10px;
 }
 
+/* See layout-single-column.scss: unconditional (not just at the desktop
+   breakpoint below), otherwise this parent stays opaque below 1175px and
+   the child's translucent tint sits on solid color instead of the
+   wallpaper. */
+.layout-multiple-columns .columns-area__panels__main {
+  background: transparent;
+}
+
 /* stylelint-disable-next-line -- ported bird-ui/theme-ui override, not worth reformatting */
 @media (min-width: 1175px) {
   .layout-multiple-columns .columns-area__panels__main {
@@ -1084,11 +1092,15 @@ body.embed .status__content a,
 }
 
 /* Unread message */
+
+/* See layout-single-column.scss: --color-dark is an opaque solid that
+   doesn't match this theme's translucent surfaces; reuse the same soft
+   translucent hover tint instead. */
 .layout-multiple-columns .conversation--unread,
 .layout-multiple-columns .notification.unread:hover,
 .layout-multiple-columns .notification.unread,
 .layout-multiple-columns .status__wrapper.unread {
-  background-color: var(--color-dark);
+  background-color: var(--color-column-link-hover);
 }
 
 .layout-multiple-columns .notification:hover .notification__message {

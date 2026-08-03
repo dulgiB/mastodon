@@ -3079,9 +3079,16 @@ a.account__display-name {
   gap: 8px;
   padding-bottom: env(safe-area-inset-bottom);
   background: var(--color-bg-primary);
-  backdrop-filter: $backdrop-blur-filter;
   border-top: 1px solid var(--color-border-primary);
   box-sizing: border-box;
+
+  // No backdrop-filter: background above is already fully opaque, so
+  // there's nothing for it to blur — it was a no-op on correctly
+  // rendering browsers, but seen to corrupt compositing (icons vanishing,
+  // ghosted/overlapping text in sibling fixed/sticky bars) combined with
+  // position: fixed on some mobile engines (Samsung Internet reported;
+  // same class of bug as the sticky+backdrop-filter issue on mobile
+  // Safari noted below on .tabs-bar__wrapper).
 
   .layout-multiple-columns & {
     display: none;
@@ -3139,7 +3146,11 @@ a.account__display-name {
 
 .tabs-bar__wrapper {
   background: var(--color-bg-primary);
-  backdrop-filter: $backdrop-blur-filter;
+
+  // No backdrop-filter: background above is already fully opaque, so
+  // there's nothing for it to blur — see .ui__navigation-bar for why this
+  // was removed (mobile rendering corruption with sticky/fixed
+  // positioning, no visible effect either way on browsers unaffected).
   position: sticky;
   top: 0;
   z-index: 2;
@@ -3148,6 +3159,19 @@ a.account__display-name {
   @media screen and (min-width: $no-gap-breakpoint) {
     border-top: 10px solid var(--color-bg-primary);
   }
+}
+
+// The column header (tabs, back button, etc.) for whichever single-column
+// page is active gets portaled in here (see TabsBarPortal in
+// columns_area.tsx). This target div has no CSS of its own anywhere in the
+// codebase, so as a flex item of .tabs-bar__wrapper with no sizing hint it
+// was sized by content — which, once that content's own children use
+// percentage widths (e.g. .account__section-headline's tab buttons), don't
+// count toward that auto-sizing and collapse the whole chain to 0, stacking
+// every tab at the same position instead of laying them out in a row.
+#tabs-bar__portal {
+  flex: 1 1 auto;
+  min-width: 0;
 }
 
 .react-swipeable-view-container {
