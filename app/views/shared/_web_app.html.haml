@@ -1,4 +1,4 @@
-- content_for :body_classes, 'app-body'
+- content_for :body_classes, "app-body theme-#{current_theme}"
 - content_for :header_tags do
   - if user_signed_in?
     %meta{ name: 'initialPath', content: request.path }

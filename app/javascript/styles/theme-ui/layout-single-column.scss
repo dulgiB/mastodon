@@ -904,6 +904,19 @@ body.layout-single-column {
   margin-inline: 10px;
 }
 
+/* .columns-area__panels__main carries an opaque --color-bg-primary
+   background of its own (components.scss), but the actual tinted "card"
+   is one of its child divs (see the --color-column rule above) — this
+   parent is only ever meant to be a transparent frame that lets the
+   wallpaper show through around/behind it. Unconditional (not just at the
+   desktop breakpoint below): below 1175px this parent still carries that
+   opaque background too, so the child's translucent tint sits on solid
+   --color-bg-primary instead of the wallpaper, reading as flat gray
+   instead of frosted glass. */
+.layout-single-column .columns-area__panels__main {
+  background: transparent;
+}
+
 /* stylelint-disable-next-line -- ported bird-ui/theme-ui override, not worth reformatting */
 @media (min-width: 1175px) {
   .layout-single-column .columns-area__panels__main {
@@ -1071,11 +1084,17 @@ body.embed .status__content a,
 }
 
 /* Unread message */
+
+/* --color-dark is an opaque solid (brand-dark in dark mode, near-white in
+   light mode) that doesn't match this theme's translucent card surfaces.
+   --color-column-link-hover is the same soft translucent tint already used
+   for nav-link hover states, so it blends in either mode instead of
+   painting a flat block over the wallpaper/tint. */
 .layout-single-column .conversation--unread,
 .layout-single-column .notification.unread:hover,
 .layout-single-column .notification.unread,
 .layout-single-column .status__wrapper.unread {
-  background-color: var(--color-dark);
+  background-color: var(--color-column-link-hover);
 }
 
 .layout-single-column .notification:hover .notification__message {
