@@ -67,6 +67,7 @@ import ColumnHeader from '../../components/column_header';
 import { scrollBottom } from '../../scroll';
 import { textForScreenReader, defaultMediaVisibility } from '../../components/status';
 import { StatusQuoteManager } from '../../components/status_quoted';
+import { compareId } from '../../compare_id';
 import { deleteModal, me } from '../../initial_state';
 import { makeGetStatus, makeGetPictureInPicture } from '../../selectors';
 import { getAncestorsIds, getDescendantsIds } from 'mastodon/selectors/contexts';
@@ -92,6 +93,7 @@ const messages = defineMessages({
 const makeMapStateToProps = () => {
   const getStatus = makeGetStatus();
   const getPictureInPicture = makeGetPictureInPicture();
+  const getLatestStatus = makeGetStatus();
 
   const mapStateToProps = (state, props) => {
     const status = getStatus(state, { id: props.params.statusId, contextType: 'detailed' });
@@ -102,6 +104,7 @@ const makeMapStateToProps = () => {
     let participantAccountIds = [];
     let conversationId = null;
     let conversationUnread = false;
+    let latestStatus = null;
 
     if (status) {
       ancestorsIds   = getAncestorsIds(state, status.get('in_reply_to_id'));
@@ -110,6 +113,17 @@ const makeMapStateToProps = () => {
       // For direct conversations, collect the other participants so the typing
       // indicator only reacts to people in this conversation.
       if (status.get('visibility') === 'direct') {
+        // getAncestorsIds/getDescendantsIds walk the reply tree in pre-order
+        // DFS: siblings under one parent are visited oldest-first, but the
+        // whole subtree of the oldest sibling is drained before the next
+        // sibling is visited at all. That can misorder a DM thread as soon
+        // as a single message picks up more than one direct reply. Re-sort
+        // the full set chronologically and re-split around the focused
+        // status so a DM thread always reads top-to-bottom in time order.
+        const sortedIds = [...ancestorsIds, ...descendantsIds].sort(compareId);
+        ancestorsIds = sortedIds.filter(id => compareId(id, status.get('id')) < 0);
+        descendantsIds = sortedIds.filter(id => compareId(id, status.get('id')) > 0);
+
         const seen = new Set();
         [status.get('id'), ...ancestorsIds, ...descendantsIds].forEach(id => {
           const accountId = state.getIn(['statuses', id, 'account']);
@@ -125,6 +139,12 @@ const makeMapStateToProps = () => {
           const conversation = state.getIn(['conversations', 'items']).find(item => item.get('id') === conversationId);
           conversationUnread = conversation ? conversation.get('unread') : false;
         }
+
+        // Replies composed from this thread should always attach to the
+        // thread's true latest message, not the status the page happened to
+        // be opened on (which goes stale as soon as a new message arrives).
+        const latestId = descendantsIds.length > 0 ? descendantsIds[descendantsIds.length - 1] : status.get('id');
+        latestStatus = latestId === status.get('id') ? status : getLatestStatus(state, { id: latestId });
       }
     }
 
@@ -134,6 +154,7 @@ const makeMapStateToProps = () => {
       ancestorsIds,
       descendantsIds,
       participantAccountIds,
+      latestStatus,
       conversationId,
       conversationUnread,
       askReplyConfirmation: state.getIn(['compose', 'text']).trim().length !== 0,
@@ -178,6 +199,7 @@ class Status extends ImmutablePureComponent {
     participantAccountIds: PropTypes.arrayOf(PropTypes.string),
     conversationId: PropTypes.string,
     conversationUnread: PropTypes.bool,
+    latestStatus: ImmutablePropTypes.map,
     composeInReplyTo: PropTypes.string,
     composeIsSubmitting: PropTypes.bool,
     intl: PropTypes.object.isRequired,
@@ -245,19 +267,24 @@ class Status extends ImmutablePureComponent {
     const { askReplyConfirmation, dispatch } = this.props;
     const { signedIn } = this.props.identity;
 
+    // In a DM thread, always reply to the true latest message rather than
+    // whichever status this action happens to be bound to (the page's
+    // focused status, which goes stale as soon as a new message arrives).
+    const replyTarget = status.get('visibility') === 'direct' && this.props.latestStatus ? this.props.latestStatus : status;
+
     if (signedIn) {
       if (askReplyConfirmation) {
-        dispatch(openModal({ modalType: 'CONFIRM_REPLY', modalProps: { status } }));
+        dispatch(openModal({ modalType: 'CONFIRM_REPLY', modalProps: { status: replyTarget } }));
       } else {
-        dispatch(replyCompose(status));
+        dispatch(replyCompose(replyTarget));
       }
     } else {
       dispatch(openModal({
         modalType: 'INTERACTION',
         modalProps: {
           intent: 'reply',
-          accountId: status.getIn(['account', 'id']),
-          url: status.get('uri'),
+          accountId: replyTarget.getIn(['account', 'id']),
+          url: replyTarget.get('uri'),
         },
       }));
     }
