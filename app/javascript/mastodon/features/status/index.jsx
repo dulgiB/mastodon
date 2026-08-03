@@ -7,6 +7,7 @@ import { Helmet } from '@unhead/react/helmet';
 import { withRouter } from 'react-router-dom';
 import { difference } from 'lodash';
 
+import { createSelector } from '@reduxjs/toolkit';
 import ImmutablePropTypes from 'react-immutable-proptypes';
 import ImmutablePureComponent from 'react-immutable-pure-component';
 import { connect } from 'react-redux';
@@ -32,6 +33,7 @@ import {
   mentionCompose,
   directCompose,
 } from '../../actions/compose';
+import { markConversationRead, findConversationIdForStatus } from '../../actions/conversations';
 import {
   initDomainBlockModal,
   unblockDomain,
@@ -44,8 +46,10 @@ import {
   pin,
   unpin,
 } from '../../actions/interactions';
+import { submitMarkers } from '../../actions/markers';
 import { openModal } from '../../actions/modal';
 import { initMuteModal } from '../../actions/mutes';
+import { markNotificationsAsRead } from '../../actions/notification_groups';
 import { initReport } from '../../actions/reports';
 import {
   fetchStatus,
@@ -59,10 +63,13 @@ import {
   undoStatusTranslation,
 } from '../../actions/statuses';
 import { setStatusQuotePolicy } from '../../actions/statuses_typed';
+import { connectDirectStream } from '../../actions/streaming';
 import ColumnHeader from '../../components/column_header';
+import { scrollBottom } from '../../scroll';
 import { textForScreenReader, defaultMediaVisibility } from '../../components/status';
 import { StatusQuoteManager } from '../../components/status_quoted';
-import { deleteModal } from '../../initial_state';
+import { compareId } from '../../compare_id';
+import { deleteModal, me } from '../../initial_state';
 import { makeGetStatus, makeGetPictureInPicture } from '../../selectors';
 import { getAncestorsIds, getDescendantsIds } from 'mastodon/selectors/contexts';
 import Column from '../ui/components/column';
@@ -70,7 +77,11 @@ import { attachFullscreenListener, detachFullscreenListener, isFullscreen } from
 
 import ActionBar from './components/action_bar';
 import { DetailedStatus } from './components/detailed_status';
+import { DmBubble } from './components/dm_bubble';
+import { DmComposer } from './components/dm_composer';
 import { RefreshController } from './components/refresh_controller';
+import { ScrollToBottomButton } from './components/scroll_to_bottom_button';
+import { TypingIndicator } from './components/typing_indicator';
 import { quoteComposeById } from '@/mastodon/actions/compose_typed';
 import { FOCUS_TARGET, NavigationFocusTarget } from '@/mastodon/components/navigation_focus_target';
 
@@ -81,19 +92,99 @@ const messages = defineMessages({
   detailedStatus: { id: 'status.detailed_status', defaultMessage: 'Detailed conversation view' },
 });
 
+const NO_IDS = [];
+
 const makeMapStateToProps = () => {
   const getStatus = makeGetStatus();
   const getPictureInPicture = makeGetPictureInPicture();
+  const getLatestStatus = makeGetStatus();
+
+  // Memoized so it only recomputes (and returns a new array) when the
+  // thread's participants might actually have changed, rather than on every
+  // store update — mapStateToProps runs on every dispatch app-wide, and an
+  // always-fresh array here made connect() see "changed" props every time,
+  // forcing this whole page to re-render (and any effect keyed off its
+  // props, like the direct-stream connection, to spuriously re-run) on
+  // completely unrelated activity elsewhere in the app.
+  const getParticipantAccountIds = createSelector(
+    [
+      (_state, statusId) => statusId,
+      (_state, _statusId, ancestorsIds) => ancestorsIds,
+      (_state, _statusId, _ancestorsIds, descendantsIds) => descendantsIds,
+      (_state, _statusId, _ancestorsIds, _descendantsIds, conversationAccountIds) => conversationAccountIds,
+      state => state.statuses,
+    ],
+    (statusId, ancestorsIds, descendantsIds, conversationAccountIds, statuses) => {
+      const seen = new Set();
+
+      [statusId, ...ancestorsIds, ...descendantsIds].forEach(id => {
+        const accountId = statuses.getIn([id, 'account']);
+        if (accountId && accountId !== me) {
+          seen.add(accountId);
+        }
+      });
+
+      // A brand-new conversation's other participant has, by definition,
+      // never posted in it yet — deriving participants purely from message
+      // authors above would then never recognize their typing signal for
+      // their own first reply. The conversation's own account list (from
+      // AccountConversation, keyed by the mention graph rather than by who
+      // has actually posted) covers that gap.
+      (conversationAccountIds ?? []).forEach(accountId => {
+        if (accountId && accountId !== me) {
+          seen.add(accountId);
+        }
+      });
+
+      return Array.from(seen);
+    },
+  );
 
   const mapStateToProps = (state, props) => {
     const status = getStatus(state, { id: props.params.statusId, contextType: 'detailed' });
 
-    let ancestorsIds   = [];
-    let descendantsIds = [];
+    let ancestorsIds   = NO_IDS;
+    let descendantsIds = NO_IDS;
+
+    let participantAccountIds = NO_IDS;
+    let conversationId = null;
+    let conversationUnread = false;
+    let latestStatus = null;
 
     if (status) {
       ancestorsIds   = getAncestorsIds(state, status.get('in_reply_to_id'));
       descendantsIds = getDescendantsIds(state, status.get('id'));
+
+      // For direct conversations, collect the other participants so the typing
+      // indicator only reacts to people in this conversation.
+      if (status.get('visibility') === 'direct') {
+        // getAncestorsIds/getDescendantsIds walk the reply tree in pre-order
+        // DFS: siblings under one parent are visited oldest-first, but the
+        // whole subtree of the oldest sibling is drained before the next
+        // sibling is visited at all. That can misorder a DM thread as soon
+        // as a single message picks up more than one direct reply. Re-sort
+        // the full set chronologically and re-split around the focused
+        // status so a DM thread always reads top-to-bottom in time order.
+        const sortedIds = [...ancestorsIds, ...descendantsIds].sort(compareId);
+        ancestorsIds = sortedIds.filter(id => compareId(id, status.get('id')) < 0);
+        descendantsIds = sortedIds.filter(id => compareId(id, status.get('id')) > 0);
+
+        conversationId = findConversationIdForStatus(state, status.get('id'));
+
+        let conversation = null;
+        if (conversationId) {
+          conversation = state.getIn(['conversations', 'items']).find(item => item.get('id') === conversationId);
+          conversationUnread = conversation ? conversation.get('unread') : false;
+        }
+
+        participantAccountIds = getParticipantAccountIds(state, status.get('id'), ancestorsIds, descendantsIds, conversation?.get('accounts'));
+
+        // Replies composed from this thread should always attach to the
+        // thread's true latest message, not the status the page happened to
+        // be opened on (which goes stale as soon as a new message arrives).
+        const latestId = descendantsIds.length > 0 ? descendantsIds[descendantsIds.length - 1] : status.get('id');
+        latestStatus = latestId === status.get('id') ? status : getLatestStatus(state, { id: latestId });
+      }
     }
 
     return {
@@ -101,9 +192,15 @@ const makeMapStateToProps = () => {
       status,
       ancestorsIds,
       descendantsIds,
+      participantAccountIds,
+      latestStatus,
+      conversationId,
+      conversationUnread,
       askReplyConfirmation: state.getIn(['compose', 'text']).trim().length !== 0,
       domain: state.getIn(['meta', 'domain']),
       pictureInPicture: getPictureInPicture(state, { id: props.params.statusId }),
+      composeInReplyTo: state.getIn(['compose', 'in_reply_to']),
+      composeIsSubmitting: state.getIn(['compose', 'is_submitting']),
     };
   };
 
@@ -138,6 +235,12 @@ class Status extends ImmutablePureComponent {
     isLoading: PropTypes.bool,
     ancestorsIds: PropTypes.arrayOf(PropTypes.string).isRequired,
     descendantsIds: PropTypes.arrayOf(PropTypes.string).isRequired,
+    participantAccountIds: PropTypes.arrayOf(PropTypes.string),
+    conversationId: PropTypes.string,
+    conversationUnread: PropTypes.bool,
+    latestStatus: ImmutablePropTypes.map,
+    composeInReplyTo: PropTypes.string,
+    composeIsSubmitting: PropTypes.bool,
     intl: PropTypes.object.isRequired,
     askReplyConfirmation: PropTypes.bool,
     multiColumn: PropTypes.bool,
@@ -158,11 +261,19 @@ class Status extends ImmutablePureComponent {
      * Used to highlight newly added replies in the UI
      */
     newRepliesIds: [],
+    /** Whether the DM thread's scroll container is scrolled to the bottom. */
+    isAtBottom: true,
+    /** Count of new messages that arrived while scrolled away from the bottom. */
+    newMessageCount: 0,
   };
 
   componentDidMount() {
     this.props.dispatch(fetchStatus(this.props.params.statusId, { forceFetch: true }));
     attachFullscreenListener(this.onFullScreenChange);
+    // The container's own onScroll (below) only fires in multi-column
+    // layout, where it's the actual overflow element — single-column
+    // layout scrolls the page instead, so this is needed too.
+    window.addEventListener('scroll', this.handleScroll);
   }
 
   handleToggleMediaVisibility = () => {
@@ -199,19 +310,24 @@ class Status extends ImmutablePureComponent {
     const { askReplyConfirmation, dispatch } = this.props;
     const { signedIn } = this.props.identity;
 
+    // In a DM thread, always reply to the true latest message rather than
+    // whichever status this action happens to be bound to (the page's
+    // focused status, which goes stale as soon as a new message arrives).
+    const replyTarget = status.get('visibility') === 'direct' && this.props.latestStatus ? this.props.latestStatus : status;
+
     if (signedIn) {
       if (askReplyConfirmation) {
-        dispatch(openModal({ modalType: 'CONFIRM_REPLY', modalProps: { status } }));
+        dispatch(openModal({ modalType: 'CONFIRM_REPLY', modalProps: { status: replyTarget } }));
       } else {
-        dispatch(replyCompose(status));
+        dispatch(replyCompose(replyTarget));
       }
     } else {
       dispatch(openModal({
         modalType: 'INTERACTION',
         modalProps: {
           intent: 'reply',
-          accountId: status.getIn(['account', 'id']),
-          url: status.get('uri'),
+          accountId: replyTarget.getIn(['account', 'id']),
+          url: replyTarget.get('uri'),
         },
       }));
     }
@@ -459,7 +575,15 @@ class Status extends ImmutablePureComponent {
   };
 
   renderChildren (list, ancestors) {
-    const { params: { statusId } } = this.props;
+    const { status, params: { statusId } } = this.props;
+
+    // Direct conversations are rendered as a chat thread of aligned bubbles
+    // instead of the standard stacked status cards.
+    if (status && status.get('visibility') === 'direct') {
+      return list.map(id => (
+        <DmBubble key={id} id={id} />
+      ));
+    }
 
     return list.map((id, i) => (
       <StatusQuoteManager
@@ -482,10 +606,80 @@ class Status extends ImmutablePureComponent {
     this.statusNode = c;
   };
 
+  // `.columns-area--mobile .scrollable` (single-column layout) sets
+  // `overflow: visible` on this container so the page itself scrolls
+  // instead — only multi-column desktop layout makes the container the
+  // actual overflow/scroll element. Both the container's own `onScroll`
+  // and window `scroll` events are wired up (see componentDidMount), and
+  // this checks which one is actually live at call time.
+  isContainerScrollable = () => {
+    const node = this.node;
+    return !!node && node.scrollHeight > node.clientHeight;
+  };
+
+  scrollToBottom = () => {
+    if (!this.node) {
+      return;
+    }
+
+    if (this.isContainerScrollable()) {
+      scrollBottom(this.node);
+    } else {
+      requestIdleCallback(() => {
+        window.scrollTo({ top: document.documentElement.scrollHeight, behavior: 'smooth' });
+      });
+    }
+  };
+
+  handleScrollToBottomClick = () => {
+    this.setState({ isAtBottom: true, newMessageCount: 0 });
+    this.scrollToBottom();
+    this.maybeMarkConversationRead(true);
+  };
+
+  handleScroll = () => {
+    if (!this.node || this.props.status?.get('visibility') !== 'direct') {
+      return;
+    }
+
+    let isAtBottom;
+
+    if (this.isContainerScrollable()) {
+      const { scrollTop, scrollHeight, clientHeight } = this.node;
+      isAtBottom = scrollHeight - scrollTop - clientHeight < 40;
+    } else {
+      isAtBottom = this.node.getBoundingClientRect().bottom - window.innerHeight < 40;
+    }
+
+    if (isAtBottom !== this.state.isAtBottom) {
+      this.setState({ isAtBottom, ...(isAtBottom ? { newMessageCount: 0 } : {}) });
+    }
+
+    if (isAtBottom) {
+      this.maybeMarkConversationRead(true);
+    }
+  };
+
+  // Reaching the bottom of a fully-read DM thread clears both the DM inbox's
+  // own unread flag and the bell-icon mention-notification badge. The latter
+  // only supports a single "mark everything up to now as read" cursor (no
+  // per-notification read API), so this mirrors what "mark all as read"
+  // already does elsewhere rather than introducing a new mechanism.
+  maybeMarkConversationRead = (isAtBottom = this.state.isAtBottom) => {
+    const { dispatch, conversationId, conversationUnread } = this.props;
+
+    if (isAtBottom && conversationUnread && conversationId) {
+      dispatch(markConversationRead(conversationId));
+      dispatch(markNotificationsAsRead());
+      dispatch(submitMarkers({ immediate: true }));
+    }
+  };
+
   componentDidUpdate(prevProps) {
-    const { status, descendantsIds, params } = this.props;
+    const { status, ancestorsIds, descendantsIds, params } = this.props;
 
     const isSameStatus = status && (prevProps.status?.get('id') === status.get('id'));
+    const isDirect = status && status.get('visibility') === 'direct';
 
     // Only highlight replies after the initial load
     if (prevProps.descendantsIds.length && isSameStatus) {
@@ -493,7 +687,37 @@ class Status extends ImmutablePureComponent {
 
       if (newRepliesIds.length) {
         this.setState({newRepliesIds});
+
+        if (isDirect) {
+          if (this.state.isAtBottom) {
+            this.scrollToBottom();
+            this.maybeMarkConversationRead(true);
+          } else {
+            this.setState(({ newMessageCount }) => ({ newMessageCount: newMessageCount + newRepliesIds.length }));
+          }
+        }
       }
+    }
+
+    // The thread's replies (descendantsIds) arrive from a separate context
+    // fetch than the status itself, landing a render or two after it — by
+    // which point the loadedStatusId scroll below already ran with nothing
+    // yet to scroll to. Catches that transition specifically (excluded from
+    // the "new replies" branch above since prevProps.descendantsIds.length
+    // is 0 here, by design, to avoid highlighting the whole initial load
+    // as "new").
+    if (isDirect && prevProps.descendantsIds.length === 0 && descendantsIds.length > 0 && this.state.isAtBottom) {
+      this.scrollToBottom();
+    }
+
+    // Force-scroll to the bottom once our own reply to this thread finishes submitting.
+    if (
+      isDirect &&
+      prevProps.composeIsSubmitting && !this.props.composeIsSubmitting &&
+      prevProps.composeInReplyTo && [status.get('id'), ...ancestorsIds, ...descendantsIds].includes(prevProps.composeInReplyTo)
+    ) {
+      this.setState({ isAtBottom: true, newMessageCount: 0 });
+      this.scrollToBottom();
     }
 
     if (params.statusId && prevProps.params.statusId !== params.statusId) {
@@ -502,12 +726,37 @@ class Status extends ImmutablePureComponent {
 
     if (status && status.get('id') !== this.state.loadedStatusId) {
       this.setState({ showMedia: defaultMediaVisibility(this.props.status), loadedStatusId: status.get('id') });
+      this.updateDirectStreamSubscription(status.get('visibility') === 'direct');
+
+      if (isDirect) {
+        // ScrollContainer's own restore-on-navigate (shouldUpdateScroll,
+        // above) sets scrollTop directly on this component's own div —
+        // a no-op in single-column layout, where the page scrolls instead
+        // (see scrollToBottom/handleScroll). Covers that case explicitly,
+        // rather than opening a thread scrolled to its very top there.
+        this.scrollToBottom();
+      }
+
+      // Covers opening a thread that's already scrolled to the bottom (the
+      // default) with unread messages waiting.
+      this.maybeMarkConversationRead();
     }
   }
 
   componentWillUnmount () {
     detachFullscreenListener(this.onFullScreenChange);
+    this.directStreamDisconnect?.();
+    window.removeEventListener('scroll', this.handleScroll);
   }
+
+  // Direct-visibility statuses are never fanned out over the regular
+  // `update` stream, so a DM thread needs its own subscription to the
+  // `direct` channel to receive new messages (and typing events) live —
+  // otherwise only the DM inbox column (if also mounted) would get them.
+  updateDirectStreamSubscription = (isDirect) => {
+    this.directStreamDisconnect?.();
+    this.directStreamDisconnect = isDirect ? this.props.dispatch(connectDirectStream()) : undefined;
+  };
 
   onFullScreenChange = () => {
     this.setState({ fullscreen: isFullscreen() });
@@ -517,6 +766,16 @@ class Status extends ImmutablePureComponent {
     // Do not change scroll when opening a modal
     if (location.state?.mastodonModalKey !== prevLocation?.state?.mastodonModalKey) {
       return false;
+    }
+
+    // Direct threads open scrolled to the newest message, like a
+    // messenger, rather than to the focused post's own position — for a
+    // conversation opened from the list the focused post already is the
+    // newest message, but scrolling to just its offset can still leave it
+    // (and everything below it, like the composer) out of view when there
+    // are ancestors above it.
+    if (this.props.status?.get('visibility') === 'direct') {
+      return this.node ? [0, this.node.scrollHeight] : false;
     }
 
     // Scroll to focused post if it is loaded
@@ -559,6 +818,7 @@ class Status extends ImmutablePureComponent {
 
     const isLocal = status.getIn(['account', 'acct'], '').indexOf('@') === -1;
     const isIndexable = !status.getIn(['account', 'noindex']);
+    const isDirect = status.get('visibility') === 'direct';
 
     const handlers = {
       reply: this.handleHotkeyReply,
@@ -584,7 +844,7 @@ class Status extends ImmutablePureComponent {
         />
 
         <ScrollContainer scrollKey='thread' shouldUpdateScroll={this.shouldUpdateScroll} childRef={this.setContainerRef}>
-          <div className={classNames('item-list scrollable scrollable--flex', { fullscreen })} ref={this.setContainerRef}>
+          <div className={classNames('item-list scrollable scrollable--flex', { fullscreen, 'conversation-thread': isDirect })} ref={this.setContainerRef} onScroll={isDirect ? this.handleScroll : undefined}>
             {ancestors}
 
             <Hotkeys handlers={handlers}>
@@ -595,46 +855,59 @@ class Status extends ImmutablePureComponent {
                 tabIndex={0}
                 aria-label={textForScreenReader({intl, status})} ref={this.setStatusRef}
               >
-                <DetailedStatus
-                  key={`details-${status.get('id')}`}
-                  status={status}
-                  onOpenVideo={this.handleOpenVideo}
-                  onOpenMedia={this.handleOpenMedia}
-                  onToggleHidden={this.handleToggleHidden}
-                  onTranslate={this.handleTranslate}
-                  domain={domain}
-                  showMedia={this.state.showMedia}
-                  onToggleMediaVisibility={this.handleToggleMediaVisibility}
-                  pictureInPicture={pictureInPicture}
-                  ancestors={this.props.ancestorsIds.length}
-                  multiColumn={multiColumn}
-                />
+                {isDirect ? (
+                  <DmBubble
+                    key={`bubble-${status.get('id')}`}
+                    id={status.get('id')}
+                    focused
+                  />
+                ) : (
+                  <DetailedStatus
+                    key={`details-${status.get('id')}`}
+                    status={status}
+                    onOpenVideo={this.handleOpenVideo}
+                    onOpenMedia={this.handleOpenMedia}
+                    onToggleHidden={this.handleToggleHidden}
+                    onTranslate={this.handleTranslate}
+                    domain={domain}
+                    showMedia={this.state.showMedia}
+                    onToggleMediaVisibility={this.handleToggleMediaVisibility}
+                    pictureInPicture={pictureInPicture}
+                    ancestors={this.props.ancestorsIds.length}
+                    multiColumn={multiColumn}
+                  />
+                )}
 
-                <ActionBar
-                  key={`action-bar-${status.get('id')}`}
-                  status={status}
-                  onReply={this.handleReplyClick}
-                  onFavourite={this.handleFavouriteClick}
-                  onReblog={this.handleReblogClick}
-                  onBookmark={this.handleBookmarkClick}
-                  onDelete={this.handleDeleteClick}
-                  onRevokeQuote={this.handleRevokeQuoteClick}
-                  onQuotePolicyChange={this.handleQuotePolicyChange}
-                  onQuote={this.handleQuote}
-                  onEdit={this.handleEditClick}
-                  onDirect={this.handleDirectClick}
-                  onMention={this.handleMentionClick}
-                  onMute={this.handleMuteClick}
-                  onUnmute={this.handleUnmuteClick}
-                  onMuteConversation={this.handleConversationMuteClick}
-                  onBlock={this.handleBlockClick}
-                  onUnblock={this.handleUnblockClick}
-                  onBlockDomain={this.handleBlockDomainClick}
-                  onUnblockDomain={this.handleUnblockDomainClick}
-                  onReport={this.handleReport}
-                  onPin={this.handlePin}
-                  onEmbed={this.handleEmbed}
-                />
+                {/* Direct messages use the per-bubble ellipsis menu in DmBubble
+                    instead of the full action bar, which reads as out of
+                    place under a chat-style message. */}
+                {!isDirect && (
+                  <ActionBar
+                    key={`action-bar-${status.get('id')}`}
+                    status={status}
+                    onReply={this.handleReplyClick}
+                    onFavourite={this.handleFavouriteClick}
+                    onReblog={this.handleReblogClick}
+                    onBookmark={this.handleBookmarkClick}
+                    onDelete={this.handleDeleteClick}
+                    onRevokeQuote={this.handleRevokeQuoteClick}
+                    onQuotePolicyChange={this.handleQuotePolicyChange}
+                    onQuote={this.handleQuote}
+                    onEdit={this.handleEditClick}
+                    onDirect={this.handleDirectClick}
+                    onMention={this.handleMentionClick}
+                    onMute={this.handleMuteClick}
+                    onUnmute={this.handleUnmuteClick}
+                    onMuteConversation={this.handleConversationMuteClick}
+                    onBlock={this.handleBlockClick}
+                    onUnblock={this.handleUnblockClick}
+                    onBlockDomain={this.handleBlockDomainClick}
+                    onUnblockDomain={this.handleUnblockDomainClick}
+                    onReport={this.handleReport}
+                    onPin={this.handlePin}
+                    onEmbed={this.handleEmbed}
+                  />
+                )}
               </NavigationFocusTarget>
             </Hotkeys>
 
@@ -647,6 +920,18 @@ class Status extends ImmutablePureComponent {
             />
           </div>
         </ScrollContainer>
+
+        {isDirect && (
+          <div className='dm-composer-anchor'>
+            {!this.state.isAtBottom && (
+              <ScrollToBottomButton count={this.state.newMessageCount} onClick={this.handleScrollToBottomClick} />
+            )}
+
+            <TypingIndicator accountIds={this.props.participantAccountIds} />
+
+            <DmComposer rootId={status.get('id')} />
+          </div>
+        )}
 
         <Helmet>
           <title>{titleFromStatus(intl, status)}</title>

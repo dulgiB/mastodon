@@ -1,6 +1,8 @@
 # frozen_string_literal: true
 
 class Api::V1::ConversationsController < Api::BaseController
+  include Redisable
+
   LIMIT = 20
 
   before_action -> { doorkeeper_authorize! :read, :'read:statuses' }, only: :index
@@ -29,7 +31,31 @@ class Api::V1::ConversationsController < Api::BaseController
     render_empty
   end
 
+  def typing
+    broadcast_typing! if throttle_typing?
+    render_empty
+  end
+
   private
+
+  # Ephemeral, latency-sensitive presence signal: publish directly to each
+  # recipient's direct streaming channel instead of enqueuing a worker.
+  def broadcast_typing!
+    payload = { event: 'conversation.typing', payload: { conversation_id: @conversation.conversation_id.to_s, account_id: current_account.id.to_s } }.to_json
+
+    @conversation.participant_account_ids.each do |recipient_id|
+      next if Block.exists?(account_id: recipient_id, target_account_id: current_account.id)
+      next unless redis.exists?("subscribed:timeline:direct:#{recipient_id}")
+
+      redis.publish("timeline:direct:#{recipient_id}", payload)
+    end
+  end
+
+  # Debounce on the server too: at most one broadcast per sender/conversation
+  # every few seconds, regardless of how often the client calls us.
+  def throttle_typing?
+    redis.set("typing:#{current_account.id}:#{@conversation.id}", 1, nx: true, ex: 3)
+  end
 
   def set_conversation
     @conversation = AccountConversation.where(account: current_account).find(params[:id])
