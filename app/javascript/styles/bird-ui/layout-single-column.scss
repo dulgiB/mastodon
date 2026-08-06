@@ -1859,7 +1859,10 @@ body.embed .detailed-status__meta .detailed-status__link .fa-retweet,
 .layout-single-column .notification-ungrouped .status .status__content,
 .layout-single-column .notification-ungrouped .status .status__action-bar,
 .layout-single-column .notification-ungrouped .status .attachment-list,
-.layout-single-column .notification-ungrouped .status .picture-in-picture-placeholder,
+.layout-single-column
+  .notification-ungrouped
+  .status
+  .picture-in-picture-placeholder,
 .layout-single-column .notification-ungrouped .status .more-from-author,
 .layout-single-column .notification-ungrouped .status .status-card,
 .layout-single-column .notification-ungrouped .status .collection-preview,

@@ -1575,7 +1575,9 @@ body.embed .detailed-status__display-avatar > img,
 .layout-single-column .status:not(.status--in-thread) .status__content,
 .layout-single-column .status:not(.status--in-thread) .content-warning,
 .layout-single-column .status:not(.status--in-thread) .filter-warning,
-.layout-single-column .status:not(.status--in-thread) .picture-in-picture-placeholder,
+.layout-single-column
+  .status:not(.status--in-thread)
+  .picture-in-picture-placeholder,
 .layout-single-column .status:not(.status--in-thread) .more-from-author,
 .layout-single-column .status:not(.status--in-thread) .status__quote,
 .layout-single-column .status:not(.status--in-thread) .collection-preview {
@@ -1892,7 +1894,10 @@ body.embed .detailed-status__meta .detailed-status__link .fa-retweet,
 .layout-single-column .notification-ungrouped .status .status__content,
 .layout-single-column .notification-ungrouped .status .status__action-bar,
 .layout-single-column .notification-ungrouped .status .attachment-list,
-.layout-single-column .notification-ungrouped .status .picture-in-picture-placeholder,
+.layout-single-column
+  .notification-ungrouped
+  .status
+  .picture-in-picture-placeholder,
 .layout-single-column .notification-ungrouped .status .more-from-author,
 .layout-single-column .notification-ungrouped .status .status-card,
 .layout-single-column .notification-ungrouped .status .collection-preview,
