@@ -699,14 +699,23 @@ class Status extends ImmutablePureComponent {
       }
     }
 
-    // The thread's replies (descendantsIds) arrive from a separate context
-    // fetch than the status itself, landing a render or two after it — by
-    // which point the loadedStatusId scroll below already ran with nothing
-    // yet to scroll to. Catches that transition specifically (excluded from
-    // the "new replies" branch above since prevProps.descendantsIds.length
-    // is 0 here, by design, to avoid highlighting the whole initial load
-    // as "new").
-    if (isDirect && prevProps.descendantsIds.length === 0 && descendantsIds.length > 0 && this.state.isAtBottom) {
+    // The thread's ancestors/replies (ancestorsIds/descendantsIds) arrive
+    // from a separate context fetch than the status itself, landing a
+    // render or two after it — by which point the loadedStatusId scroll
+    // below already ran with nothing yet to scroll to. A DM thread is
+    // opened at its latest message (see conversation.jsx's handleClick),
+    // so ancestorsIds — not descendantsIds — usually holds the bulk of
+    // the thread's history; both are checked since either can be what's
+    // still missing at that point. Catches that transition specifically
+    // (excluded from the "new replies" branch above since
+    // prevProps.descendantsIds.length is 0 here, by design, to avoid
+    // highlighting the whole initial load as "new").
+    if (
+      isDirect &&
+      this.state.isAtBottom &&
+      ((prevProps.descendantsIds.length === 0 && descendantsIds.length > 0) ||
+        (prevProps.ancestorsIds.length === 0 && ancestorsIds.length > 0))
+    ) {
       this.scrollToBottom();
     }
 

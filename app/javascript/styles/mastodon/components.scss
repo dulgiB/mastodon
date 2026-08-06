@@ -8750,6 +8750,24 @@ noscript {
     a {
       overflow-wrap: anywhere;
     }
+
+    .status__content {
+      // Override .status__content .status__content__text.status__content__text--visible
+      .status__content__text.status__content__text {
+        display: -webkit-box;
+      }
+
+      .status__content__text {
+        -webkit-line-clamp: 2;
+        line-clamp: 2;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+      }
+    }
+
+    .status__content__read-more-button {
+      display: none;
+    }
   }
 }
 
