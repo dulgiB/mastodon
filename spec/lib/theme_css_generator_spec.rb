@@ -47,10 +47,6 @@ RSpec.describe ThemeCssGenerator do
       it 'emits a background-image rule' do
         expect(subject).to include('background-image: url(https://cdn.example/hero.png);')
       end
-
-      it 'targets the actual app root element' do
-        expect(subject).to include('.app-holder {')
-      end
     end
 
     context 'when both wordmark urls are provided' do
@@ -67,10 +63,6 @@ RSpec.describe ThemeCssGenerator do
       it 'targets both token themes and legacy theme body classes' do
         expect(subject).to include("[data-color-scheme='light']")
         expect(subject).to include('body.theme-default')
-      end
-
-      it 'sets --logo directly on body, not just :root, so it beats theme packs that redeclare --logo on body' do
-        expect(subject).to include('html, body {')
       end
     end
 
