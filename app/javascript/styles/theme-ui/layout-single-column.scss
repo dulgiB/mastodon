@@ -1336,6 +1336,14 @@ body.embed .status__content a,
   background-color: var(--color-column);
 }
 
+/* Status padding: upstream's 16px top/bottom reads as excess whitespace
+   next to denser timelines (e.g. Twitter/X's ~12px); tighten vertically
+   only, keep horizontal so avatar/content indentation is unaffected. */
+.layout-single-column .status {
+  padding-top: 12px;
+  padding-bottom: 12px;
+}
+
 /* Status header */
 .layout-single-column .status .status__info {
   align-items: flex-start;
@@ -1348,7 +1356,7 @@ body.embed .status__content a,
 
 /* Status action bar */
 .layout-single-column .status__action-bar {
-  margin-top: 12px;
+  margin-top: 10px;
   max-height: 27px;
 }
 
@@ -1575,7 +1583,9 @@ body.embed .detailed-status__display-avatar > img,
 .layout-single-column .status:not(.status--in-thread) .status__content,
 .layout-single-column .status:not(.status--in-thread) .content-warning,
 .layout-single-column .status:not(.status--in-thread) .filter-warning,
-.layout-single-column .status:not(.status--in-thread) .picture-in-picture-placeholder,
+.layout-single-column
+  .status:not(.status--in-thread)
+  .picture-in-picture-placeholder,
 .layout-single-column .status:not(.status--in-thread) .more-from-author,
 .layout-single-column .status:not(.status--in-thread) .status__quote,
 .layout-single-column .status:not(.status--in-thread) .collection-preview {
@@ -1892,7 +1902,10 @@ body.embed .detailed-status__meta .detailed-status__link .fa-retweet,
 .layout-single-column .notification-ungrouped .status .status__content,
 .layout-single-column .notification-ungrouped .status .status__action-bar,
 .layout-single-column .notification-ungrouped .status .attachment-list,
-.layout-single-column .notification-ungrouped .status .picture-in-picture-placeholder,
+.layout-single-column
+  .notification-ungrouped
+  .status
+  .picture-in-picture-placeholder,
 .layout-single-column .notification-ungrouped .status .more-from-author,
 .layout-single-column .notification-ungrouped .status .status-card,
 .layout-single-column .notification-ungrouped .status .collection-preview,
@@ -2149,6 +2162,7 @@ body.embed .detailed-status__meta .detailed-status__link .fa-retweet,
 
 .layout-single-column .status__prepend {
   padding-left: calc(var(--size-avatar) - 4px);
+  padding-top: 12px;
 }
 
 .layout-single-column .notification.notification-update .account__display-name,
@@ -3263,7 +3277,7 @@ body.embed .button.logo-button:hover,
 }
 
 .layout-single-column .status__prepend + .status {
-  padding-top: 10px;
+  padding-top: 8px;
 }
 
 .layout-single-column .search__icon .fa-times-circle {
