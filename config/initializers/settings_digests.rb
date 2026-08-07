@@ -1,20 +1,18 @@
 # frozen_string_literal: true
 
 Rails.application.config.to_prepare do
-  digested_settings = begin
-    { custom_css: Setting.custom_css, theme_custom_css: Setting.theme_custom_css }
+  custom_css = begin
+    Setting.custom_css
   rescue # Running without a cache, database, not migrated, no connection, etc
-    {}
+    nil
   end
 
-  digested_settings.each do |key, value|
-    next if value.blank?
-
+  if custom_css.present?
     Rails
       .cache
       .write(
-        :"setting_digest_#{key}",
-        Digest::SHA256.hexdigest(value)
+        :setting_digest_custom_css,
+        Digest::SHA256.hexdigest(custom_css)
       )
   end
 end
