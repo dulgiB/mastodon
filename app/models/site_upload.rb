@@ -55,30 +55,6 @@ class SiteUpload < ApplicationRecord
     }.freeze,
 
     mascot: {}.freeze,
-
-    hero: {
-      '@1x': {
-        format: 'png',
-        geometry: '1920x1080>',
-        file_geometry_parser: FastGeometryParser,
-      }.freeze,
-    }.freeze,
-
-    wordmark_light: {
-      '@1x': {
-        format: 'png',
-        geometry: '600x180>',
-        file_geometry_parser: FastGeometryParser,
-      }.freeze,
-    }.freeze,
-
-    wordmark_dark: {
-      '@1x': {
-        format: 'png',
-        geometry: '600x180>',
-        file_geometry_parser: FastGeometryParser,
-      }.freeze,
-    }.freeze,
   }.freeze
 
   has_attached_file :file, styles: ->(file) { STYLES[file.instance.var.to_sym] }, convert_options: { all: '-coalesce +profile "!icc,*" +set date:modify +set date:create +set date:timestamp' }, processors: [:lazy_thumbnail, :blurhash_transcoder, :type_corrector]

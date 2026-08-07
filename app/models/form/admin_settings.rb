@@ -20,14 +20,6 @@ class Form::AdminSettings
     peers_api_enabled
     preview_sensitive_media
     custom_css
-    theme_color_brand
-    theme_color_background
-    theme_color_background_secondary
-    theme_color_text
-    theme_custom_css
-    hero
-    wordmark_light
-    wordmark_dark
     profile_directory
     thumbnail
     thumbnail_description
@@ -85,24 +77,11 @@ class Form::AdminSettings
     mascot
     app_icon
     favicon
-    hero
-    wordmark_light
-    wordmark_dark
   ).freeze
 
   DIGEST_KEYS = %i(
     custom_css
-    theme_custom_css
   ).freeze
-
-  THEME_COLOR_KEYS = %i(
-    theme_color_brand
-    theme_color_background
-    theme_color_background_secondary
-    theme_color_text
-  ).freeze
-
-  HEX_COLOR_FORMAT = /\A#(?:\h{3}|\h{6})\z/
 
   OVERRIDEN_SETTINGS = {
     authorized_fetch: :authorized_fetch_mode?,
@@ -134,9 +113,6 @@ class Form::AdminSettings
   validates :site_short_description, length: { maximum: DESCRIPTION_LIMIT }, if: -> { defined?(@site_short_description) }
   validates :thumbnail_description, length: { maximum: DESCRIPTION_LIMIT }, if: -> { defined?(@thumbnail_description) }
   validates :status_page_url, url: true, allow_blank: true
-  validates_each THEME_COLOR_KEYS, allow_blank: true do |record, attr, value|
-    record.errors.add(attr, :invalid) if record.instance_variable_defined?(:"@#{attr}") && value.present? && !HEX_COLOR_FORMAT.match?(value)
-  end
   validate :validate_site_uploads
   validates :landing_page, inclusion: { in: LANDING_PAGE }, if: -> { defined?(@landing_page) }
 
@@ -171,10 +147,18 @@ class Form::AdminSettings
     # So for now, return early if errors aren't empty.
     return false unless errors.empty? && valid?
 
-    # Persist uploads first so the generated theme CSS can reference their URLs.
-    persist_uploads
-    regenerate_theme_custom_css if theme_customizer_submitted?
-    persist_settings
+    KEYS.each do |key|
+      next unless instance_variable_defined?(:"@#{key}")
+
+      cache_digest_value(key) if DIGEST_KEYS.include?(key)
+
+      if UPLOAD_KEYS.include?(key)
+        public_send(key).save
+      else
+        setting = Setting.where(var: key).first_or_initialize(var: key)
+        setting.update(value: typecast_value(key, instance_variable_get(:"@#{key}")))
+      end
+    end
   end
 
   def persisted?
@@ -182,55 +166,6 @@ class Form::AdminSettings
   end
 
   private
-
-  def persist_uploads
-    KEYS.each do |key|
-      next unless UPLOAD_KEYS.include?(key)
-      next unless instance_variable_defined?(:"@#{key}")
-
-      public_send(key).save
-    end
-  end
-
-  def persist_settings
-    KEYS.each do |key|
-      next if UPLOAD_KEYS.include?(key)
-      next unless instance_variable_defined?(:"@#{key}")
-
-      cache_digest_value(key) if DIGEST_KEYS.include?(key)
-
-      setting = Setting.where(var: key).first_or_initialize(var: key)
-      setting.update(value: typecast_value(key, instance_variable_get(:"@#{key}")))
-    end
-  end
-
-  def theme_customizer_submitted?
-    (THEME_COLOR_KEYS + %i(hero wordmark_light wordmark_dark)).any? { |key| instance_variable_defined?(:"@#{key}") }
-  end
-
-  # Rebuilds theme_custom_css from the picked brand colors and image uploads so
-  # it rides the existing hashed custom-CSS pipeline (DIGEST_KEYS) for
-  # zero-downtime updates. Assigning @theme_custom_css makes persist_settings
-  # store it.
-  def regenerate_theme_custom_css
-    @theme_custom_css = ThemeCssGenerator.new(
-      brand: stored_or_submitted(:theme_color_brand),
-      background: stored_or_submitted(:theme_color_background),
-      background_secondary: stored_or_submitted(:theme_color_background_secondary),
-      text: stored_or_submitted(:theme_color_text),
-      hero_url: SiteUpload.find_by(var: :hero)&.file&.url,
-      wordmark_light_url: SiteUpload.find_by(var: :wordmark_light)&.file&.url,
-      wordmark_dark_url: SiteUpload.find_by(var: :wordmark_dark)&.file&.url
-    ).to_css
-  end
-
-  # Reads a submitted value if present on this form, otherwise the stored Setting,
-  # without memoizing through the KEYS getter (which would flag it for re-saving).
-  def stored_or_submitted(key)
-    return instance_variable_get(:"@#{key}") if instance_variable_defined?(:"@#{key}")
-
-    Setting.public_send(key)
-  end
 
   def cache_digest_value(key)
     Rails.cache.delete(:"setting_digest_#{key}")
