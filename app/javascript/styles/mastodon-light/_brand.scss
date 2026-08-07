@@ -1,8 +1,12 @@
-// Whippy Edition "mastodon-light" brand palette: overrides the shared
-// --color-indigo-* palette swatches (every brand token resolves through
-// var(--color-indigo-*)) and forces light tokens regardless of
-// [data-color-scheme], since this theme is its own compiled bundle rather
-// than a runtime light/dark switch.
+// XETEAD brand palette: overrides the shared --color-indigo-* palette
+// swatches (every brand token resolves through var(--color-indigo-*)) and
+// forces light tokens regardless of [data-color-scheme], since this theme is
+// its own compiled bundle rather than a runtime light/dark switch.
+// Colors are hardcoded here rather than driven by an admin-configurable
+// picker: an earlier admin appearance customizer (PR #9) generated this kind
+// of override from user input at runtime, but didn't work well in practice
+// for theme-ui (its own --color-accent/--color-bg/etc. never consulted the
+// generated tokens -- see the theme-ui layout files) and was reverted.
 
 @use '../mastodon/theme/light';
 @use '../mastodon/theme/utils';
@@ -13,15 +17,30 @@ html:not([data-color-scheme]) {
   @include light.tokens;
   @include utils.invert-on-light;
 
-  --color-indigo-50: #fdf1f4;
-  --color-indigo-100: #fbe0e7;
-  --color-indigo-200: #f6c2d1;
-  --color-indigo-300: #df98a2;
-  --color-indigo-400: #e37f98;
-  --color-indigo-500: #cf647d;
-  --color-indigo-600: #be2a4d;
-  --color-indigo-700: #a02143;
-  --color-indigo-800: #7e1c39;
-  --color-indigo-900: #611a32;
-  --color-indigo-950: #36091a;
+  // Amber scale anchored at 700 = #f2a007 (the exact brand color), shaded
+  // the same way the rest of the palette in mastodon/theme/_base.scss is:
+  // lighter tints below 700, darker shades above.
+  --color-indigo-50: #fef9f0;
+  --color-indigo-100: #fdf2dd;
+  --color-indigo-200: #fce5ba;
+  --color-indigo-300: #fbd389;
+  --color-indigo-400: #fbbf51;
+  --color-indigo-500: #fbb32d;
+  --color-indigo-600: #faaa14;
+  --color-indigo-700: #f2a007;
+  --color-indigo-800: #c78305;
+  --color-indigo-900: #966508;
+  --color-indigo-950: #5a3d07;
+  --color-bg-primary: #b36a00;
+  --color-text-primary: #0a0a2e;
+  --color-text-secondary: color-mix(
+    in oklab,
+    var(--color-text-primary),
+    var(--color-bg-primary) 35%
+  );
+
+  // --color-indigo-700 (the brand base) is light enough that the token
+  // system's default white --color-text-on-brand-base fails contrast on it;
+  // use the (dark) primary text color instead of lightening the brand.
+  --color-text-on-brand-base: var(--color-text-primary);
 }
