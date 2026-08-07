@@ -88,8 +88,7 @@ class ThemeCssGenerator
     return if @hero_url.blank?
 
     <<~CSS.strip
-      .public-layout,
-      .app-holder--login {
+      .app-holder {
         background-image: url(#{@hero_url});
         background-size: cover;
         background-position: center;
@@ -102,6 +101,14 @@ class ThemeCssGenerator
   # as a `background-image: var(--logo)`, stock/token themes as an <img> we swap
   # with `content`. A single --admin-wordmark var carries the per-scheme choice.
   # An unset variant falls back to the other so uploading one still shows a logo.
+  #
+  # --logo is redefined by theme-ui/bird-ui directly on `body` (e.g.
+  # `body.theme-default.layout-single-column`), not just `:root`. Custom
+  # properties don't let `!important` beat a value that's directly cascaded on
+  # the element itself (inheritance from `:root` only wins when the element has
+  # no own declaration), so the override has to target `html, body` -- matching
+  # or outranking every place a theme pack redeclares --logo -- rather than
+  # `:root` alone.
   def wordmark_block
     return if @wordmark_dark_url.blank? && @wordmark_light_url.blank?
 
@@ -109,7 +116,7 @@ class ThemeCssGenerator
     light_url = @wordmark_light_url || @wordmark_dark_url
 
     <<~CSS.strip
-      :root {
+      html, body {
         --admin-wordmark: url(#{dark_url});
         --logo: var(--admin-wordmark) !important;
       }
