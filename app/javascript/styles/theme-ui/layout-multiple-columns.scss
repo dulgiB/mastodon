@@ -261,7 +261,10 @@ body.theme-default.layout-multiple-columns {
     transparent
   );
   --color-light-shade: #00000005;
-  --color-mud: #f0dee2;
+
+  /* Was #f0dee2, a leftover of the old rose brand. Same HSL lightness (0.906)
+     and saturation (0.375), rotated to the brand's amber hue (39deg). */
+  --color-mud: #f0eade;
   --color-black-coral: #9188a6;
   --color-profile-button-hover: #f1eff41a;
   --color-column-link-hover: #f7f7f91a;

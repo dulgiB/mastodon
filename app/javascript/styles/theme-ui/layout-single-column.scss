@@ -261,7 +261,10 @@ body.theme-default.layout-single-column {
   --color-accent-dark: var(--color-bg-brand-base);
   --color-border: var(--color-border-primary);
   --color-dim: var(--color-text-secondary);
-  --color-mud: #f0dee2;
+
+  /* Was #f0dee2, a leftover of the old rose brand. Same HSL lightness (0.906)
+     and saturation (0.375), rotated to the brand's amber hue (39deg). */
+  --color-mud: #f0eade;
   --color-light-purple: #df98a2;
   --color-bg-compose-form: color-mix(
     in oklab,
