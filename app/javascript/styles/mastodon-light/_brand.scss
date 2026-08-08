@@ -40,7 +40,12 @@ html:not([data-color-scheme]) {
   --color-indigo-800: #c78305;
   --color-indigo-900: #966508;
   --color-indigo-950: #5a3d07;
-  --color-bg-primary: #f8f0d6;
+  // Desaturated on purpose: this is what shows behind any transparent area
+  // (avatar PNGs, etc.), not just the general page fill, so a fully
+  // saturated brand tone reads as an arbitrary color cast no matter what's
+  // drawn on top of it. #f2a007-tinted cream traded for a near-neutral
+  // warm white.
+  --color-bg-primary: #f9f6f0;
   --color-text-primary: #0a0a2e;
   --color-text-secondary: color-mix(
     in oklab,
@@ -81,4 +86,12 @@ body.admin {
 // that wrapper can grow into on wide viewports.
 .admin-wrapper .sidebar {
   background: var(--color-bg-secondary);
+}
+
+// Same alpha treatment as the dark bundle's compose box (see
+// mastodon-dark/_brand.scss) for the same reason and for consistency
+// between the two bundles, even though light's --color-bg-secondary
+// isn't especially saturated to begin with.
+.compose-form__highlightable {
+  background: rgb(from var(--color-bg-secondary) r g b / 44%);
 }
