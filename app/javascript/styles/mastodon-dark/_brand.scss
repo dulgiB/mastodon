@@ -35,7 +35,12 @@ html:not([data-color-scheme]) {
   --color-indigo-800: #393dd0;
   --color-indigo-900: #2f3193;
   --color-indigo-950: #212359;
-  --color-bg-primary: #131368;
+  // Desaturated on purpose: this is what shows behind any transparent area
+  // (avatar PNGs, etc.), not just the general page fill, so a fully
+  // saturated brand tone reads as an arbitrary color cast no matter what's
+  // drawn on top of it. The old #131368 indigo traded for a near-neutral
+  // dark slate.
+  --color-bg-primary: #232337;
 
   // Backs ~24 surfaces in components.scss (cards, hovers, inset panels), so
   // it has to read as a lift off --color-bg-primary without going light.
@@ -47,10 +52,9 @@ html:not([data-color-scheme]) {
     var(--color-bg-primary) 35%
   );
 
-  // Contrast against these choices, for the record: white on the brand base
-  // is 4.63:1 (passes AA body text), --color-text-brand (indigo-300) on the
-  // background is 6.94:1, and white on the background is 15.9:1. So unlike
-  // the light bundle, no --color-text-on-brand-base override is needed here.
+  // No --color-text-on-brand-base override needed here (unlike the light
+  // bundle): white stays legible against --color-bg-primary at this
+  // lightness, and against --color-text-brand's indigo.
 }
 
 // See mastodon-light/_brand.scss for why: body.admin renders at full-page
@@ -80,5 +84,5 @@ body.admin {
 // primary sitting behind it is darker either way (photo hero or flat),
 // so this reliably dims rather than lightens.
 .compose-form__highlightable {
-  background: rgb(26 26 122 / 65%);
+  background: rgb(26 26 122 / 44%);
 }
