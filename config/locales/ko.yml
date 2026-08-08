@@ -2118,13 +2118,11 @@ ko:
     review_link: 이용 약관 검토하기
     title: "%{domain} 도메인의 이용 약관에 변경 있음"
   themes:
-    bird-ui-dark: 파란새풍 테마 (어두움)
-    bird-ui-light: 파란새풍 테마 (밝음)
     contrast: 마스토돈 (고대비)
-    default: 휘핑 에디션 커스텀 테마 (밝음)
+    default: 모험의 시작 테마 (밝음)
     mastodon-dark: 마스토돈 (어두움)
     mastodon-light: 마스토돈 (밝음)
-    theme-ui-dark: 휘핑 에디션 커스텀 테마 (어두움)
+    theme-ui-dark: 모험의 시작 테마 (어두움)
   time:
     formats:
       default: "%Y-%m-%d %H:%M"
