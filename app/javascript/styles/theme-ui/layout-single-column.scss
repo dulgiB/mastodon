@@ -7,7 +7,7 @@
   --bg-image: url('../../images/theme/bg_dark.png');
   --logo: url('../../images/theme/wordmark_dark.png');
   --logo-aspect-ratio: 350 / 170;
-  --m-logo: url('../../images/theme/m_logo_dark.png');
+  --m-logo: url('../../images/theme/m_logo.png');
   --color-column: rgba(0, 0, 0, 40%);
   --color-brand-twitter: #1d9bf0;
   --color-brand-twitter-bg: #15202b;
@@ -248,8 +248,8 @@ body.theme-default.layout-single-column {
   );
   --bg-image: url('../../images/theme/bg_light.jpg');
   --logo: url('../../images/theme/wordmark_light.png');
-  --logo-aspect-ratio: 339 / 158;
-  --m-logo: url('../../images/theme/m_logo_light.png');
+  --logo-aspect-ratio: 350 / 170;
+  --m-logo: url('../../images/theme/m_logo.png');
   --color-column: rgba(255, 255, 255, 40%);
   --color-brand-mastodon: #be2a4d;
   --color-brand-mastodon-links: #df98a2;
