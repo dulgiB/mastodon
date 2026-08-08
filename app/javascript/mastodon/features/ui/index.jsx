@@ -26,6 +26,7 @@ import { WithRouterPropTypes } from 'mastodon/utils/react_router';
 import { checkAnnualReport } from '@/mastodon/reducers/slices/annual_report';
 
 import { uploadCompose, resetCompose, changeComposeSpoilerness } from '../../actions/compose';
+import { expandConversations } from '../../actions/conversations';
 import { clearHeight } from '../../actions/height_cache';
 import { fetchServer, fetchServerTranslationLanguages } from '../../actions/server';
 import { expandHomeTimeline } from '../../actions/timelines';
@@ -439,6 +440,14 @@ class UI extends PureComponent {
       this.props.dispatch(fetchMarkers());
       this.props.dispatch(expandHomeTimeline());
       this.props.dispatch(fetchNotifications());
+      // The sidebar's unread DM badge (DirectMessagesLink, via
+      // selectUnreadConversationsCount) reads state.conversations.items,
+      // which otherwise stays empty until direct_timeline's own mount
+      // effect fetches it -- i.e. only after the user opens Direct
+      // Messages once. Priming it here on boot, the same way fetchNotifications
+      // primes the notifications badge, makes the DM badge correct on
+      // first paint instead of stuck at zero.
+      this.props.dispatch(expandConversations());
       this.props.dispatch(fetchServerTranslationLanguages());
       this.props.dispatch(checkAnnualReport());
 
