@@ -5,6 +5,7 @@
 :root {
   --bg-image: url('../../images/theme/bg_dark.png');
   --logo: url('../../images/theme/wordmark_dark.png');
+  --logo-aspect-ratio: 350 / 170;
   --m-logo: url('../../images/theme/m_logo_dark.png');
   --color-column: rgba(0, 0, 0, 40%);
   --color-columns: #1e202850;
@@ -29,28 +30,40 @@
 
   /* Note: Remember to search for the DIM hex
      and replace it inside the SVG icons if you decide to change it */
-  --color-bg: var(--color-brand-mastodon-bg);
-  --color-bg-75: #1e2028bf;
-  --color-fg: #fff;
-  --color-border: #38384d;
-  --color-dim: var(--color-brand-mastodon-dim);
-  --color-accent: #81c5cf;
-  --color-accent-dark: #27a4b8;
-  --color-accent-dark-50: #27a4b880;
-  --color-green: #00ba7c;
-  --color-red: #f91880;
-  --color-red-75: #f91880bf;
-  --color-yellow: #ffac33;
+
+  /* Modern-token-backed: resolves through app/javascript/styles/mastodon/theme
+     (see index.scss / dark.scss), so admin appearance settings (brand color,
+     via ThemeCssGenerator) flow through to theme-ui instead of being ignored. */
+  --color-bg: var(--color-bg-primary);
+  --color-bg-75: color-mix(in oklab, var(--color-bg-primary) 75%, transparent);
+  --color-fg: var(--color-text-primary);
+  --color-border: var(--color-border-primary);
+  --color-dim: var(--color-text-secondary);
+  --color-accent: var(--color-text-brand);
+  --color-accent-dark: var(--color-bg-brand-base);
+  --color-accent-dark-50: color-mix(
+    in oklab,
+    var(--color-bg-brand-base) 50%,
+    transparent
+  );
+  --color-green: var(--color-text-success);
+  --color-red: var(--color-text-error);
+  --color-red-75: color-mix(in oklab, var(--color-text-error) 75%, transparent);
+  --color-yellow: var(--color-text-warning);
   --color-light-shade: #ffffff05;
-  --color-focusable-toot: #ffffff09;
-  --color-light-text: #f7f9f9;
+  --color-focusable-toot: color-mix(
+    in oklab,
+    var(--color-text-primary) 3.5%,
+    transparent
+  );
+  --color-light-text: var(--color-text-primary);
   --color-mud: var(--color-brand-mastodon-mud);
   --color-black-coral: #5a5371;
   --color-profile-button-hover: #f1eff41a;
   --color-column-link-hover: #f7f7f91a;
-  --color-modal-overlay: #5b708366;
+  --color-modal-overlay: var(--color-bg-overlay-base);
   --color-dark: var(--color-brand-mastodon-dark);
-  --color-thread-line: var(--color-brand-mastodon-threaded-line);
+  --color-thread-line: var(--color-border-primary);
   --color-gainsboro: #dcd9e8;
   --color-light-purple: #9baec8;
   --color-lighter-purple: #a5b8d3;
@@ -222,38 +235,55 @@ body.theme-default.layout-multiple-columns {
   );
   --bg-image: url('../../images/theme/bg_light.png');
   --logo: url('../../images/theme/wordmark_light.png');
+  --logo-aspect-ratio: 339 / 158;
   --m-logo: url('../../images/theme/m_logo_light.png');
   --color-column: rgba(255, 255, 255, 40%);
   --color-columns: rgba(255, 255, 255, 50%);
   --color-brand-mastodon: #be2a4d;
   --color-brand-mastodon-links: #df98a2;
-  --color-accent-dark-50: #be2a4d80;
-  --color-accent-dark: #be2a4d;
-  --color-bg: #fff;
-  --color-fg: #000;
-  --color-border: #e9dee0;
-  --color-dim: #c16c80;
-  --color-light-text: #1f1b23;
-  --color-green: #17bf63;
-  --color-red: #e0245e;
-  --color-red-75: #e0245ebf;
-  --color-focusable-toot: rgba(0, 0, 0, 3.5%);
+  --color-accent-dark-50: color-mix(
+    in oklab,
+    var(--color-bg-brand-base) 50%,
+    transparent
+  );
+  --color-accent-dark: var(--color-bg-brand-base);
+  --color-bg: var(--color-bg-primary);
+  --color-fg: var(--color-text-primary);
+  --color-border: var(--color-border-primary);
+  --color-dim: var(--color-text-secondary);
+  --color-light-text: var(--color-text-primary);
+  --color-green: var(--color-text-success);
+  --color-red: var(--color-text-error);
+  --color-red-75: color-mix(in oklab, var(--color-text-error) 75%, transparent);
+  --color-focusable-toot: color-mix(
+    in oklab,
+    var(--color-text-primary) 3.5%,
+    transparent
+  );
   --color-light-shade: #00000005;
   --color-mud: #f0dee2;
   --color-black-coral: #9188a6;
   --color-profile-button-hover: #f1eff41a;
   --color-column-link-hover: #f7f7f91a;
-  --color-modal-overlay: #6a5b8366;
+  --color-modal-overlay: var(--color-bg-overlay-base);
   --color-dark: #f7f9f9;
-  --color-thread-line: #e1e8ed;
+  --color-thread-line: var(--color-border-primary);
   --color-gainsboro: #8899a6;
   --color-light-purple: #df98a2;
   --color-dark-electric-blue: #9088a6;
-  --color-bg-75: #ffffffbf;
+  --color-bg-75: color-mix(in oklab, var(--color-bg-primary) 75%, transparent);
   --color-accent: var(--color-accent-dark);
   --color-ghost-button-text: var(--color-accent-dark);
-  --color-bg-compose-form: rgb(192 108 128 / 20%);
-  --color-bg-compose-form-focus: rgb(192 108 128 / 40%);
+  --color-bg-compose-form: color-mix(
+    in oklab,
+    var(--color-bg-brand-base) 20%,
+    transparent
+  );
+  --color-bg-compose-form-focus: color-mix(
+    in oklab,
+    var(--color-bg-brand-base) 40%,
+    transparent
+  );
   --color-hashtag: var(--color-accent-dark);
   --color-mention: var(--color-accent-dark);
 
@@ -404,9 +434,17 @@ body.layout-multiple-columns {
   background-image: var(--logo);
   background-position: 0 50%;
   background-repeat: no-repeat;
-  background-size: auto 80px;
-  height: 85px;
-  width: 230px;
+  background-size: contain;
+
+  /* The box has to carry the wordmark's own ratio for `contain` to fill the
+     full width: with a fixed height, `contain` scales to whichever axis runs
+     out first, so a short box just letterboxes the mark and leaves empty
+     space to its side instead of spanning the column. The ratio ships next
+     to --logo itself so an instance swapping in its own wordmark can
+     override both together. */
+  aspect-ratio: var(--logo-aspect-ratio);
+  height: auto;
+  width: 100%;
   padding: 0;
 }
 
@@ -4038,7 +4076,7 @@ body.embed .button.logo-button:hover,
      the real top of the viewport, leaving a blank gap over content
      instead of sitting flush at the top. */
   .layout-multiple-columns .tabs-bar__wrapper {
-    box-shadow: 0 1px 0 0 var(--background-border-color);
+    box-shadow: 0 1px 0 0 var(--color-border);
     margin-right: 0;
     position: sticky;
     top: 0;

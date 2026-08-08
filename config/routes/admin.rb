@@ -81,9 +81,7 @@ namespace :admin do
     resource :registrations, only: [:show, :update], controller: 'registrations'
     resource :content_retention, only: [:show, :update], controller: 'content_retention'
     resource :about, only: [:show, :update], controller: 'about'
-    resource :appearance, only: [:show, :update], controller: 'appearance' do
-      get :preview
-    end
+    resource :appearance, only: [:show, :update], controller: 'appearance'
     resource :discovery, only: [:show, :update], controller: 'discovery'
   end
 

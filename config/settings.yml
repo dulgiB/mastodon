@@ -20,11 +20,6 @@ defaults: &defaults
   preview_sensitive_media: false
   noindex: true
   theme: 'default'
-  theme_color_brand: ''
-  theme_color_background: ''
-  theme_color_background_secondary: ''
-  theme_color_text: ''
-  theme_custom_css: ''
   thumbnail_description: ''
   trends: false
   timeline_preview: false

@@ -1,8 +1,0 @@
-- value = admin_settings.public_send(attribute)
-- field_id = "form_admin_settings_#{attribute}"
-.fields-row__column.fields-row__column-6.fields-group.theme-color-field
-  = f.input attribute,
-            as: :string,
-            input_html: { placeholder: placeholder, class: 'theme-color-input' },
-            wrapper: :with_label
-  %input.theme-color-picker{ type: 'color', 'aria-hidden': 'true', tabindex: '-1', value: (value if value.to_s.match?(/\A#\h{6}\z/)), data: { theme_color_picker: field_id } }
