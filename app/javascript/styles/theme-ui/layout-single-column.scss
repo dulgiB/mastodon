@@ -1904,6 +1904,16 @@ body.embed .detailed-status__meta .detailed-status__link .fa-retweet,
   .layout-single-column .tabs-bar__wrapper {
     margin-right: -2px;
   }
+
+  /* Core CSS gives .tabs-bar__wrapper a 10px border-top at this
+     breakpoint (meant as a gap-simulating spacer between full-bleed
+     columns). It renders as a solid var(--color-bg-primary) band that
+     doesn't match this wrapper's translucent/blurred background here,
+     leaving a visible seam above the portaled column-header instead of
+     sitting flush at the top. */
+  .layout-single-column .tabs-bar__wrapper {
+    border-top: 0;
+  }
 }
 
 /* Hidden things */
