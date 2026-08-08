@@ -71,3 +71,14 @@ body.admin {
 .admin-wrapper .sidebar {
   background: var(--color-bg-secondary);
 }
+
+// components.scss backs the compose box in plain --color-bg-secondary,
+// same as ~24 other surfaces -- fine for small cards, but at this box's
+// size the full-strength saturated indigo is eye-straining and it's one
+// of the first things visible on every page. Let some black show through
+// via alpha instead of inventing an unrelated solid color; --color-bg-
+// primary sitting behind it is darker either way (photo hero or flat),
+// so this reliably dims rather than lightens.
+.compose-form__highlightable {
+  background: rgb(26 26 122 / 65%);
+}
