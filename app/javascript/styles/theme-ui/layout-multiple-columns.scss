@@ -4076,7 +4076,7 @@ body.embed .button.logo-button:hover,
      the real top of the viewport, leaving a blank gap over content
      instead of sitting flush at the top. */
   .layout-multiple-columns .tabs-bar__wrapper {
-    box-shadow: 0 1px 0 0 var(--background-border-color);
+    box-shadow: 0 1px 0 0 var(--color-border);
     margin-right: 0;
     position: sticky;
     top: 0;
