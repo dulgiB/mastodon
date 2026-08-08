@@ -1,0 +1,42 @@
+// XETEAD brand palette for the dark bundle: mirrors mastodon-light/_brand.scss.
+// Overrides the shared --color-indigo-* palette swatches (every brand token
+// resolves through var(--color-indigo-*)) and forces dark tokens regardless of
+// [data-color-scheme], since this theme is its own compiled bundle rather than
+// a runtime light/dark switch.
+
+@use '../mastodon/theme/dark';
+@use '../mastodon/theme/utils';
+
+[data-color-scheme='dark'],
+[data-color-scheme='light'],
+html:not([data-color-scheme]) {
+  @include dark.tokens;
+  @include utils.invert-on-dark;
+
+  // Indigo scale anchored at 700 = #6064ec (the brand color), kept strictly
+  // monotonic in lightness so the soft/hover steps the token layer derives
+  // from it stay ordered.
+  --color-indigo-50: #f1f1fe;
+  --color-indigo-100: #e2e3fd;
+  --color-indigo-200: #c6c8fb;
+  --color-indigo-300: #a1a4f7;
+  --color-indigo-400: #8285f3;
+  --color-indigo-500: #7174ef;
+  --color-indigo-600: #686ced;
+  --color-indigo-700: #6064ec;
+  --color-indigo-800: #393dd0;
+  --color-indigo-900: #2f3193;
+  --color-indigo-950: #212359;
+  --color-bg-primary: #131368;
+  --color-text-primary: #fff;
+  --color-text-secondary: color-mix(
+    in oklab,
+    var(--color-text-primary),
+    var(--color-bg-primary) 35%
+  );
+
+  // Contrast against these choices, for the record: white on the brand base
+  // is 4.63:1 (passes AA body text), --color-text-brand (indigo-300) on the
+  // background is 6.94:1, and white on the background is 15.9:1. So unlike
+  // the light bundle, no --color-text-on-brand-base override is needed here.
+}
