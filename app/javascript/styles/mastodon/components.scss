@@ -376,6 +376,43 @@
   }
 }
 
+// Renders as a bare native <button> (see text_icon_button.jsx) with none of
+// .icon-button's reset, so it fell back to the browser's default button
+// chrome -- an always-visible border/focus ring that doesn't clear on
+// click or blur, and a native pressed effect that doesn't match its
+// siblings. Give it the same reset and hover/focus/active treatment.
+.text-icon-button {
+  --default-icon-color: var(--color-text-secondary);
+  --hover-icon-color: var(--color-text-primary);
+  --hover-bg-color: var(--color-bg-brand-softest);
+  --focus-outline-color: var(--color-border-brand);
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--default-icon-color);
+  background: transparent;
+  border: 0;
+  border-radius: 4px;
+  cursor: pointer;
+  font-weight: bold;
+
+  &:hover,
+  &:active,
+  &:focus-visible {
+    color: var(--hover-icon-color);
+    background-color: var(--hover-bg-color);
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--focus-outline-color);
+  }
+
+  &.active {
+    color: var(--color-text-brand);
+  }
+}
+
 body > [data-popper-placement] {
   z-index: 9999;
 }
