@@ -10,6 +10,14 @@
 [data-color-scheme='dark'],
 [data-color-scheme='light'],
 html:not([data-color-scheme]) {
+  // See mastodon-light/_brand.scss: pin color-scheme to match this bundle's
+  // always-dark colors, instead of letting it track [data-color-scheme]
+  // (which follows prefers-color-scheme, independent of which bundle is
+  // actually loaded). Otherwise an OS light preference makes native form
+  // controls (checkboxes, radios, etc.) render with light-native styling
+  // on this dark background.
+  color-scheme: dark;
+
   @include dark.tokens;
   @include utils.invert-on-dark;
 
@@ -43,4 +51,23 @@ html:not([data-color-scheme]) {
   // is 4.63:1 (passes AA body text), --color-text-brand (indigo-300) on the
   // background is 6.94:1, and white on the background is 15.9:1. So unlike
   // the light bundle, no --color-text-on-brand-base override is needed here.
+}
+
+// See mastodon-light/_brand.scss for why: body.admin renders at full-page
+// scale with dense text, unlike the SPA's translucent panels over
+// --bg-image, where the brand's saturated indigo reads as harsh. Darken it
+// for this page only; the SPA's --color-bg-primary is untouched.
+body.admin {
+  background: color-mix(in oklab, var(--color-bg-primary), black 50%);
+}
+
+// .sidebar (the actual 300px nav column, stretched full-height by its
+// flex parent) had no background of its own (shared admin.scss never set
+// one). --color-bg-secondary is already a lift off --color-bg-primary for
+// elevated surfaces (see above) -- against the now-darker body.admin it
+// reads clearly as a separate navigational panel. Targeting .sidebar
+// rather than its wider .sidebar-wrapper ancestor avoids tinting the
+// empty flex space that wrapper can grow into on wide viewports.
+.admin-wrapper .sidebar {
+  background: var(--color-bg-secondary);
 }
