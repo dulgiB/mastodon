@@ -64,8 +64,11 @@
   --color-dark: var(--color-brand-mastodon-dark);
   --color-thread-line: var(--color-border-primary);
   --color-topaz: #dadaf3;
-  --color-light-purple: #9baec8;
-  --color-lighter-purple: #a5b8d3;
+  // Was #9baec8/#a5b8d3, the old Bird UI purple accent. Same HSL
+  // lightness/saturation, rotated to the brand's indigo hue (238deg),
+  // matching --color-mud's precedent below.
+  --color-light-purple: #9b9cc8;
+  --color-lighter-purple: #a5a6d3;
   --color-dark-electric-blue: #576078;
   --color-button-text: #f7f9f9;
   --color-ghost-button-text: var(--color-button-text);
@@ -265,7 +268,13 @@ body.theme-default.layout-single-column {
   /* Was #f0dee2, a leftover of the old rose brand. Same HSL lightness (0.906)
      and saturation (0.375), rotated to the brand's amber hue (39deg). */
   --color-mud: #f0eade;
-  --color-light-purple: #df98a2;
+  // Was #df98a2, the old Bird UI purple accent (same one overridden
+  // for dark above) -- rotated to the brand's amber hue (39deg) instead
+  // of indigo, keeping the same HSL lightness/saturation. No light-mode
+  // --color-lighter-purple existed before; added here so it doesn't
+  // fall through to the dark section's indigo-hued value.
+  --color-light-purple: #dfc698;
+  --color-lighter-purple: #e7d0a5;
   --color-bg-compose-form: color-mix(
     in oklab,
     var(--color-bg-brand-base) 20%,
