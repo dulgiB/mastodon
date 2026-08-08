@@ -28,6 +28,10 @@ html:not([data-color-scheme]) {
   --color-indigo-900: #2f3193;
   --color-indigo-950: #212359;
   --color-bg-primary: #131368;
+
+  // Backs ~24 surfaces in components.scss (cards, hovers, inset panels), so
+  // it has to read as a lift off --color-bg-primary without going light.
+  --color-bg-secondary: #1a1a7a;
   --color-text-primary: #fff;
   --color-text-secondary: color-mix(
     in oklab,
