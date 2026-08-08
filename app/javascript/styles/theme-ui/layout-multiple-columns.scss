@@ -1461,6 +1461,36 @@ body.embed .status__content a,
   order: 3;
 }
 
+// Pinned posts on a profile (account_timeline feature) render a 3-item CSS
+// grid header instead of the normal 2-item flex one -- display-name (which
+// contains the avatar) spanning both rows on the left, the "Pinned" badge
+// and relative-time stacked on the right. `order` affects grid
+// auto-placement too, and the values above (meant for the plain flex
+// header) sort the badge -- unset, order 0 -- ahead of display-name
+// (order 1), so the grid auto-places display-name/the avatar into the
+// second column instead of the first. Reset to DOM order inside this
+// specific grid so it lays out as designed.
+.layout-multiple-columns
+  .status__info._feat_account_timeline__pinnedStatusHeader
+  .status__display-name,
+.layout-multiple-columns
+  .status__info._feat_account_timeline__pinnedStatusHeader
+  .status__relative-time {
+  order: initial;
+}
+
+// The "separator dot" ::before above (`content: '·'`) is a real generated
+// box that participates in grid auto-placement exactly like the three
+// visible children, landing in whatever cell is left over once the reset
+// above puts display-name/relative-time back in their intended spots --
+// rendering as a small stray dot near the avatar. It only ever made sense
+// as an inline joiner between name and time in the plain flex header;
+// the pinned grid already separates them spatially, so drop it here.
+.layout-multiple-columns
+  .status__info._feat_account_timeline__pinnedStatusHeader::before {
+  content: none;
+}
+
 /* Visibility icon */
 .layout-multiple-columns .status .status__visibility-icon {
   font-size: var(--font-size-mid);
