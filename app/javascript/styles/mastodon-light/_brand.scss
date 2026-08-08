@@ -14,6 +14,15 @@
 [data-color-scheme='dark'],
 [data-color-scheme='light'],
 html:not([data-color-scheme]) {
+  // Native form controls (checkboxes, radios, select arrows, scrollbars)
+  // otherwise take their light/dark rendering from [data-color-scheme],
+  // which tracks prefers-color-scheme -- independent of which bundle is
+  // actually loaded. This bundle's colors are always light (see comment
+  // above), so pin this too or an OS dark preference makes e.g. unchecked
+  // checkboxes render with dark-native borders on this light background
+  // (barely visible) instead of matching the tokens set below.
+  color-scheme: light;
+
   @include light.tokens;
   @include utils.invert-on-light;
 
@@ -39,8 +48,37 @@ html:not([data-color-scheme]) {
     var(--color-bg-primary) 35%
   );
 
+  // Distinct, slightly darker surface for panels that should read as a
+  // separate layer from the main --color-bg-primary surface (e.g. the
+  // settings/admin sidebar below) -- this bundle never overrode it before,
+  // so such panels silently fell back to the upstream neutral grey token,
+  // which doesn't read as related to the cream palette at all.
+  --color-bg-secondary: color-mix(
+    in oklab,
+    var(--color-bg-primary),
+    var(--color-text-primary) 8%
+  );
+
   // --color-indigo-700 (the brand base) is light enough that the token
   // system's default white --color-text-on-brand-base fails contrast on it;
   // use the (dark) primary text color instead of lightening the brand.
   --color-text-on-brand-base: var(--color-text-primary);
+}
+
+// The settings/admin pages (body.admin) render at full-page scale with dense
+// text, unlike the SPA's translucent panels over --bg-image -- the brand's
+// full-saturation cream reads as harsh there. Soften it for this page only;
+// the SPA's --color-bg-primary is untouched.
+body.admin {
+  background: color-mix(in oklab, var(--color-bg-primary), white 60%);
+}
+
+// .sidebar (the actual 300px nav column, stretched full-height by its
+// flex parent) had no background of its own (shared admin.scss never set
+// one), so it was visually flat with the content next to it instead of
+// reading as a separate navigational panel. Targeting .sidebar rather than
+// its wider .sidebar-wrapper ancestor avoids tinting the empty flex space
+// that wrapper can grow into on wide viewports.
+.admin-wrapper .sidebar {
+  background: var(--color-bg-secondary);
 }
