@@ -8559,23 +8559,18 @@ noscript {
     }
   }
 
-  // Background stays theme-driven (--color-bg-primary, the same surface
-  // .dropdown-menu uses). Only the base text color is pinned to #000 —
-  // theme-token pairings for it kept ending up low/no-contrast, and this
-  // is the one piece that actually needs guaranteed contrast. !important
-  // is scoped to .status__content itself, not its descendants: a mention
-  // or hashtag link has its own explicit color rule elsewhere, which an
-  // ancestor's color (however it's set) never overrides through
-  // inheritance — only text with no color of its own picks this up.
+  // Background and text are a matched token pair (--color-bg-primary /
+  // --color-text-primary, the same surface .dropdown-menu uses). This used
+  // to pin the text to #000 !important because token pairings "kept ending
+  // up low/no-contrast" — that was true while theme-ui's own color
+  // variables were disconnected from these tokens, but it meant black text
+  // on the dark scheme's dark bubble, which is the worse failure.
   &__body {
     min-width: 0;
     padding: 10px 14px;
     border-radius: 18px;
     background: var(--color-bg-primary);
-
-    .status__content {
-      color: #000 !important;
-    }
+    color: var(--color-text-primary);
   }
 
   &__time {
@@ -8605,6 +8600,28 @@ noscript {
       color: var(--color-text-on-brand-base);
       opacity: 0.7;
     }
+  }
+}
+
+// The bubble's own text color has to reach .status__content and the links
+// inside it, but theme-ui/bird-ui set `.layout-single-column .status__content`
+// and `... .status__content a` at equal specificity and load after this file,
+// so they win the tie. Repeating .conversation-bubble adds the extra class
+// needed to outrank them without !important.
+// Links matter most here: mentions/hashtags take a brand color, and an own
+// bubble's background *is* the brand color, so a mention inside one rendered
+// brand-on-brand and vanished. Inheriting the bubble's text color keeps every
+// combination readable by construction; the underline carries "this is a link"
+// instead of the color.
+.conversation-bubble .conversation-bubble__body {
+  .status__content {
+    color: inherit;
+  }
+
+  .status__content a {
+    color: inherit;
+    text-decoration: underline;
+    text-underline-offset: 2px;
   }
 }
 
