@@ -1448,6 +1448,18 @@ body.embed .status__content a,
   order: initial;
 }
 
+// The "separator dot" ::before above (`content: '·'`) is a real generated
+// box that participates in grid auto-placement exactly like the three
+// visible children, landing in whatever cell is left over once the reset
+// above puts display-name/relative-time back in their intended spots --
+// rendering as a small stray dot near the avatar. It only ever made sense
+// as an inline joiner between name and time in the plain flex header;
+// the pinned grid already separates them spatially, so drop it here.
+.layout-single-column
+  .status__info._feat_account_timeline__pinnedStatusHeader::before {
+  content: none;
+}
+
 /* Visibility icon */
 .layout-single-column .status .status__visibility-icon {
   font-size: var(--font-size-mid);
