@@ -267,84 +267,86 @@ class ComposeForm extends ImmutablePureComponent {
         <div className='compose-form__highlightable' ref={this.setRef}>
           <EditIndicator />
 
-          <div className='compose-form__dropdowns'>
-            <VisibilityButton disabled={this.props.isEditing} />
-            <LanguageDropdown />
-          </div>
-
-          {this.props.spoiler && (
-            <div className='spoiler-input'>
-              <div className='spoiler-input__border' />
-
-              <AutosuggestInput
-                placeholder={intl.formatMessage(messages.spoiler_placeholder)}
-                value={this.props.spoilerText}
-                disabled={isSubmitting}
-                onChange={this.handleChangeSpoilerText}
-                onKeyDown={this.handleKeyDownSpoiler}
-                ref={this.setSpoilerText}
-                suggestions={this.props.suggestions}
-                onSuggestionsFetchRequested={this.onSuggestionsFetchRequested}
-                onSuggestionsClearRequested={this.onSuggestionsClearRequested}
-                onSuggestionSelected={this.onSpoilerSuggestionSelected}
-                searchTokens={[':']}
-                id='cw-spoiler-input'
-                className='spoiler-input__input'
-                lang={this.props.lang}
-                spellCheck
-              />
-
-              <div className='spoiler-input__border' />
+          <div className='compose-form__editor-area'>
+            <div className='compose-form__dropdowns'>
+              <VisibilityButton disabled={this.props.isEditing} />
+              <LanguageDropdown />
             </div>
-          )}
 
-          <AutosuggestTextarea
-            ref={this.textareaRef}
-            placeholder={intl.formatMessage(messages.placeholder)}
-            disabled={isSubmitting}
-            value={this.props.text}
-            onChange={this.handleChange}
-            suggestions={this.props.suggestions}
-            onFocus={this.handleFocus}
-            onKeyDown={this.handleKeyDownPost}
-            onSuggestionsFetchRequested={this.onSuggestionsFetchRequested}
-            onSuggestionsClearRequested={this.onSuggestionsClearRequested}
-            onSuggestionSelected={this.onSuggestionSelected}
-            onPaste={onPaste}
-            onDrop={onDrop}
-            autoFocus={autoFocus}
-            lang={this.props.lang}
-            className='compose-form__input'
-          />
+            {this.props.spoiler && (
+              <div className='spoiler-input'>
+                <div className='spoiler-input__border' />
 
-          <PollForm />
-          <UploadForm />
-          <ComposeQuotedStatus />
+                <AutosuggestInput
+                  placeholder={intl.formatMessage(messages.spoiler_placeholder)}
+                  value={this.props.spoilerText}
+                  disabled={isSubmitting}
+                  onChange={this.handleChangeSpoilerText}
+                  onKeyDown={this.handleKeyDownSpoiler}
+                  ref={this.setSpoilerText}
+                  suggestions={this.props.suggestions}
+                  onSuggestionsFetchRequested={this.onSuggestionsFetchRequested}
+                  onSuggestionsClearRequested={this.onSuggestionsClearRequested}
+                  onSuggestionSelected={this.onSpoilerSuggestionSelected}
+                  searchTokens={[':']}
+                  id='cw-spoiler-input'
+                  className='spoiler-input__input'
+                  lang={this.props.lang}
+                  spellCheck
+                />
 
-          <div className='compose-form__footer'>
-            <div className='compose-form__actions'>
-              <div className='compose-form__buttons'>
-                <UploadButtonContainer />
-                <PollButtonContainer />
-                <SpoilerButtonContainer />
-                <ContentTypeButtonContainer />
-                <EmojiPickerDropdown onPickEmoji={this.handleEmojiPick} />
-                <CharacterCounter max={maxChars} text={this.getFulltextForCharacterCounting()} />
+                <div className='spoiler-input__border' />
               </div>
+            )}
 
-              <div className='compose-form__submit'>
-                <Button
-                  type='submit'
-                  compact
-                  disabled={!this.canSubmit()}
-                  loading={isSubmitting}
-                >
-                  {intl.formatMessage(
-                    this.props.isEditing ?
-                      messages.saveChanges :
-                      (this.props.isInReply ? messages.reply : messages.publish)
-                  )}
-                </Button>
+            <AutosuggestTextarea
+              ref={this.textareaRef}
+              placeholder={intl.formatMessage(messages.placeholder)}
+              disabled={isSubmitting}
+              value={this.props.text}
+              onChange={this.handleChange}
+              suggestions={this.props.suggestions}
+              onFocus={this.handleFocus}
+              onKeyDown={this.handleKeyDownPost}
+              onSuggestionsFetchRequested={this.onSuggestionsFetchRequested}
+              onSuggestionsClearRequested={this.onSuggestionsClearRequested}
+              onSuggestionSelected={this.onSuggestionSelected}
+              onPaste={onPaste}
+              onDrop={onDrop}
+              autoFocus={autoFocus}
+              lang={this.props.lang}
+              className='compose-form__input'
+            />
+
+            <PollForm />
+            <UploadForm />
+            <ComposeQuotedStatus />
+
+            <div className='compose-form__footer'>
+              <div className='compose-form__actions'>
+                <div className='compose-form__buttons'>
+                  <UploadButtonContainer />
+                  <PollButtonContainer />
+                  <SpoilerButtonContainer />
+                  <ContentTypeButtonContainer />
+                  <EmojiPickerDropdown onPickEmoji={this.handleEmojiPick} />
+                  <CharacterCounter max={maxChars} text={this.getFulltextForCharacterCounting()} />
+                </div>
+
+                <div className='compose-form__submit'>
+                  <Button
+                    type='submit'
+                    compact
+                    disabled={!this.canSubmit()}
+                    loading={isSubmitting}
+                  >
+                    {intl.formatMessage(
+                      this.props.isEditing ?
+                        messages.saveChanges :
+                        (this.props.isInReply ? messages.reply : messages.publish)
+                    )}
+                  </Button>
+                </div>
               </div>
             </div>
           </div>
