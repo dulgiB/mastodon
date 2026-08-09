@@ -6464,30 +6464,38 @@ a.status-card {
   width: 600px;
   flex-direction: column;
 
+  // backdrop-filter (and the border-radius/border/background it composites
+  // with) lives on this single container rather than on __top/__bottom
+  // individually -- two adjacent elements each applying their own
+  // backdrop-filter get promoted to independent GPU compositing layers,
+  // and at fractional device pixel ratios their shared edge doesn't
+  // rasterize to quite the same pixel, leaking a hairline of whatever's
+  // behind (the dimmed page backdrop) through the seam between them. Same
+  // single-container approach .interaction-modal already uses below.
+  border-radius: 16px;
+  background: var(--color-bg-primary);
+  backdrop-filter: $backdrop-blur-filter;
+  border: 1px solid var(--color-border-primary);
+
+  @media screen and (max-width: $mobile-breakpoint) {
+    border-radius: 16px 16px 0 0;
+    border-bottom: 0;
+  }
+
   &__top,
   &__bottom {
     display: flex;
     gap: 8px;
     padding: 24px;
     flex-direction: column;
-    background: var(--color-bg-primary);
-    backdrop-filter: $backdrop-blur-filter;
-    border: 1px solid var(--color-border-primary);
   }
 
   &__top {
-    border-radius: 16px 16px 0 0;
-    border-bottom-width: 0;
     gap: 16px;
   }
 
   &__bottom {
-    border-radius: 0 0 16px 16px;
-    border-top: 0;
-
     @media screen and (max-width: $mobile-breakpoint) {
-      border-radius: 0;
-      border-bottom: 0;
       padding-bottom: 32px;
     }
   }
