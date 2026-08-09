@@ -3481,7 +3481,13 @@ body.embed .button.logo-button:hover,
     padding-top: 10px;
   }
 
-  .layout-multiple-columns .compose-form .emoji-picker-dropdown {
+  // Pulled out of its normal spot in the bottom toolbar (.compose-form__
+  // buttons) and pinned to the top-right corner of .compose-form__editor-area
+  // (the visibility/language pills + textarea + footer, i.e. everything
+  // below EditIndicator), next to the visibility/language pills. Anchoring
+  // to __editor-area rather than __highlightable keeps this corner free of
+  // EditIndicator's own cancel button when editing an existing post.
+  .layout-multiple-columns .compose-form__editor-area .emoji-picker-dropdown {
     inset-inline-end: 3px;
     position: absolute;
     top: 3px;

@@ -594,6 +594,15 @@ body > [data-popper-placement] {
     }
   }
 
+  // Positioning context for controls (e.g. the emoji picker button, see
+  // theme-ui layout files) that anchor to this box's corner rather than
+  // EditIndicator's -- EditIndicator renders as a sibling above this, with
+  // its own background/border, so anchoring to __highlightable directly
+  // would overlap it in edit mode.
+  &__editor-area {
+    position: relative;
+  }
+
   &__warning {
     color: var(--color-text-primary);
     background: var(--color-bg-warning-softest);
