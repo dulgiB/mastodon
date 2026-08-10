@@ -376,6 +376,43 @@
   }
 }
 
+// Renders as a bare native <button> (see text_icon_button.jsx) with none of
+// .icon-button's reset, so it fell back to the browser's default button
+// chrome -- an always-visible border/focus ring that doesn't clear on
+// click or blur, and a native pressed effect that doesn't match its
+// siblings. Give it the same reset and hover/focus/active treatment.
+.text-icon-button {
+  --default-icon-color: var(--color-text-secondary);
+  --hover-icon-color: var(--color-text-primary);
+  --hover-bg-color: var(--color-bg-brand-softest);
+  --focus-outline-color: var(--color-border-brand);
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--default-icon-color);
+  background: transparent;
+  border: 0;
+  border-radius: 4px;
+  cursor: pointer;
+  font-weight: bold;
+
+  &:hover,
+  &:active,
+  &:focus-visible {
+    color: var(--hover-icon-color);
+    background-color: var(--hover-bg-color);
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--focus-outline-color);
+  }
+
+  &.active {
+    color: var(--color-text-brand);
+  }
+}
+
 body > [data-popper-placement] {
   z-index: 9999;
 }
@@ -555,6 +592,15 @@ body > [data-popper-placement] {
     &:has(textarea:focus) {
       outline-color: var(--color-border-brand);
     }
+  }
+
+  // Positioning context for controls (e.g. the emoji picker button, see
+  // theme-ui layout files) that anchor to this box's corner rather than
+  // EditIndicator's -- EditIndicator renders as a sibling above this, with
+  // its own background/border, so anchoring to __highlightable directly
+  // would overlap it in edit mode.
+  &__editor-area {
+    position: relative;
   }
 
   &__warning {
@@ -8650,11 +8696,28 @@ noscript {
   background: var(--color-bg-primary);
 
   // Below $mobile-menu-breakpoint the fixed .ui__navigation-bar sits on top
-  // of a scrolling page rather than a bounded column, so "sticky to the
-  // bottom of the scroll container" alone would end up underneath it —
-  // same reserved-height variable that bar's own layout already uses.
+  // of a scrolling page rather than a bounded column (bindToDocument), so
+  // `sticky` only ever pins once scrolling *past* this element's in-flow
+  // position happens -- on a short thread there's nothing to scroll yet,
+  // so it just sits in flow instead of at the visual bottom, leaving a
+  // gap down to the nav bar. `position: fixed` (the same strategy
+  // .ui__navigation-bar itself already uses one breakpoint down) pins it
+  // unconditionally instead of depending on scroll state.
   @media screen and (max-width: #{$mobile-menu-breakpoint - 1}) {
+    position: fixed;
+    width: 100%;
     bottom: var(--mobile-bottom-nav-height);
+  }
+}
+
+@media screen and (max-width: #{$mobile-menu-breakpoint - 1}) {
+  .conversation-thread {
+    // Compensate for .dm-composer-anchor switching to `fixed` above: it's
+    // no longer in flow, so nothing else reserves room for it below the
+    // last message. ~64px covers the single-line composer's rendered
+    // height (padding + textarea); it grows for multi-line drafts, but
+    // that's a much smaller miss than the gap this replaces.
+    padding-bottom: 64px;
   }
 }
 
@@ -8680,6 +8743,12 @@ noscript {
     background: var(--color-bg-secondary);
     color: var(--color-text-primary);
     font: inherit;
+
+    // `font: inherit` otherwise pulls `body`'s 13px base -- nothing between
+    // here and there sets a larger size the way .status__content does for
+    // the messages themselves, so the composer read noticeably smaller
+    // than the thread it's replying in. Match that 15px.
+    font-size: 15px;
     line-height: 1.4;
 
     &:focus {
@@ -11314,6 +11383,26 @@ noscript {
   position: sticky;
   bottom: 0;
   background: var(--color-bg-primary);
+
+  // Same issue and fix as .dm-composer-anchor (see there): below this
+  // breakpoint the page scrolls rather than a bounded column, so on
+  // short content `sticky` never activates and this sits in flow with a
+  // gap down to the fixed nav bar instead of pinning to the viewport.
+  @media screen and (max-width: #{$mobile-menu-breakpoint - 1}) {
+    position: fixed;
+    width: 100%;
+    bottom: var(--mobile-bottom-nav-height);
+  }
+}
+
+@media screen and (max-width: #{$mobile-menu-breakpoint - 1}) {
+  .scrollable:has(> .column-footer) {
+    // Compensate for .column-footer switching to `fixed` above: it's no
+    // longer in flow, so nothing else reserves room for it below the
+    // last list item. ~80px covers its rendered height (padding + one
+    // button row).
+    padding-bottom: 80px;
+  }
 }
 
 .lists-scrollable {
