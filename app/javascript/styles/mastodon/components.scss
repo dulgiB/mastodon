@@ -11285,6 +11285,12 @@ noscript {
   p {
     margin-bottom: 8px;
     font-weight: 500;
+
+    /* spoilerHtml is plain-escaped spoiler_text, so line breaks survive
+       only as literal "\n" characters rather than <br> tags -- without
+       this, the default `white-space: normal` collapses them and a
+       multi-line content warning renders as a single line. */
+    white-space: pre-wrap;
   }
 
   .link-button {

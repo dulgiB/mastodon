@@ -1067,10 +1067,14 @@ body.embed .status__content a,
   stroke: var(--color-accent) !important;
 }
 
-/* Mud background colors, reply-indicator */
+/* This used to fill .reply-indicator with a solid --color-mud background
+   and force light text over it, from before the v4.5.x redesign gave
+   .reply-indicator its own grid layout with per-element text colors
+   (see components.scss). Left in place, it now paints a mismatched solid
+   box behind the "replying to" preview and fights the current per-element
+   colors. Keep just the height cap; leave it transparent so the compose
+   panel's own background shows through, like the rest of the redesign. */
 .layout-single-column .reply-indicator {
-  background-color: var(--color-mud);
-  color: var(--color-light-text);
   max-height: 20vh;
 }
 
@@ -1676,8 +1680,6 @@ body.embed .detailed-status__display-avatar > img,
 .layout-single-column .status:not(.status--in-thread) .status__action-bar,
 .layout-single-column .status:not(.status--in-thread) .attachment-list,
 .layout-single-column .status:not(.status--in-thread) .status__content,
-.layout-single-column .status:not(.status--in-thread) .content-warning,
-.layout-single-column .status:not(.status--in-thread) .filter-warning,
 .layout-single-column
   .status:not(.status--in-thread)
   .picture-in-picture-placeholder,
@@ -1686,6 +1688,18 @@ body.embed .detailed-status__display-avatar > img,
 .layout-single-column .status:not(.status--in-thread) .collection-preview {
   font-size: var(--font-size);
   padding-left: calc(var(--size-avatar) + var(--gap-default));
+  padding-top: 0;
+}
+
+/* content-warning/filter-warning paint their own background+border box
+   (unlike the elements above, which are transparent), so indenting them
+   with padding-left only pushed their text over -- the box itself still
+   started under the avatar and its background covered it. Use margin so
+   the box itself clears the avatar column. */
+.layout-single-column .status:not(.status--in-thread) .content-warning,
+.layout-single-column .status:not(.status--in-thread) .filter-warning {
+  font-size: var(--font-size);
+  margin-left: calc(var(--size-avatar) + var(--gap-default));
   padding-top: 0;
 }
 
@@ -1708,14 +1722,19 @@ body.embed .detailed-status__display-avatar > img,
 [dir='rtl'] .layout-single-column .attachment-list,
 [dir='rtl'] .layout-single-column .status__content__read-more-button,
 [dir='rtl'] .layout-single-column .status .status__content,
-[dir='rtl'] .layout-single-column .status .content-warning,
-[dir='rtl'] .layout-single-column .status .filter-warning,
 [dir='rtl'] .layout-single-column .status .picture-in-picture-placeholder,
 [dir='rtl'] .layout-single-column .status .more-from-author,
 [dir='rtl'] .layout-single-column .status .status__quote,
 [dir='rtl'] .layout-single-column .status .collection-preview {
   padding-left: 0;
   padding-right: calc(var(--size-avatar) + var(--gap-default));
+}
+
+/* See the LTR rule above: content-warning/filter-warning need their box
+   shifted with margin, not just their text padded. */
+[dir='rtl'] .layout-single-column .status .content-warning,
+[dir='rtl'] .layout-single-column .status .filter-warning {
+  margin-right: calc(var(--size-avatar) + var(--gap-default));
 }
 
 /* Reset padding from attachment-list on reply indicator */
