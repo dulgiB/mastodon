@@ -1687,12 +1687,14 @@ body.embed .detailed-status,
    (unlike the elements above, which are transparent), so indenting them
    with padding-left only pushed their text over -- the box itself still
    started under the avatar and its background covered it. Use margin so
-   the box itself clears the avatar column. */
+   the box itself clears the avatar column. Also leave padding-top alone
+   (unlike the elements above): zeroing it left the box with an 8px
+   bottom padding but none on top, an uneven gap around the text that
+   only the avatar overlap had been hiding. */
 .layout-multiple-columns .status:not(.status--in-thread) .content-warning,
 .layout-multiple-columns .status:not(.status--in-thread) .filter-warning {
   font-size: var(--font-size);
   margin-left: calc(var(--size-avatar) + var(--gap-default));
-  padding-top: 0;
 }
 
 /* Translate link and other padding resets */
