@@ -1638,8 +1638,6 @@ body.embed .detailed-status,
 .layout-multiple-columns .status:not(.status--in-thread) .status__action-bar,
 .layout-multiple-columns .status:not(.status--in-thread) .attachment-list,
 .layout-multiple-columns .status:not(.status--in-thread) .status__content,
-.layout-multiple-columns .status:not(.status--in-thread) .content-warning,
-.layout-multiple-columns .status:not(.status--in-thread) .filter-warning,
 .layout-multiple-columns
   .status:not(.status--in-thread)
   .picture-in-picture-placeholder,
@@ -1648,6 +1646,18 @@ body.embed .detailed-status,
 .layout-multiple-columns .status:not(.status--in-thread) .collection-preview {
   font-size: var(--font-size);
   padding-left: calc(var(--size-avatar) + var(--gap-default));
+  padding-top: 0;
+}
+
+/* content-warning/filter-warning paint their own background+border box
+   (unlike the elements above, which are transparent), so indenting them
+   with padding-left only pushed their text over -- the box itself still
+   started under the avatar and its background covered it. Use margin so
+   the box itself clears the avatar column. */
+.layout-multiple-columns .status:not(.status--in-thread) .content-warning,
+.layout-multiple-columns .status:not(.status--in-thread) .filter-warning {
+  font-size: var(--font-size);
+  margin-left: calc(var(--size-avatar) + var(--gap-default));
   padding-top: 0;
 }
 
@@ -1670,14 +1680,19 @@ body.embed .detailed-status,
 [dir='rtl'] .layout-multiple-columns .attachment-list,
 [dir='rtl'] .layout-multiple-columns .status__content__read-more-button,
 [dir='rtl'] .layout-multiple-columns .status .status__content,
-[dir='rtl'] .layout-multiple-columns .status .content-warning,
-[dir='rtl'] .layout-multiple-columns .status .filter-warning,
 [dir='rtl'] .layout-multiple-columns .status .picture-in-picture-placeholder,
 [dir='rtl'] .layout-multiple-columns .status .more-from-author,
 [dir='rtl'] .layout-multiple-columns .status .status__quote,
 [dir='rtl'] .layout-multiple-columns .status .collection-preview {
   padding-left: 0;
   padding-right: calc(var(--size-avatar) + var(--gap-default));
+}
+
+/* See the LTR rule above: content-warning/filter-warning need their box
+   shifted with margin, not just their text padded. */
+[dir='rtl'] .layout-multiple-columns .status .content-warning,
+[dir='rtl'] .layout-multiple-columns .status .filter-warning {
+  margin-right: calc(var(--size-avatar) + var(--gap-default));
 }
 
 /* Reset padding from attachment-list on reply indicator */
