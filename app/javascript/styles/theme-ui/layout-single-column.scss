@@ -1046,10 +1046,14 @@ body.embed .status__content a,
   stroke: var(--color-accent) !important;
 }
 
-/* Mud background colors, reply-indicator */
+/* This used to fill .reply-indicator with a solid --color-mud background
+   and force light text over it, from before the v4.5.x redesign gave
+   .reply-indicator its own grid layout with per-element text colors
+   (see components.scss). Left in place, it now paints a mismatched solid
+   box behind the "replying to" preview and fights the current per-element
+   colors. Keep just the height cap; leave it transparent so the compose
+   panel's own background shows through, like the rest of the redesign. */
 .layout-single-column .reply-indicator {
-  background-color: var(--color-mud);
-  color: var(--color-light-text);
   max-height: 20vh;
 }
 
