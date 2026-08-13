@@ -11,6 +11,16 @@
     - if storage_host?
       %link{ rel: 'dns-prefetch', href: storage_host }/
 
+    -# Base font is self-hosted Pretendard (see fonts/pretendard.scss), but its
+    -# ellipsis glyph sits on the baseline rather than centered, so U+2026 is
+    -# borrowed from this Noto Sans KR subset instead (see
+    -# fonts/ellipsis-glyph-fix.scss). The subset is otherwise made up of
+    -# rarely-used Hangul syllables, so unlike common punctuation it's almost
+    -# never already warm by the time a post uses "…" and cold-fetches
+    -# mid-scroll, briefly showing the fallback font's lower-baseline ellipsis.
+    -# Preload it directly to avoid that.
+    %link{ rel: 'preload', as: 'font', type: 'font/woff2', crossorigin: 'anonymous', href: vite_asset_path('fonts/noto-sans-kr/PbykFmXiEBPT4ITbgNA5Cgm20xz64px_1hVWr0wuPNGmlQNMEfD4.114.woff2') }/
+
     - SiteUpload::FAVICON_SIZES.each do |size|
       %link{ rel: 'icon', sizes: "#{size}x#{size}", href: favicon_path(size.to_i) || frontend_asset_path("icons/favicon-#{size}x#{size}.png"), type: 'image/png' }/
 
