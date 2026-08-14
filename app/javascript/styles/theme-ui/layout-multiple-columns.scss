@@ -931,8 +931,9 @@ body.layout-multiple-columns {
   flex-grow: 1;
   height: 100vh;
   max-width: 350px;
-  overflow: visible;
+  overflow-y: auto;
   position: sticky;
+  scrollbar-width: thin;
   top: 0;
 }
 
@@ -4484,6 +4485,8 @@ div[tabindex='-1']
 
 /* Scrollbars */
 .layout-multiple-columns .scrollable::-webkit-scrollbar,
+.layout-multiple-columns
+  .columns-area__panels__pane--compositional::-webkit-scrollbar,
 .layout-multiple-columns .drawer__inner::-webkit-scrollbar,
 .layout-multiple-columns textarea::-webkit-scrollbar,
 .layout-multiple-columns .autosuggest-textarea__textarea::-webkit-scrollbar,
@@ -4494,6 +4497,8 @@ div[tabindex='-1']
 }
 
 .layout-multiple-columns .scrollable::-webkit-scrollbar-thumb,
+.layout-multiple-columns
+  .columns-area__panels__pane--compositional::-webkit-scrollbar-thumb,
 .layout-multiple-columns textarea::-webkit-scrollbar-thumb,
 .layout-multiple-columns
   .autosuggest-textarea__textarea::-webkit-scrollbar-thumb,
@@ -4505,6 +4510,8 @@ div[tabindex='-1']
 }
 
 .layout-multiple-columns .scrollable::-webkit-scrollbar-thumb:hover,
+.layout-multiple-columns
+  .columns-area__panels__pane--compositional::-webkit-scrollbar-thumb:hover,
 .layout-multiple-columns textarea::-webkit-scrollbar-thumb:hover,
 .layout-multiple-columns
   .autosuggest-textarea__textarea::-webkit-scrollbar-thumb:hover,
@@ -4514,6 +4521,8 @@ div[tabindex='-1']
 }
 
 .layout-multiple-columns .scrollable::-webkit-scrollbar-thumb:active,
+.layout-multiple-columns
+  .columns-area__panels__pane--compositional::-webkit-scrollbar-thumb:active,
 .layout-multiple-columns textarea::-webkit-scrollbar-thumb:active,
 .layout-multiple-columns
   .autosuggest-textarea__textarea::-webkit-scrollbar-thumb:active,
@@ -4523,6 +4532,8 @@ div[tabindex='-1']
 }
 
 .layout-multiple-columns .scrollable::-webkit-scrollbar-track,
+.layout-multiple-columns
+  .columns-area__panels__pane--compositional::-webkit-scrollbar-track,
 .layout-multiple-columns textarea::-webkit-scrollbar-track,
 .layout-multiple-columns
   .autosuggest-textarea__textarea::-webkit-scrollbar-track,
@@ -4534,6 +4545,8 @@ div[tabindex='-1']
 }
 
 .layout-multiple-columns .scrollable::-webkit-scrollbar-track:hover,
+.layout-multiple-columns
+  .columns-area__panels__pane--compositional::-webkit-scrollbar-track:hover,
 .layout-multiple-columns textarea::-webkit-scrollbar-track:hover,
 .layout-multiple-columns
   .autosuggest-textarea__textarea::-webkit-scrollbar-track:hover,
@@ -4543,6 +4556,8 @@ div[tabindex='-1']
 }
 
 .layout-multiple-columns .scrollable::-webkit-scrollbar-track:active,
+.layout-multiple-columns
+  .columns-area__panels__pane--compositional::-webkit-scrollbar-track:active,
 .layout-multiple-columns textarea::-webkit-scrollbar-track:active,
 .layout-multiple-columns
   .autosuggest-textarea__textarea::-webkit-scrollbar-track:active,
@@ -4552,6 +4567,8 @@ div[tabindex='-1']
 }
 
 .layout-multiple-columns .scrollable::-webkit-scrollbar-corner,
+.layout-multiple-columns
+  .columns-area__panels__pane--compositional::-webkit-scrollbar-corner,
 .layout-multiple-columns .drawer__inner::-webkit-scrollbar-corner,
 .layout-multiple-columns textarea::-webkit-scrollbar-corner,
 .layout-multiple-columns
