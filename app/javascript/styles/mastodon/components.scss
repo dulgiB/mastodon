@@ -1202,6 +1202,20 @@ body > [data-popper-placement] {
 
   .detailed-status__display-name {
     margin-bottom: 4px;
+
+    // Override the fit-content default: for names/handles with no break
+    // opportunity (e.g. a long underscore-joined handle), fit-content can't
+    // shrink below max-content, so it overflows the card instead of
+    // wrapping. Bound it to the available width and let it wrap.
+    width: auto;
+    max-width: 100%;
+
+    .display-name,
+    .display-name__html,
+    .display-name__account {
+      white-space: normal;
+      overflow-wrap: anywhere;
+    }
   }
 
   .detailed-status__display-avatar {
