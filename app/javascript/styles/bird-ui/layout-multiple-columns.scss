@@ -868,6 +868,7 @@ body.layout-multiple-columns {
   flex-grow: 1;
   height: 100vh;
   max-width: 350px;
+  overflow-x: hidden;
   overflow-y: auto;
   position: sticky;
   scrollbar-width: thin;
