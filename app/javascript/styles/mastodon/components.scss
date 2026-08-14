@@ -3158,9 +3158,17 @@ a.account__display-name {
   // same class of bug as the sticky+backdrop-filter issue on mobile
   // Safari noted below on .tabs-bar__wrapper).
 
-  .layout-multiple-columns & {
-    display: none;
-  }
+  // No `.layout-multiple-columns & { display: none; }` override here:
+  // that used to hide this bar unconditionally in multi-column mode,
+  // but .columns-area__panels__pane--navigational (multi-column's own
+  // sidebar nav) turns into an off-canvas overlay below width: 760px
+  // (see the @media (width <= 759px) block further down), while JS
+  // only leaves multi-column layout at LAYOUT_BREAKPOINT: 630px (see
+  // is_mobile.ts). That mismatch left a 630-759px dead zone with no
+  // nav reachable at all. The @media (width >= 760px) rule below
+  // already hides this bar at desktop widths for both layouts, which
+  // is the only width range multi-column's sidebar nav is actually
+  // on-screen, so no extra override is needed here.
 
   &__items {
     display: grid;

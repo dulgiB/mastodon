@@ -20,6 +20,12 @@ $mobile-menu-breakpoint: 760px;
 $mobile-breakpoint: 630px;
 $no-columns-breakpoint: 600px;
 
-$font-sans-serif: 'mastodon-font-sans-serif' !default;
+// Noto Sans KR first (it has a full Latin set too, so this covers Latin
+// text as well, not just Hangul/CJK) -- mastodon-font-sans-serif (Roboto,
+// see fonts/roboto.scss) stays as a fallback for anything Noto Sans KR's
+// self-hosted unicode-range chunks don't cover, and the generic
+// `sans-serif` at the end lets the browser fall through to a system font
+// for scripts neither one has (Arabic, Thai, Devanagari, etc.).
+$font-sans-serif: 'Noto Sans KR', 'mastodon-font-sans-serif' !default;
 $font-display: 'mastodon-font-display' !default;
 $font-monospace: 'mastodon-font-monospace' !default;
