@@ -1545,7 +1545,11 @@ body.embed .detailed-status,
 .layout-multiple-columns .account__avatar > img,
 .layout-multiple-columns .column > .scrollable .status__avatar img {
   border: 0;
-  border-radius: 50%;
+
+  /* Was border-radius: 50% -- see layout-single-column.scss's identical
+     rule for why: a leftover circular-avatar override that no longer
+     matches the .account__avatar container's rounded-square shape. */
+  border-radius: var(--avatar-border-radius);
   box-shadow: rgb(255 255 255 / 3%) 0 0 2px inset;
 }
 

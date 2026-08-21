@@ -1526,7 +1526,13 @@ body.embed .detailed-status__display-avatar > img,
 .layout-single-column .column > .scrollable .status__avatar img {
   background-color: var(--color-bg);
   border: 0;
-  border-radius: 50%;
+
+  /* Was border-radius: 50% -- a leftover from before upstream's avatars
+     switched to the rounded-square var(--avatar-border-radius) shape.
+     The .account__avatar container already uses that shape (core CSS,
+     unmodified here); forcing the <img> to a circle inside it left the
+     container's square-ish corners visible around a circular photo. */
+  border-radius: var(--avatar-border-radius);
   box-shadow: rgb(255 255 255 / 3%) 0 0 2px inset;
 }
 
