@@ -29,6 +29,10 @@ $no-columns-breakpoint: 600px;
 // anything Pretendard's self-hosted unicode-range chunks don't cover, and the
 // generic `sans-serif` at the end lets the browser fall through to a system
 // font for scripts none of the above have (Arabic, Thai, Devanagari, etc.).
+/* stylelint-disable-next-line scss/dollar-variable-colon-space-after -- oxfmt
+   wraps this line right after the colon once it exceeds printWidth; the two
+   tools disagree on this specific formatting and this is oxfmt's canonical
+   output. */
 $font-sans-serif:
   'mastodon-font-ellipsis-fix', 'Pretendard', 'mastodon-font-sans-serif' !default;
 $font-display: 'mastodon-font-display' !default;
