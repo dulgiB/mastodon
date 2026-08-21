@@ -3160,15 +3160,25 @@ a.account__display-name {
 
   // No `.layout-multiple-columns & { display: none; }` override here:
   // that used to hide this bar unconditionally in multi-column mode,
-  // but .columns-area__panels__pane--navigational (multi-column's own
-  // sidebar nav) turns into an off-canvas overlay below width: 760px
-  // (see the @media (width <= 759px) block further down), while JS
-  // only leaves multi-column layout at LAYOUT_BREAKPOINT: 630px (see
-  // is_mobile.ts). That mismatch left a 630-759px dead zone with no
-  // nav reachable at all. The @media (width >= 760px) rule below
-  // already hides this bar at desktop widths for both layouts, which
-  // is the only width range multi-column's sidebar nav is actually
-  // on-screen, so no extra override is needed here.
+  // but .columns-area__panels__pane--navigational (CollapsibleNavigationPanel,
+  // single-column's own sidebar nav, toggled by this bar's menu button)
+  // is only reachable as a docked peek-drawer below width: 890px (see
+  // the @media (width <= 889px) block further down), while JS only
+  // leaves multi-column layout at LAYOUT_BREAKPOINT: 630px (see
+  // is_mobile.ts). That mismatch used to leave a 630-759px dead zone
+  // with no nav reachable at all.
+
+  // The peek-drawer's toggle behavior (CollapsibleNavigationPanel's
+  // `openable` state in useBreakpoint.tsx) has to stay in sync with
+  // this bar's own visibility cutoff below, or the menu button renders
+  // but does nothing: both theme-ui/layout-multiple-columns.scss and
+  // bird-ui/layout-multiple-columns.scss independently treat 630-889px
+  // as their own "iPad" tier and don't give the pane a real in-flow
+  // desktop position until width: 890px, so the peek-drawer treatment
+  // (and the `openable` breakpoint that drives it) is extended through
+  // 889px to cover that whole gap. The @media (width >= 890px) rule
+  // below is what finally hides this bar, matching the width the
+  // sidebar becomes on-screen and usable again on its own.
 
   &__items {
     display: grid;
@@ -3521,7 +3531,15 @@ a.account__display-name {
   }
 }
 
-@media screen and (width <= 759px) {
+// Extended through 889px (not just <=759px) to cover the "iPad" tier
+// where bird-ui/theme-ui's layout-single-column.scss don't give the pane
+// a real in-flow desktop position until width: 890px — see the "iPad"
+// tier comment on .ui__navigation-bar above. useBreakpoint.tsx's
+// `openable` breakpoint (which drives CollapsibleNavigationPanel's
+// open/close toggle and drag handling) is kept at the same 889px cutoff,
+// otherwise the menu button in .ui__navigation-bar renders but the pane
+// never responds to it in that range.
+@media screen and (width <= 889px) {
   .columns-area__panels__main {
     width: 100%;
   }
@@ -3575,7 +3593,7 @@ a.account__display-name {
   }
 }
 
-@media screen and (width >= 760px) {
+@media screen and (width >= 890px) {
   .ui__navigation-bar {
     display: none;
   }
@@ -3799,6 +3817,7 @@ a.account__display-name {
 }
 
 .compose-panel {
+  box-sizing: border-box;
   width: 285px;
   margin-top: 8px;
 
@@ -6464,30 +6483,38 @@ a.status-card {
   width: 600px;
   flex-direction: column;
 
+  // backdrop-filter (and the border-radius/border/background it composites
+  // with) lives on this single container rather than on __top/__bottom
+  // individually -- two adjacent elements each applying their own
+  // backdrop-filter get promoted to independent GPU compositing layers,
+  // and at fractional device pixel ratios their shared edge doesn't
+  // rasterize to quite the same pixel, leaking a hairline of whatever's
+  // behind (the dimmed page backdrop) through the seam between them. Same
+  // single-container approach .interaction-modal already uses below.
+  border-radius: 16px;
+  background: var(--color-bg-primary);
+  backdrop-filter: $backdrop-blur-filter;
+  border: 1px solid var(--color-border-primary);
+
+  @media screen and (max-width: $mobile-breakpoint) {
+    border-radius: 16px 16px 0 0;
+    border-bottom: 0;
+  }
+
   &__top,
   &__bottom {
     display: flex;
     gap: 8px;
     padding: 24px;
     flex-direction: column;
-    background: var(--color-bg-primary);
-    backdrop-filter: $backdrop-blur-filter;
-    border: 1px solid var(--color-border-primary);
   }
 
   &__top {
-    border-radius: 16px 16px 0 0;
-    border-bottom-width: 0;
     gap: 16px;
   }
 
   &__bottom {
-    border-radius: 0 0 16px 16px;
-    border-top: 0;
-
     @media screen and (max-width: $mobile-breakpoint) {
-      border-radius: 0;
-      border-bottom: 0;
       padding-bottom: 32px;
     }
   }

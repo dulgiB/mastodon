@@ -2,7 +2,7 @@ import { useSyncExternalStore } from 'react';
 
 const breakpoints = {
   narrow: 479, // Device width under which horizontal space is constrained
-  openable: 759, // Device width at which the sidebar becomes an openable hamburger menu
+  openable: 889, // Device width at which the sidebar becomes an openable hamburger menu (must match .ui__navigation-bar's visibility cutoff in components.scss)
   full: 1174, // Device width at which all 3 columns can be displayed
 };
 

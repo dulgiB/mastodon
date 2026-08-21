@@ -887,14 +887,17 @@ body.layout-single-column {
 }
 
 /* Change panel order.
-   Scoped to width > 759px: below that, core CSS turns
+   Scoped to width > 889px: below that, core CSS turns
    .columns-area__panels__pane--navigational into a fixed full-screen
    overlay for the mobile hamburger menu (see components.scss's
-   `@media screen and (width <= 759px)` block). These order/width rules
-   were unconditional and fought with that - forcing the overlay pane
-   down to a 260px flex item and letting it wrap below the main
-   content instead of covering the screen, on both mobile and desktop. */
-@media screen and (width > 759px) {
+   `@media screen and (width <= 889px)` block, which covers the whole
+   630-889px "iPad" tier this file doesn't give the pane a real in-flow
+   position in - see the --width-side-panel rules below). These
+   order/width rules were unconditional and fought with that - forcing
+   the overlay pane down to a 260px flex item and letting it wrap below
+   the main content instead of covering the screen, on both mobile and
+   desktop. */
+@media screen and (width > 889px) {
   .layout-single-column .columns-area__panels__pane {
     order: 3;
   }
@@ -920,6 +923,7 @@ body.layout-single-column {
   flex-grow: 1;
   height: 100vh;
   max-width: 350px;
+  overflow-x: hidden;
   overflow-y: auto;
   position: sticky;
   scrollbar-width: thin;
@@ -1526,7 +1530,13 @@ body.embed .detailed-status__display-avatar > img,
 .layout-single-column .column > .scrollable .status__avatar img {
   background-color: var(--color-bg);
   border: 0;
-  border-radius: 50%;
+
+  /* Was border-radius: 50% -- a leftover from before upstream's avatars
+     switched to the rounded-square var(--avatar-border-radius) shape.
+     The .account__avatar container already uses that shape (core CSS,
+     unmodified here); forcing the <img> to a circle inside it left the
+     container's square-ish corners visible around a circular photo. */
+  border-radius: var(--avatar-border-radius);
   box-shadow: rgb(255 255 255 / 3%) 0 0 2px inset;
 }
 

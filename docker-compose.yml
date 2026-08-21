@@ -140,6 +140,7 @@ services:
     env_file: .env.mastodon
     environment:
       MASTODON_API_BASE_URL: http://web:3000
+      TZ: Asia/Seoul
     depends_on: [web]
     networks: [internal]
 
@@ -149,6 +150,7 @@ services:
     env_file: .env.mastodon-test
     environment:
       MASTODON_API_BASE_URL: http://web_test:3001
+      TZ: Asia/Seoul
     depends_on: [web_test]
     networks: [internal]
 
