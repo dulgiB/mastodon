@@ -68,59 +68,6 @@ services:
       - search_data:/usr/share/elasticsearch/data
     networks: [internal]
 
-  # ── 테스트 인스턴스 ──────────────────────────────
-  db_test:
-    image: postgres:14-alpine
-    restart: always
-    env_file: .env.mastodon-test
-    environment:
-      POSTGRES_HOST_AUTH_METHOD: trust
-      POSTGRES_USER: mastodon
-      POSTGRES_DB: mastodon
-    volumes:
-      - postgres_data_test:/var/lib/postgresql/data
-    networks: [internal]
-
-  redis_test:
-    image: redis:7-alpine
-    restart: always
-    volumes:
-      - redis_data_test:/data
-    networks: [internal]
-
-  web_test:
-    build: .
-    restart: always
-    env_file: .env.mastodon-test
-    command: bundle exec puma -C config/puma.rb
-    user: '991:991'
-    environment:
-      PORT: '3001' # 본 인스턴스(3000)와 충돌 방지
-    depends_on: [db_test, redis_test, search]
-    networks: [internal, external]
-
-  streaming_test:
-    build:
-      context: .
-      dockerfile: ./streaming/Dockerfile
-    restart: always
-    env_file: .env.mastodon-test
-    command: node ./streaming/index.js
-    environment:
-      PORT: '4001'
-      STREAMING_PORT: '4001'
-    depends_on: [db_test, redis_test]
-    networks: [internal, external]
-
-  sidekiq_test:
-    build: .
-    restart: always
-    env_file: .env.mastodon-test
-    command: bundle exec sidekiq
-    user: '991:991'
-    depends_on: [db_test, redis_test, search]
-    networks: [internal, external]
-
   # ── 공통 ─────────────────────────────────────────
   nginx:
     image: nginx:alpine
@@ -131,35 +78,31 @@ services:
     volumes:
       - ./nginx/conf.d:/etc/nginx/conf.d:ro
       - ./nginx/certs:/etc/nginx/certs:ro
-    depends_on: [web, web_test]
+    depends_on: [web]
     networks: [external]
 
   bot:
-    build: /home/youruser/your-bot-repo
+    build: /home/xetead/xetead-bot
     restart: always
     env_file: .env.mastodon
     environment:
-      MASTODON_API_BASE_URL: http://web:3000
+      # web:3000 직접 호출은 HostAuthorization 미들웨어가 Host: web:3000을
+      # 허용 도메인이 아니라고 403으로 막는다(bot_test와 동일 사유). 공개
+      # 도메인(Cloudflare 경유, 그 뒤가 이 nginx로 돌아옴)으로 붙여야 한다.
+      MASTODON_API_BASE_URL: https://xetead.quest
+      # 컨테이너 기본 시간대는 UTC라 date.today() 기준 일일 의뢰 리셋 등이
+      # KST 자정이 아닌 UTC 자정(=KST 오전 9시)에 일어난다. 로그 타임스탬프도
+      # KST로 찍히길 원해 컨테이너 시간대 자체를 바꾼다.
       TZ: Asia/Seoul
+    command: ["uv", "run", "--frozen", "--no-dev", "python", "-m", "bot.main"]
     depends_on: [web]
-    networks: [internal]
-
-  bot_test:
-    build: /home/youruser/your-bot-repo
-    restart: always
-    env_file: .env.mastodon-test
-    environment:
-      MASTODON_API_BASE_URL: http://web_test:3001
-      TZ: Asia/Seoul
-    depends_on: [web_test]
-    networks: [internal]
+    # Google Sheets(oauth2.googleapis.com)와 공개 도메인 접근에 외부 인터넷이 필요해 external도 추가.
+    networks: [internal, external]
 
 volumes:
   postgres_data:
   redis_data:
   mastodon_system:
-  postgres_data_test:
-  redis_data_test:
   search_data:
 
 networks:
