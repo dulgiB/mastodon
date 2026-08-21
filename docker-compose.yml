@@ -1,74 +1,4 @@
 services:
-  # ── 본 인스턴스 ─────────────────────────────────
-  db:
-    image: postgres:14-alpine
-    restart: always
-    env_file: .env.mastodon
-    environment:
-      POSTGRES_HOST_AUTH_METHOD: trust
-      POSTGRES_USER: mastodon
-      POSTGRES_DB: mastodon
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
-    networks: [internal]
-
-  redis:
-    image: redis:7-alpine
-    restart: always
-    volumes:
-      - redis_data:/data
-    networks: [internal]
-
-  web:
-    build: .
-    restart: always
-    env_file: .env.mastodon
-    command: bundle exec puma -C config/puma.rb
-    user: '991:991'
-    depends_on: [db, redis, search]
-    networks: [internal, external]
-    healthcheck:
-      test:
-        [
-          'CMD-SHELL',
-          'wget -q --spider --proxy=off localhost:3000/health || exit 1',
-        ]
-
-  streaming:
-    build:
-      context: .
-      dockerfile: ./streaming/Dockerfile
-    restart: always
-    env_file: .env.mastodon
-    command: node ./streaming/index.js
-    depends_on: [db, redis]
-    networks: [internal, external]
-
-  sidekiq:
-    build: .
-    restart: always
-    env_file: .env.mastodon
-    command: bundle exec sidekiq
-    user: '991:991'
-    depends_on: [db, redis, search]
-    networks: [internal, external]
-    volumes:
-      - mastodon_system:/mastodon/public/system
-    healthcheck:
-      test: ['CMD-SHELL', "ps aux | grep '[s]idekiq\ 8' || false"]
-
-  search:
-    build: ./search
-    restart: always
-    environment:
-      discovery.type: single-node
-      xpack.security.enabled: 'false'
-      ES_JAVA_OPTS: '-Xms512m -Xmx512m'
-    volumes:
-      - search_data:/usr/share/elasticsearch/data
-    networks: [internal]
-
-  # ── 테스트 인스턴스 ──────────────────────────────
   db_test:
     image: postgres:14-alpine
     restart: always
@@ -88,6 +18,17 @@ services:
       - redis_data_test:/data
     networks: [internal]
 
+  search:
+    build: ./search
+    restart: always
+    environment:
+      discovery.type: single-node
+      xpack.security.enabled: 'false'
+      ES_JAVA_OPTS: '-Xms512m -Xmx512m'
+    volumes:
+      - search_data:/usr/share/elasticsearch/data
+    networks: [internal]
+
   web_test:
     build: .
     restart: always
@@ -95,9 +36,15 @@ services:
     command: bundle exec puma -C config/puma.rb
     user: '991:991'
     environment:
-      PORT: '3001' # 본 인스턴스(3000)와 충돌 방지
+      PORT: '3001'
     depends_on: [db_test, redis_test, search]
     networks: [internal, external]
+    healthcheck:
+      test:
+        [
+          'CMD-SHELL',
+          'wget -q --spider --proxy=off localhost:3001/health || exit 1',
+        ]
 
   streaming_test:
     build:
@@ -120,8 +67,20 @@ services:
     user: '991:991'
     depends_on: [db_test, redis_test, search]
     networks: [internal, external]
+    healthcheck:
+      test: ['CMD-SHELL', "ps aux | grep '[s]idekiq\ 8' || false"]
 
-  # ── 공통 ─────────────────────────────────────────
+  bot_test:
+    build: /home/xetead/xetead-bot
+    restart: always
+    env_file: .env.mastodon-test
+    environment:
+      MASTODON_API_BASE_URL: https://test.xetead.quest
+      TZ: Asia/Seoul
+    command: ["uv", "run", "--frozen", "--no-dev", "python", "-m", "bot.main"]
+    depends_on: [web_test]
+    networks: [internal, external]
+
   nginx:
     image: nginx:alpine
     restart: always
@@ -131,33 +90,10 @@ services:
     volumes:
       - ./nginx/conf.d:/etc/nginx/conf.d:ro
       - ./nginx/certs:/etc/nginx/certs:ro
-    depends_on: [web, web_test]
+    depends_on: [web_test]
     networks: [external]
 
-  bot:
-    build: /home/youruser/your-bot-repo
-    restart: always
-    env_file: .env.mastodon
-    environment:
-      MASTODON_API_BASE_URL: http://web:3000
-      TZ: Asia/Seoul
-    depends_on: [web]
-    networks: [internal]
-
-  bot_test:
-    build: /home/youruser/your-bot-repo
-    restart: always
-    env_file: .env.mastodon-test
-    environment:
-      MASTODON_API_BASE_URL: http://web_test:3001
-      TZ: Asia/Seoul
-    depends_on: [web_test]
-    networks: [internal]
-
 volumes:
-  postgres_data:
-  redis_data:
-  mastodon_system:
   postgres_data_test:
   redis_data_test:
   search_data:
