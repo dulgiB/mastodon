@@ -8,9 +8,10 @@ split (Google Fonts-style dynamic subsetting) so a browser only fetches the
 glyph ranges actually used by the text on the page.
 
 The subset carrying the ellipsis glyph (U+2026, index 86 in the upstream
-split) is intentionally omitted here -- see fonts/ellipsis-glyph-fix.scss,
-which substitutes Noto Sans KR's centered "…" instead of Pretendard's
-baseline-aligned one.
+split) is intentionally omitted here, and U+2025/U+22ef are carved out of the
+unicode-range of the subsets that would otherwise carry them below -- see
+fonts/ellipsis-glyph-fix.scss, which substitutes Noto Sans KR's centered
+"‥"/"…"/"⋯" instead of Pretendard's baseline-aligned ones.
 
 License: SIL Open Font License 1.1 (see app/javascript/fonts/pretendard/OFL.txt).
 */
@@ -923,7 +924,7 @@ License: SIL Open Font License 1.1 (see app/javascript/fonts/pretendard/OFL.txt)
     U+2243, U+2245, U+2248, U+2250-2253, U+225a, U+2260-2262, U+2264-2267,
     U+226a-226b, U+226e-2273, U+2276-2277, U+2279-227b, U+2280-2287,
     U+228a-228b, U+2295-2297, U+22a3-22a5, U+22bb-22bc, U+22ce-22cf,
-    U+22da-22db, U+22ee-22ef, U+2306, U+2312, U+2314, U+2467-2478;
+    U+22da-22db, U+22ee, U+2306, U+2312, U+2314, U+2467-2478;
 }
 @font-face {
   font-family: Pretendard;
@@ -939,7 +940,7 @@ License: SIL Open Font License 1.1 (see app/javascript/fonts/pretendard/OFL.txt)
     U+132-133, U+138, U+13f-142, U+149-14b, U+152-153, U+166-167, U+2bc, U+2c7,
     U+2d0, U+2d8-2d9, U+2db-2dd, U+391-394, U+396-3a1, U+3a3-3a9, U+3b2-3b6,
     U+3b8, U+3bc, U+3be-3c1, U+3c3-3c9, U+2010, U+2015-2016, U+2018-2019,
-    U+201b, U+201f-2021, U+2025, U+2030, U+2033-2036, U+203c, U+203e, U+2042,
+    U+201b, U+201f-2021, U+2030, U+2033-2036, U+203c, U+203e, U+2042,
     U+2074, U+207a-207f, U+2081-2084, U+2109, U+2113, U+2116, U+2121, U+2126,
     U+212b, U+2153-2154;
 }
@@ -2225,7 +2226,7 @@ License: SIL Open Font License 1.1 (see app/javascript/fonts/pretendard/OFL.txt)
     U+2243, U+2245, U+2248, U+2250-2253, U+225a, U+2260-2262, U+2264-2267,
     U+226a-226b, U+226e-2273, U+2276-2277, U+2279-227b, U+2280-2287,
     U+228a-228b, U+2295-2297, U+22a3-22a5, U+22bb-22bc, U+22ce-22cf,
-    U+22da-22db, U+22ee-22ef, U+2306, U+2312, U+2314, U+2467-2478;
+    U+22da-22db, U+22ee, U+2306, U+2312, U+2314, U+2467-2478;
 }
 @font-face {
   font-family: Pretendard;
@@ -2241,7 +2242,7 @@ License: SIL Open Font License 1.1 (see app/javascript/fonts/pretendard/OFL.txt)
     U+132-133, U+138, U+13f-142, U+149-14b, U+152-153, U+166-167, U+2bc, U+2c7,
     U+2d0, U+2d8-2d9, U+2db-2dd, U+391-394, U+396-3a1, U+3a3-3a9, U+3b2-3b6,
     U+3b8, U+3bc, U+3be-3c1, U+3c3-3c9, U+2010, U+2015-2016, U+2018-2019,
-    U+201b, U+201f-2021, U+2025, U+2030, U+2033-2036, U+203c, U+203e, U+2042,
+    U+201b, U+201f-2021, U+2030, U+2033-2036, U+203c, U+203e, U+2042,
     U+2074, U+207a-207f, U+2081-2084, U+2109, U+2113, U+2116, U+2121, U+2126,
     U+212b, U+2153-2154;
 }
@@ -3456,7 +3457,7 @@ License: SIL Open Font License 1.1 (see app/javascript/fonts/pretendard/OFL.txt)
     U+2243, U+2245, U+2248, U+2250-2253, U+225a, U+2260-2262, U+2264-2267,
     U+226a-226b, U+226e-2273, U+2276-2277, U+2279-227b, U+2280-2287,
     U+228a-228b, U+2295-2297, U+22a3-22a5, U+22bb-22bc, U+22ce-22cf,
-    U+22da-22db, U+22ee-22ef, U+2306, U+2312, U+2314, U+2467-2478;
+    U+22da-22db, U+22ee, U+2306, U+2312, U+2314, U+2467-2478;
 }
 @font-face {
   font-family: Pretendard;
@@ -3471,7 +3472,7 @@ License: SIL Open Font License 1.1 (see app/javascript/fonts/pretendard/OFL.txt)
     U+132-133, U+138, U+13f-142, U+149-14b, U+152-153, U+166-167, U+2bc, U+2c7,
     U+2d0, U+2d8-2d9, U+2db-2dd, U+391-394, U+396-3a1, U+3a3-3a9, U+3b2-3b6,
     U+3b8, U+3bc, U+3be-3c1, U+3c3-3c9, U+2010, U+2015-2016, U+2018-2019,
-    U+201b, U+201f-2021, U+2025, U+2030, U+2033-2036, U+203c, U+203e, U+2042,
+    U+201b, U+201f-2021, U+2030, U+2033-2036, U+203c, U+203e, U+2042,
     U+2074, U+207a-207f, U+2081-2084, U+2109, U+2113, U+2116, U+2121, U+2126,
     U+212b, U+2153-2154;
 }

@@ -1,8 +1,14 @@
-// Pretendard's own "…" sits on the baseline; Noto Sans KR centers it like most
-// CJK fonts. Borrow just that glyph from the Noto subset already self-hosted for
-// this (see app/javascript/fonts/noto-sans-kr/). A distinct font-family (rather
-// than another 'Pretendard' @font-face) avoids same-family unicode-range
-// tie-break ambiguity; ordinary font-family fallback is unambiguous instead.
+// Pretendard's own "…"/"‥"/"⋯" sit on the baseline; Noto Sans KR centers them
+// like most CJK fonts. A run containing one of these right after a Latin/Common
+// character (e.g. ") …") gets shaped as a single font run by the browser, so
+// ordinary font-family fallback per character isn't enough -- Pretendard is
+// disqualified for exactly these codepoints via unicode-range on its own
+// @font-face (pretendard.scss), and this face supplies the Noto Sans KR glyph
+// instead. U+22ee (vertical ellipsis) is deliberately left out: Noto Sans KR
+// has no glyph for it, so it stays with Pretendard rather than reaching a face
+// with no glyph at all. A distinct font-family (rather than another
+// 'Pretendard' @font-face) avoids same-family unicode-range tie-break
+// ambiguity; ordinary font-family fallback is unambiguous instead.
 @font-face {
   font-family: mastodon-font-ellipsis-fix;
   font-style: normal;
@@ -10,5 +16,5 @@
   font-display: swap;
   src: url('@/fonts/noto-sans-kr/PbykFmXiEBPT4ITbgNA5Cgm20xz64px_1hVWr0wuPNGmlQNMEfD4.114.woff2')
     format('woff2');
-  unicode-range: U+2026;
+  unicode-range: U+2025-2026, U+22ef;
 }

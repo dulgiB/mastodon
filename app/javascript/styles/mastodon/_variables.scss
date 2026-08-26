@@ -20,10 +20,10 @@ $mobile-menu-breakpoint: 760px;
 $mobile-breakpoint: 630px;
 $no-columns-breakpoint: 600px;
 
-// mastodon-font-ellipsis-fix first: it only covers U+2026, borrowed from Noto
-// Sans KR because Pretendard's own "…" sits on the baseline instead of
-// centered (see fonts/ellipsis-glyph-fix.scss). Pretendard next -- it has a
-// full Latin set too, so this covers Latin text as well as Hangul, and
+// mastodon-font-ellipsis-fix first: it covers U+2025/U+2026/U+22ef, borrowed
+// from Noto Sans KR because Pretendard's own "‥"/"…"/"⋯" sit on the baseline
+// instead of centered (see fonts/ellipsis-glyph-fix.scss). Pretendard next --
+// it has a full Latin set too, so this covers Latin text as well as Hangul, and
 // doesn't share Noto Sans KR's oversized digit/Hangul spacing. Then
 // mastodon-font-sans-serif (Roboto, see fonts/roboto.scss) as a fallback for
 // anything Pretendard's self-hosted unicode-range chunks don't cover, and the
