@@ -14,6 +14,7 @@ import { loadEntireArchiveTimeline } from 'mastodon/actions/timelines';
 import api from 'mastodon/api';
 import Column from 'mastodon/components/column';
 import ColumnHeader from 'mastodon/components/column_header';
+import { ColumnSearchHeader } from 'mastodon/components/column_search_header';
 import { identityContextPropShape, withIdentity } from 'mastodon/identity_context';
 import { WithRouterPropTypes } from 'mastodon/utils/react_router';
 
@@ -35,6 +36,8 @@ class ArchiveTimeline extends PureComponent {
   state = {
     archives: null,
     order: 'asc',
+    searching: false,
+    query: '',
   };
 
   componentDidMount () {
@@ -62,6 +65,7 @@ class ArchiveTimeline extends PureComponent {
 
     if (episodeId && episodeId !== prevProps.params.episodeId) {
       this.props.dispatch(loadEntireArchiveTimeline(episodeId));
+      this.setState({ searching: false, query: '' });
     }
   }
 
@@ -81,10 +85,22 @@ class ArchiveTimeline extends PureComponent {
     this.setState(state => ({ order: state.order === 'asc' ? 'desc' : 'asc' }));
   };
 
+  handleSearchActivate = () => {
+    this.setState({ searching: true });
+  };
+
+  handleSearchBack = () => {
+    this.setState({ searching: false, query: '' });
+  };
+
+  handleSearchSubmit = query => {
+    this.setState({ query });
+  };
+
   render () {
     const { columnId, multiColumn, intl, identity } = this.props;
     const { episodeId } = this.props.params;
-    const { archives, order } = this.state;
+    const { archives, order, searching, query } = this.state;
     const pinned = !!columnId;
 
     if (!identity.signedIn) {
@@ -142,14 +158,27 @@ class ArchiveTimeline extends PureComponent {
           />
         )}
 
+        {archives.length > 0 && (
+          <ColumnSearchHeader
+            active={searching}
+            onActivate={this.handleSearchActivate}
+            onBack={this.handleSearchBack}
+            onSubmit={this.handleSearchSubmit}
+            placeholder={intl.formatMessage({ id: 'archive_timeline.search_placeholder', defaultMessage: 'Search this archive' })}
+          />
+        )}
+
         <ArchiveStatusListContainer
           trackScroll={!pinned}
           scrollKey={`archive_timeline-${columnId}`}
           timelineId={`archive:${episodeId}`}
           order={order}
+          query={query}
           emptyMessage={
             archives.length === 0 ? (
               <FormattedMessage id='empty_column.archive_none' defaultMessage='No archives have been defined yet.' />
+            ) : query.trim() ? (
+              <FormattedMessage id='empty_column.archive_search' defaultMessage='No posts in this episode match your search.' />
             ) : (
               <FormattedMessage id='empty_column.archive' defaultMessage='This episode has no posts.' />
             )
