@@ -28,4 +28,34 @@ RSpec.describe 'API V1 Archives' do
       end
     end
   end
+
+  describe 'GET /api/v1/archives/search' do
+    let!(:matching_status)     { Fabricate(:status, text: 'this one mentions zebras', visibility: :public) }
+    let!(:non_matching_status) { Fabricate(:status, text: 'nothing to see here', visibility: :public) }
+    let!(:matching_episode)     { Fabricate(:archive, title: 'Has zebras', start_status_id: matching_status.id, end_status_id: matching_status.id) }
+    let!(:non_matching_episode) { Fabricate(:archive, title: 'No zebras', start_status_id: non_matching_status.id, end_status_id: non_matching_status.id) }
+
+    it 'returns only the episodes containing a visible match, case-insensitively' do
+      get '/api/v1/archives/search', params: { q: 'ZEBRAS' }, headers: headers
+
+      expect(response).to have_http_status(200)
+      expect(response.parsed_body.pluck(:id))
+        .to include(matching_episode.id.to_s)
+        .and not_include(non_matching_episode.id.to_s)
+    end
+
+    it 'returns an empty array for a blank query' do
+      get '/api/v1/archives/search', params: { q: '' }, headers: headers
+
+      expect(response).to have_http_status(200)
+      expect(response.parsed_body).to eq([])
+    end
+
+    it 'returns an empty array when nothing matches' do
+      get '/api/v1/archives/search', params: { q: 'nonexistentqueryxyz' }, headers: headers
+
+      expect(response).to have_http_status(200)
+      expect(response.parsed_body).to eq([])
+    end
+  end
 end

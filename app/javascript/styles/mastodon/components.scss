@@ -11561,3 +11561,17 @@ noscript {
     }
   }
 }
+
+.archive-timeline__find-next {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 10px 15px;
+  border: 1px solid var(--color-border-primary);
+  border-top: 0;
+  background: var(--surface-background-color, transparent);
+  color: var(--color-text-secondary);
+  font-size: 13px;
+  flex: 0 0 auto;
+}

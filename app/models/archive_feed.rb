@@ -19,6 +19,22 @@ class ArchiveFeed
     scope.to_a_paginated_by_id(limit, max_id: max_id, since_id: since_id, min_id: min_id)
   end
 
+  # Whether this archive contains at least one status visible to the viewer
+  # whose text or content warning literally (no stemming) contains `query`,
+  # case-insensitively. Used to point a searcher at other episodes when the
+  # one they're looking at doesn't have a match.
+  # @param [String] query
+  # @return [Boolean]
+  def match?(query)
+    scope.merge(self.class.text_scope(query)).exists?
+  end
+
+  # @param [String] query
+  def self.text_scope(query)
+    pattern = "%#{ActiveRecord::Base.sanitize_sql_like(query)}%"
+    Status.where('statuses.text ILIKE :pattern OR statuses.spoiler_text ILIKE :pattern', pattern: pattern)
+  end
+
   private
 
   attr_reader :archive, :viewer

@@ -327,6 +327,8 @@
   "annual_report.summary.share_message": "I got the {archetype} archetype!",
   "annual_report.summary.share_on_mastodon": "Share on Mastodon",
   "archive_timeline.episode": "Episode",
+  "archive_timeline.find_next": "Find next",
+  "archive_timeline.find_next_hint": "Not found here. Found in {count, plural, one {# other episode} other {# other episodes}}.",
   "archive_timeline.newest_first": "Newest first",
   "archive_timeline.next_episode": "Next episode",
   "archive_timeline.oldest_first": "Oldest first",

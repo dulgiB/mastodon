@@ -71,7 +71,9 @@ namespace :api, format: false do
       resources :archive, only: :show, controller: :archive
     end
 
-    resources :archives, only: [:index]
+    resources :archives, only: [:index] do
+      get :search, on: :collection
+    end
 
     with_options to: 'streaming#index' do
       get '/streaming'
