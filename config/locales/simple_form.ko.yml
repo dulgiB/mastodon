@@ -212,6 +212,10 @@ ko:
         text: 공지사항
       appeal:
         text: 이 결정을 번복해야만 하는 이유가 무엇입니까
+      archive:
+        end_status_id: 끝 포스트 ID
+        start_status_id: 시작 포스트 ID
+        title: 제목
       defaults:
         autofollow: 초대를 통한 팔로우
         avatar: 프로필 사진
