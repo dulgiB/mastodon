@@ -11511,3 +11511,53 @@ noscript {
     gap: 4px;
   }
 }
+
+.archive-timeline__picker {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 10px 15px;
+  border: 1px solid var(--color-border-primary);
+  border-top: 0;
+  background: var(--surface-background-color, transparent);
+  flex: 0 0 auto;
+
+  &__select {
+    flex: 1 1 auto;
+    min-width: 0;
+    font-size: 14px;
+    font-family: inherit;
+    color: var(--color-text-primary);
+    background: transparent;
+    border: 1px solid var(--color-border-primary);
+    border-radius: 4px;
+    padding: 6px 8px;
+  }
+
+  &__arrow {
+    flex: 0 0 auto;
+  }
+
+  &__order {
+    flex: 0 0 auto;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    border: 0;
+    background: transparent;
+    color: var(--color-text-primary);
+    cursor: pointer;
+    font-size: 13px;
+    white-space: nowrap;
+    padding: 6px 8px;
+
+    &:hover {
+      color: var(--color-text-secondary);
+    }
+
+    .icon {
+      width: 16px;
+      height: 16px;
+    }
+  }
+}

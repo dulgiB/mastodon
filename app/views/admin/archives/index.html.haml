@@ -1,0 +1,15 @@
+- content_for :page_title do
+  = t('admin.archives.title')
+
+- content_for :heading_actions do
+  - if can? :create, :archive
+    = link_to t('admin.archives.add_new'), new_admin_archive_path, class: 'button'
+
+%hr.spacer/
+
+- if @archives.empty?
+  .muted-hint.center-text
+    = t 'admin.archives.empty'
+- else
+  .announcements-list
+    = render partial: 'archive', collection: @archives

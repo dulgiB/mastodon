@@ -68,7 +68,10 @@ namespace :api, format: false do
       resource :link, only: :show, controller: :link
       resources :tag, only: :show
       resources :list, only: :show
+      resources :archive, only: :show, controller: :archive
     end
+
+    resources :archives, only: [:index]
 
     with_options to: 'streaming#index' do
       get '/streaming'

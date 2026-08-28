@@ -38,6 +38,10 @@ export function ListTimeline () {
   return import('../../list_timeline');
 }
 
+export function ArchiveTimeline () {
+  return import('../../archive_timeline');
+}
+
 export function Lists () {
   return import('../../lists');
 }

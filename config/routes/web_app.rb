@@ -5,6 +5,7 @@
 # - Have alternative format representations
 
 %w(
+  /archive/(*any)
   /blocks
   /bookmarks
   /collections/(*any)

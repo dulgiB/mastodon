@@ -213,6 +213,10 @@ en:
         text: Announcement
       appeal:
         text: Explain why this decision should be reversed
+      archive:
+        end_status_id: End post ID
+        start_status_id: Start post ID
+        title: Title
       defaults:
         autofollow: Invite to follow your account
         avatar: Profile picture

@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_07_06_110800) do
+ActiveRecord::Schema[8.1].define(version: 2026_08_28_120000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -291,6 +291,14 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_06_110800) do
     t.index ["account_warning_id"], name: "index_appeals_on_account_warning_id", unique: true
     t.index ["approved_by_account_id"], name: "index_appeals_on_approved_by_account_id", where: "(approved_by_account_id IS NOT NULL)"
     t.index ["rejected_by_account_id"], name: "index_appeals_on_rejected_by_account_id", where: "(rejected_by_account_id IS NOT NULL)"
+  end
+
+  create_table "archives", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.bigint "end_status_id", null: false
+    t.bigint "start_status_id", null: false
+    t.string "title", default: "", null: false
+    t.datetime "updated_at", null: false
   end
 
   create_table "backups", force: :cascade do |t|
