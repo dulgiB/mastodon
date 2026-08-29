@@ -11585,7 +11585,10 @@ noscript {
 // as the global search box in the top-right panel) so its background stays
 // in sync with whatever look the active theme gives that box. Its normal
 // left padding reserves room for the global search box's icon, which this
-// one doesn't render, so that space is given back here.
-.archive-timeline__search .search__input {
-  padding-inline-start: 16px;
+// one doesn't render, so that space is given back here. The extra `input`
+// type selector (beyond just matching on class, as the per-theme rules
+// this overrides do) is needed to outrank those rules regardless of load
+// order, since they're otherwise the same specificity.
+.archive-timeline__search input.search__input {
+  padding-inline-start: 20px;
 }
