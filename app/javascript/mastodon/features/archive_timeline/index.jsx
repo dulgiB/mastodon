@@ -192,14 +192,15 @@ class ArchiveTimeline extends PureComponent {
     }
 
     const current = archives.find(archive => archive.id === episodeId);
-    const title = current ? current.title : intl.formatMessage({ id: 'archive_timeline.title', defaultMessage: 'Archive' });
+    const headerTitle = intl.formatMessage({ id: 'archive_timeline.title', defaultMessage: 'Archive' });
+    const title = current ? current.title : headerTitle;
 
     return (
       <Column bindToDocument={!multiColumn} ref={this.setRef} label={title}>
         <ColumnHeader
           icon='archive'
           iconComponent={InventoryIcon}
-          title={title}
+          title={headerTitle}
           onClick={this.handleHeaderClick}
           multiColumn={multiColumn}
         />
@@ -216,13 +217,16 @@ class ArchiveTimeline extends PureComponent {
         )}
 
         {archives.length > 0 && (
-          <ColumnSearchHeader
-            active={searching}
-            onActivate={this.handleSearchActivate}
-            onBack={this.handleSearchBack}
-            onSubmit={this.handleSearchSubmit}
-            placeholder={intl.formatMessage({ id: 'archive_timeline.search_placeholder', defaultMessage: 'Search this archive' })}
-          />
+          <div className='archive-timeline__search'>
+            <ColumnSearchHeader
+              active={searching}
+              onActivate={this.handleSearchActivate}
+              onBack={this.handleSearchBack}
+              onSubmit={this.handleSearchSubmit}
+              placeholder={intl.formatMessage({ id: 'archive_timeline.search_placeholder', defaultMessage: 'Search this archive' })}
+              inputClassName='search__input'
+            />
+          </div>
         )}
 
         {showFindNext && (

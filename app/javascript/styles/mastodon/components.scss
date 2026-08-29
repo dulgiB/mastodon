@@ -11575,3 +11575,12 @@ noscript {
   font-size: 13px;
   flex: 0 0 auto;
 }
+
+// The search input reuses the .search__input class (styled per theme, same
+// as the global search box in the top-right panel) so its background stays
+// in sync with whatever look the active theme gives that box. Its normal
+// left padding reserves room for the global search box's icon, which this
+// one doesn't render, so that space is given back here.
+.archive-timeline__search .search__input {
+  padding-inline-start: 16px;
+}
