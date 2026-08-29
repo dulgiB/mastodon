@@ -1,5 +1,5 @@
 import PropTypes from 'prop-types';
-import { PureComponent } from 'react';
+import { createRef, PureComponent } from 'react';
 
 import { FormattedMessage } from 'react-intl';
 
@@ -50,6 +50,8 @@ class ArchiveTimeline extends PureComponent {
   // active there instead of being reset like an ordinary episode switch.
   jumpingToMatch = false;
 
+  searchContainerRef = createRef();
+
   componentDidMount () {
     const { identity } = this.props;
 
@@ -68,6 +70,8 @@ class ArchiveTimeline extends PureComponent {
         this.props.history.replace(`/archive/${data[data.length - 1].id}`);
       }
     }).catch(() => this.setState({ archives: [] }));
+
+    document.addEventListener('keydown', this.handleGlobalKeyDown);
   }
 
   componentDidUpdate (prevProps) {
@@ -86,6 +90,7 @@ class ArchiveTimeline extends PureComponent {
 
   componentWillUnmount () {
     this.fetchMatchingArchives.cancel();
+    document.removeEventListener('keydown', this.handleGlobalKeyDown);
   }
 
   setRef = c => {
@@ -102,6 +107,28 @@ class ArchiveTimeline extends PureComponent {
 
   handleToggleOrder = () => {
     this.setState(state => ({ order: state.order === 'asc' ? 'desc' : 'asc' }));
+  };
+
+  // Mirrors the browser's own find-in-page shortcut: bring focus to the
+  // search box (scrolling it into view first) and select whatever text is
+  // already there, ready to be typed over — including on repeat presses,
+  // same as a real find bar, which never closes from the shortcut itself
+  // (only Escape/Cancel does).
+  handleGlobalKeyDown = e => {
+    if ((e.key !== 'f' && e.key !== 'F') || !(e.metaKey || e.ctrlKey)) {
+      return;
+    }
+
+    const input = this.searchContainerRef.current?.querySelector('input');
+
+    if (!input) {
+      return;
+    }
+
+    e.preventDefault();
+    input.scrollIntoView({ block: 'nearest' });
+    input.focus();
+    input.select();
   };
 
   handleSearchActivate = () => {
@@ -217,7 +244,7 @@ class ArchiveTimeline extends PureComponent {
         )}
 
         {archives.length > 0 && (
-          <div className='archive-timeline__search'>
+          <div className='archive-timeline__search' ref={this.searchContainerRef}>
             <ColumnSearchHeader
               active={searching}
               onActivate={this.handleSearchActivate}

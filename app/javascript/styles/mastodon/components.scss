@@ -11425,6 +11425,11 @@ noscript {
       outline: 0;
     }
   }
+
+  .link-button {
+    flex: 0 0 auto;
+    white-space: nowrap;
+  }
 }
 
 .column-footer {
