@@ -64,6 +64,13 @@ RSpec.describe ArchiveFeed do
       expect(described_class.new(archive, viewer).match?('ZEBRAS')).to be(true)
     end
 
+    it 'matches on a literal substring of Korean text, not a whole word (not morphological search)' do
+      status = Fabricate(:status, account: stranger, text: '오늘도 감사합니다', visibility: :public)
+      archive = Fabricate(:archive, start_status_id: status.id, end_status_id: status.id)
+
+      expect(described_class.new(archive, viewer).match?('감사합니')).to be(true)
+    end
+
     it 'matches the spoiler (content warning) text too' do
       status = Fabricate(:status, account: stranger, spoiler_text: 'unicornwarning', visibility: :public)
       archive = Fabricate(:archive, start_status_id: status.id, end_status_id: status.id)
