@@ -18,6 +18,7 @@ import { compareId } from 'mastodon/compare_id';
 import Column from 'mastodon/components/column';
 import ColumnHeader from 'mastodon/components/column_header';
 import { ColumnSearchHeader } from 'mastodon/components/column_search_header';
+import { LoadingIndicator } from 'mastodon/components/loading_indicator';
 import { identityContextPropShape, withIdentity } from 'mastodon/identity_context';
 import { WithRouterPropTypes } from 'mastodon/utils/react_router';
 
@@ -43,6 +44,16 @@ class ArchiveTimeline extends PureComponent {
     query: '',
     matchingArchives: null,
     matchingArchivesQuery: null,
+    // The whole episode is loaded backwards (newest page first, per the
+    // ordinary max_id pagination `expandArchiveTimeline` uses) regardless of
+    // the display `order`. Rendering the list as pages trickle in therefore
+    // means the default oldest-first view grows from the bottom while
+    // reversing on every page, which reads as the scroll position jumping
+    // around. Keep the list hidden behind a spinner until the whole episode
+    // (loadEntireArchiveTimeline's returned promise) has resolved, matching
+    // this feature's own premise: it loads the bounded episode fully before
+    // letting the UI reorder/scroll it, rather than incrementally.
+    loadingEpisode: true,
   };
 
   // Set right before navigating to another episode because the user picked
@@ -65,11 +76,13 @@ class ArchiveTimeline extends PureComponent {
       const { episodeId } = this.props.params;
 
       if (episodeId) {
-        this.props.dispatch(loadEntireArchiveTimeline(episodeId));
+        this.loadEpisode(episodeId);
       } else if (data.length > 0) {
         this.props.history.replace(`/archive/${data[data.length - 1].id}`);
+      } else {
+        this.setState({ loadingEpisode: false });
       }
-    }).catch(() => this.setState({ archives: [] }));
+    }).catch(() => this.setState({ archives: [], loadingEpisode: false }));
 
     document.addEventListener('keydown', this.handleGlobalKeyDown);
   }
@@ -78,7 +91,7 @@ class ArchiveTimeline extends PureComponent {
     const { episodeId } = this.props.params;
 
     if (episodeId && episodeId !== prevProps.params.episodeId) {
-      this.props.dispatch(loadEntireArchiveTimeline(episodeId));
+      this.loadEpisode(episodeId);
 
       if (this.jumpingToMatch) {
         this.jumpingToMatch = false;
@@ -92,6 +105,13 @@ class ArchiveTimeline extends PureComponent {
     this.fetchMatchingArchives.cancel();
     document.removeEventListener('keydown', this.handleGlobalKeyDown);
   }
+
+  loadEpisode = episodeId => {
+    this.setState({ loadingEpisode: true });
+    this.props.dispatch(loadEntireArchiveTimeline(episodeId)).then(() => {
+      this.setState({ loadingEpisode: false });
+    });
+  };
 
   setRef = c => {
     this.column = c;
@@ -178,7 +198,7 @@ class ArchiveTimeline extends PureComponent {
   render () {
     const { columnId, multiColumn, intl, identity } = this.props;
     const { episodeId } = this.props.params;
-    const { archives, order, searching, query, matchingArchives, matchingArchivesQuery } = this.state;
+    const { archives, order, searching, query, matchingArchives, matchingArchivesQuery, loadingEpisode } = this.state;
     const pinned = !!columnId;
 
     const trimmedQuery = query.trim();
@@ -276,6 +296,10 @@ class ArchiveTimeline extends PureComponent {
             <div className='empty-column-indicator'>
               <FormattedMessage id='empty_column.archive_none' defaultMessage='No archives have been defined yet.' />
             </div>
+          </div>
+        ) : loadingEpisode ? (
+          <div className='scrollable scrollable--flex'>
+            <LoadingIndicator />
           </div>
         ) : (
           <ArchiveStatusListContainer
