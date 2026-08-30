@@ -12,7 +12,7 @@ import { debounce } from 'lodash';
 
 import InventoryIcon from '@/material-icons/400-24px/inventory_2.svg?react';
 import { injectIntl } from '@/mastodon/components/intl';
-import { loadEntireArchiveTimeline } from 'mastodon/actions/timelines';
+import { expandArchiveTimelineFromStart, loadEntireArchiveTimeline } from 'mastodon/actions/timelines';
 import api from 'mastodon/api';
 import { compareId } from 'mastodon/compare_id';
 import Column from 'mastodon/components/column';
@@ -44,16 +44,18 @@ class ArchiveTimeline extends PureComponent {
     query: '',
     matchingArchives: null,
     matchingArchivesQuery: null,
-    // The whole episode is loaded backwards (newest page first, per the
-    // ordinary max_id pagination `expandArchiveTimeline` uses) regardless of
-    // the display `order`. Rendering the list as pages trickle in therefore
-    // means the default oldest-first view grows from the bottom while
-    // reversing on every page, which reads as the scroll position jumping
-    // around. Keep the list hidden behind a spinner until the whole episode
-    // (loadEntireArchiveTimeline's returned promise) has resolved, matching
-    // this feature's own premise: it loads the bounded episode fully before
-    // letting the UI reorder/scroll it, rather than incrementally.
-    loadingEpisode: true,
+    // Whether the whole episode has been loaded (rather than just the
+    // lazily-paginated oldest page and whatever's been scrolled since).
+    // Newest-first order and in-episode search both need every post already
+    // in hand — order because it's just a client-side reverse of the full
+    // list, search because it's a client-side substring match with no
+    // network round-trip — so both are gated on this until the user asks
+    // for one of them (see handleSearchActivate/handleToggleOrder).
+    fullyLoaded: false,
+    // True only while the full-episode load triggered by activating search
+    // is in flight (see loadFullEpisode) — the ordinary lazy first-page load
+    // uses the status list's own built-in loading state instead.
+    loadingFullEpisode: false,
   };
 
   // Set right before navigating to another episode because the user picked
@@ -76,13 +78,11 @@ class ArchiveTimeline extends PureComponent {
       const { episodeId } = this.props.params;
 
       if (episodeId) {
-        this.loadEpisode(episodeId);
+        this.loadFirstPage(episodeId);
       } else if (data.length > 0) {
         this.props.history.replace(`/archive/${data[data.length - 1].id}`);
-      } else {
-        this.setState({ loadingEpisode: false });
       }
-    }).catch(() => this.setState({ archives: [], loadingEpisode: false }));
+    }).catch(() => this.setState({ archives: [] }));
 
     document.addEventListener('keydown', this.handleGlobalKeyDown);
   }
@@ -91,7 +91,8 @@ class ArchiveTimeline extends PureComponent {
     const { episodeId } = this.props.params;
 
     if (episodeId && episodeId !== prevProps.params.episodeId) {
-      this.loadEpisode(episodeId);
+      this.setState({ order: 'asc', fullyLoaded: false, loadingFullEpisode: false });
+      this.loadFirstPage(episodeId);
 
       if (this.jumpingToMatch) {
         this.jumpingToMatch = false;
@@ -106,10 +107,14 @@ class ArchiveTimeline extends PureComponent {
     document.removeEventListener('keydown', this.handleGlobalKeyDown);
   }
 
-  loadEpisode = episodeId => {
-    this.setState({ loadingEpisode: true });
+  loadFirstPage = episodeId => {
+    this.props.dispatch(expandArchiveTimelineFromStart(episodeId));
+  };
+
+  loadFullEpisode = episodeId => {
+    this.setState({ loadingFullEpisode: true });
     this.props.dispatch(loadEntireArchiveTimeline(episodeId)).then(() => {
-      this.setState({ loadingEpisode: false });
+      this.setState({ loadingFullEpisode: false, fullyLoaded: true });
     });
   };
 
@@ -125,7 +130,13 @@ class ArchiveTimeline extends PureComponent {
     this.props.history.push(`/archive/${id}`);
   };
 
+  // Disabled (see render) until fullyLoaded, since newest-first is just a
+  // client-side reverse of the complete episode.
   handleToggleOrder = () => {
+    if (!this.state.fullyLoaded) {
+      return;
+    }
+
     this.setState(state => ({ order: state.order === 'asc' ? 'desc' : 'asc' }));
   };
 
@@ -153,6 +164,10 @@ class ArchiveTimeline extends PureComponent {
 
   handleSearchActivate = () => {
     this.setState({ searching: true });
+
+    if (!this.state.fullyLoaded && !this.state.loadingFullEpisode) {
+      this.loadFullEpisode(this.props.params.episodeId);
+    }
   };
 
   handleSearchBack = () => {
@@ -198,7 +213,7 @@ class ArchiveTimeline extends PureComponent {
   render () {
     const { columnId, multiColumn, intl, identity } = this.props;
     const { episodeId } = this.props.params;
-    const { archives, order, searching, query, matchingArchives, matchingArchivesQuery, loadingEpisode } = this.state;
+    const { archives, order, searching, query, matchingArchives, matchingArchivesQuery, fullyLoaded, loadingFullEpisode } = this.state;
     const pinned = !!columnId;
 
     const trimmedQuery = query.trim();
@@ -258,6 +273,7 @@ class ArchiveTimeline extends PureComponent {
             archives={archives}
             currentId={episodeId}
             order={order}
+            orderToggleDisabled={!fullyLoaded}
             onSelect={this.handleSelectEpisode}
             onToggleOrder={this.handleToggleOrder}
           />
@@ -297,15 +313,20 @@ class ArchiveTimeline extends PureComponent {
               <FormattedMessage id='empty_column.archive_none' defaultMessage='No archives have been defined yet.' />
             </div>
           </div>
-        ) : loadingEpisode ? (
+        ) : loadingFullEpisode ? (
           <div className='scrollable scrollable--flex'>
-            <LoadingIndicator />
+            <div className='empty-column-indicator'>
+              <LoadingIndicator />
+              {' '}
+              <FormattedMessage id='archive_timeline.loading_for_search' defaultMessage='Loading the whole episode to search…' />
+            </div>
           </div>
         ) : (
           <ArchiveStatusListContainer
             trackScroll={!pinned}
             scrollKey={`archive_timeline-${columnId}`}
             timelineId={`archive:${episodeId}`}
+            episodeId={episodeId}
             order={order}
             query={query}
             emptyMessage={

@@ -11560,6 +11560,15 @@ noscript {
       color: var(--color-text-secondary);
     }
 
+    &:disabled {
+      color: var(--color-text-disabled);
+      cursor: default;
+
+      &:hover {
+        color: var(--color-text-disabled);
+      }
+    }
+
     .icon {
       width: 16px;
       height: 16px;
