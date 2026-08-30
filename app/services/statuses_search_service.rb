@@ -10,7 +10,6 @@ class StatusesSearchService < BaseService
       @options = options
       @limit   = options[:limit].to_i
       @offset  = options[:offset].to_i
-      convert_deprecated_options!
 
       span.add_attributes(
         'search.offset' => @offset,
@@ -27,6 +26,10 @@ class StatusesSearchService < BaseService
   private
 
   def status_search_results
+    return database_search_results unless Chewy.enabled?
+
+    convert_deprecated_options!
+
     request             = parsed_query.request
     results             = elastic_stoplight_wrapper.run { request.collapse(field: :id).order(id: { order: :desc }).limit(@limit).offset(@offset).objects.compact }
     account_ids         = results.map(&:account_id)
@@ -37,6 +40,29 @@ class StatusesSearchService < BaseService
     results.reject { |status| StatusFilter.new(status, @account).filtered? }
   rescue Stoplight::Error::RedLight, Faraday::ConnectionFailed, Parslet::ParseFailed, Errno::ENETUNREACH, OpenSSL::SSL::SSLError, Elastic::Transport::Transport::Error
     []
+  end
+
+  # Elasticsearch is understood to be unavailable rather than merely
+  # disabled by choice here (Chewy.enabled? covers both), so this stands
+  # in with a plain substring search over the database. It only supports
+  # a literal query and the from:/min_id/max_id options above — none of
+  # SearchQueryTransformer's other operators (is:, has:, before:, quoted
+  # phrases, ...) apply.
+  def database_search_results
+    return [] if @query.blank?
+
+    results = DatabaseStatusSearch.new(@account).call(
+      @query,
+      limit: @limit,
+      offset: @offset,
+      account_id: @options[:account_id],
+      min_id: @options[:min_id],
+      max_id: @options[:max_id]
+    )
+
+    @account.preload_relations!(results.map(&:account_id), results.map(&:account_domain))
+
+    results.reject { |status| StatusFilter.new(status, @account).filtered? }
   end
 
   def parsed_query

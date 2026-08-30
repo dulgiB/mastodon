@@ -26,13 +26,7 @@ class ArchiveFeed
   # @param [String] query
   # @return [Boolean]
   def match?(query)
-    scope.merge(self.class.text_scope(query)).exists?
-  end
-
-  # @param [String] query
-  def self.text_scope(query)
-    pattern = "%#{ActiveRecord::Base.sanitize_sql_like(query)}%"
-    Status.where('statuses.text ILIKE :pattern OR statuses.spoiler_text ILIKE :pattern', pattern: pattern)
+    scope.merge(Status.matching_text(query)).exists?
   end
 
   private
@@ -48,35 +42,6 @@ class ArchiveFeed
   end
 
   def visible_scope
-    base = Status.joins(:account).left_outer_joins(:mentions).merge(Account.without_suspended)
-
-    return base if privileged_viewer?
-
-    base
-      .merge(public_or_unlisted_scope)
-      .or(base.where(account_id: viewer.id))
-      .or(base.merge(private_and_following_scope))
-      .or(base.merge(direct_or_limited_and_mentioned_scope))
-      .group(Status.arel_table[:id])
-  end
-
-  def public_or_unlisted_scope
-    Status.distributable_visibility.where.not(
-      account_id: Block.where(target_account_id: viewer.id).select(:account_id)
-    )
-  end
-
-  def private_and_following_scope
-    Status.where(visibility: :private).where(
-      account_id: Follow.where(account_id: viewer.id).select(:target_account_id)
-    )
-  end
-
-  def direct_or_limited_and_mentioned_scope
-    Status.where(visibility: %i(direct limited)).where(mentions: { account_id: viewer.id })
-  end
-
-  def privileged_viewer?
-    (viewer.user&.role || UserRole.nobody).can?(:manage_users, :manage_reports)
+    StatusVisibility.new(viewer).scope
   end
 end

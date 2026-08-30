@@ -18,5 +18,21 @@ RSpec.describe StatusesSearchService do
           )
       end
     end
+
+    context 'when elasticsearch is disabled' do
+      before { allow(Chewy).to receive(:enabled?).and_return(false) }
+
+      it 'falls back to a literal database substring search' do
+        expect(results)
+          .to have_attributes(
+            size: 1,
+            first: eq(status)
+          )
+      end
+
+      it 'returns no results for a blank query' do
+        expect(subject.call('', status.account, limit: 5)).to be_empty
+      end
+    end
   end
 end
