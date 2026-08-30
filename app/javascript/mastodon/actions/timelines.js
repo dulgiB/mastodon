@@ -168,6 +168,7 @@ export const expandAccountDirectTimeline    = (accountId, { maxId} = {}) => expa
 export const expandAccountFeaturedTimeline = (accountId, { tagged } = {}) => expandTimeline(`account:${accountId}:pinned${tagged ? `:${tagged}` : ''}`, `/api/v1/accounts/${accountId}/statuses`, { pinned: true, tagged });
 export const expandAccountMediaTimeline    = (accountId, { maxId, withReplies } = {}) => expandTimeline(`account:${accountId}:media${withReplies ? ':with_replies' : ''}`, `/api/v1/accounts/${accountId}/statuses`, { max_id: maxId, only_media: true, no_direct: true, limit: 40, exclude_replies: !withReplies });
 export const expandListTimeline            = (id, { maxId } = {}) => expandTimeline(`list:${id}`, `/api/v1/timelines/list/${id}`, { max_id: maxId });
+export const expandArchiveTimeline         = (id, { maxId } = {}) => expandTimeline(`archive:${id}`, `/api/v1/timelines/archive/${id}`, { max_id: maxId });
 export const expandLinkTimeline            = (url, { maxId } = {}) => expandTimeline(`link:${url}`, `/api/v1/timelines/link`, { url, max_id: maxId });
 export const expandHashtagTimeline         = (hashtag, { maxId, tags, local } = {}, done = noOp) => {
   return expandTimeline(`hashtag:${hashtag}${local ? ':local' : ''}`, `/api/v1/timelines/tag/${hashtag}`, {
@@ -178,6 +179,32 @@ export const expandHashtagTimeline         = (hashtag, { maxId, tags, local } = 
     local:  local,
   });
 };
+
+// Archives are small, curated, bounded ranges of statuses (unlike the other,
+// effectively unbounded timelines), so rather than incrementally paginating
+// on scroll, load the whole episode up front using the ordinary backward
+// (max_id) pagination, then let the UI freely reorder/scroll the fully
+// loaded result client-side. A hard cap guards against a pathological range.
+const ARCHIVE_MAX_PAGES = 200;
+
+export function loadEntireArchiveTimeline(id) {
+  return async (dispatch, getState) => {
+    const timelineId = `archive:${id}`;
+
+    dispatch(clearTimeline(timelineId));
+    await dispatch(expandArchiveTimeline(id));
+
+    for (let page = 0; page < ARCHIVE_MAX_PAGES && getState().getIn(['timelines', timelineId, 'hasMore']); page += 1) {
+      const maxId = getState().getIn(['timelines', timelineId, 'items'])?.last();
+
+      if (!maxId) {
+        break;
+      }
+
+      await dispatch(expandArchiveTimeline(id, { maxId }));
+    }
+  };
+}
 
 export const fillHomeTimelineGaps      = () => fillTimelineGaps('home', '/api/v1/timelines/home', {});
 export const fillPublicTimelineGaps    = ({ onlyMedia, onlyRemote } = {}) => fillTimelineGaps(`public${onlyRemote ? ':remote' : ''}${onlyMedia ? ':media' : ''}`, '/api/v1/timelines/public', { remote: !!onlyRemote, only_media: !!onlyMedia });

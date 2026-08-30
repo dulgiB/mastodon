@@ -344,6 +344,13 @@ en:
       unpublish: Unpublish
       unpublished_msg: Announcement successfully unpublished!
       updated_msg: Announcement successfully updated!
+    archives:
+      add_new: Add archive
+      delete: Delete
+      description_html: An archive is a fixed range of statuses (from a start post to an end post) that visitors can browse as its own timeline, in the original order. <strong>The range is defined by post IDs and always reflects the live posts and their current visibility</strong> — it does not copy or duplicate any data.
+      edit: Edit archive
+      empty: No archives have been defined yet.
+      title: Archives
     collections:
       accounts: Accounts
       back_to_account: Back to account page

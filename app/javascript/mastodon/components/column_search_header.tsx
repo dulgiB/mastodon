@@ -8,7 +8,15 @@ export const ColumnSearchHeader: React.FC<{
   onActivate: () => void;
   placeholder: string;
   active: boolean;
-}> = ({ onBack, onActivate, onSubmit, placeholder, active }) => {
+  inputClassName?: string;
+}> = ({
+  onBack,
+  onActivate,
+  onSubmit,
+  placeholder,
+  active,
+  inputClassName,
+}) => {
   const inputRef = useRef<HTMLInputElement>(null);
   const [value, setValue] = useState('');
 
@@ -54,6 +62,7 @@ export const ColumnSearchHeader: React.FC<{
       <input
         ref={inputRef}
         type='search'
+        className={inputClassName}
         value={value}
         onChange={handleChange}
         onKeyUp={handleKeyUp}

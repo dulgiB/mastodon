@@ -20,6 +20,8 @@ import CollectionsIcon from '@/material-icons/400-24px/category.svg?react';
 import HomeActiveIcon from '@/material-icons/400-24px/home-fill.svg?react';
 import HomeIcon from '@/material-icons/400-24px/home.svg?react';
 import InfoIcon from '@/material-icons/400-24px/info.svg?react';
+import ArchiveActiveIcon from '@/material-icons/400-24px/inventory_2-fill.svg?react';
+import ArchiveIcon from '@/material-icons/400-24px/inventory_2.svg?react';
 import NotificationsActiveIcon from '@/material-icons/400-24px/notifications-fill.svg?react';
 import NotificationsIcon from '@/material-icons/400-24px/notifications.svg?react';
 import PersonAddActiveIcon from '@/material-icons/400-24px/person_add-fill.svg?react';
@@ -69,6 +71,7 @@ const messages = defineMessages({
     id: 'navigation_bar.collections',
     defaultMessage: 'Collections',
   },
+  archive: { id: 'navigation_bar.archive', defaultMessage: 'Archive' },
   preferences: {
     id: 'navigation_bar.preferences',
     defaultMessage: 'Preferences',
@@ -328,6 +331,16 @@ export const NavigationPanel: React.FC<{ multiColumn?: boolean }> = ({
                 iconComponent={CollectionsIcon}
                 activeIconComponent={CollectionsActiveIcon}
                 text={intl.formatMessage(messages.collections)}
+              />
+            </li>
+            <li>
+              <ColumnLink
+                transparent
+                to='/archive'
+                icon='archive'
+                iconComponent={ArchiveIcon}
+                activeIconComponent={ArchiveActiveIcon}
+                text={intl.formatMessage(messages.archive)}
               />
             </li>
             <li>

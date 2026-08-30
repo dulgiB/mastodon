@@ -117,6 +117,8 @@ namespace :admin do
     end
   end
 
+  resources :archives, only: [:index, :new, :create, :edit, :update, :destroy]
+
   resources :webhooks do
     member do
       post :enable

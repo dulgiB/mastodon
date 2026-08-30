@@ -1,0 +1,10 @@
+.announcements-list__item
+  = link_to edit_admin_archive_path(archive), class: 'announcements-list__item__title' do
+    = archive.title
+
+  .announcements-list__item__action-bar.no-wrap
+    .announcements-list__item__meta
+      = "##{archive.start_status_id} – ##{archive.end_status_id}"
+
+    .rule-actions
+      = table_link_to 'delete', t('admin.archives.delete'), admin_archive_path(archive), method: :delete, data: { confirm: t('admin.accounts.are_you_sure') } if can?(:destroy, archive)
