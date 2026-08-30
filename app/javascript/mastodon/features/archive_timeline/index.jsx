@@ -271,23 +271,29 @@ class ArchiveTimeline extends PureComponent {
           </div>
         )}
 
-        <ArchiveStatusListContainer
-          trackScroll={!pinned}
-          scrollKey={`archive_timeline-${columnId}`}
-          timelineId={`archive:${episodeId}`}
-          order={order}
-          query={query}
-          emptyMessage={
-            archives.length === 0 ? (
+        {archives.length === 0 ? (
+          <div className='scrollable scrollable--flex'>
+            <div className='empty-column-indicator'>
               <FormattedMessage id='empty_column.archive_none' defaultMessage='No archives have been defined yet.' />
-            ) : query.trim() ? (
-              <FormattedMessage id='empty_column.archive_search' defaultMessage='No posts in this episode match your search.' />
-            ) : (
-              <FormattedMessage id='empty_column.archive' defaultMessage='This episode has no posts.' />
-            )
-          }
-          bindToDocument={!multiColumn}
-        />
+            </div>
+          </div>
+        ) : (
+          <ArchiveStatusListContainer
+            trackScroll={!pinned}
+            scrollKey={`archive_timeline-${columnId}`}
+            timelineId={`archive:${episodeId}`}
+            order={order}
+            query={query}
+            emptyMessage={
+              query.trim() ? (
+                <FormattedMessage id='empty_column.archive_search' defaultMessage='No posts in this episode match your search.' />
+              ) : (
+                <FormattedMessage id='empty_column.archive' defaultMessage='This episode has no posts.' />
+              )
+            }
+            bindToDocument={!multiColumn}
+          />
+        )}
 
         <Helmet>
           <title>{title}</title>
