@@ -95,6 +95,15 @@ class ScrollableList extends PureComponent {
 
   intersectionObserverWrapper = new IntersectionObserverWrapper();
 
+  // handleScroll's load-more check only re-runs in response to an actual
+  // scroll event. Async content (link preview thumbnails loading in, cards
+  // expanding once their image arrives, ...) can grow the list's height
+  // well after the user's last scroll gesture, which can leave onLoadMore
+  // never re-triggered if they stopped scrolling right as the then-last
+  // item's content was still loading in below the fold. Re-running the same
+  // check whenever the content's actual height changes closes that gap.
+  resizeObserver = typeof ResizeObserver === 'undefined' ? null : new ResizeObserver(() => this.handleScroll());
+
   handleScroll = throttle(() => {
     if (this.node) {
       const scrollTop = this.getScrollTop();
@@ -249,6 +258,7 @@ class ScrollableList extends PureComponent {
     this.clearMouseIdleTimer();
     this.detachScrollListener();
     this.detachIntersectionObserver();
+    this.resizeObserver?.disconnect();
 
     detachFullscreenListener(this.onFullScreenChange);
   }
@@ -305,7 +315,19 @@ class ScrollableList extends PureComponent {
   }
 
   setRef = (c) => {
+    // The rendered Scrollable instance (and so this ref) changes across the
+    // showLoading/content/empty render branches, so re-observing on every
+    // call (rather than once in componentDidMount) is needed to keep
+    // resizeObserver pointed at whichever node is actually mounted.
+    if (this.node && this.resizeObserver) {
+      this.resizeObserver.unobserve(this.node);
+    }
+
     this.node = c;
+
+    if (this.node && this.resizeObserver) {
+      this.resizeObserver.observe(this.node);
+    }
   };
 
   handleLoadMore = e => {

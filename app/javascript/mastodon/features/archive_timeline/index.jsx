@@ -125,7 +125,14 @@ class ArchiveTimeline extends PureComponent {
     this.column.scrollTop();
   };
 
-  handleSelectEpisode = id => {
+  // preserveSearch (set by the prev/next arrows, not the episode dropdown —
+  // see EpisodePicker) carries an active search over to the episode landed
+  // on, the same way jumping via "find next" already does.
+  handleSelectEpisode = (id, { preserveSearch = false } = {}) => {
+    if (preserveSearch) {
+      this.jumpingToMatch = true;
+    }
+
     this.props.history.push(`/archive/${id}`);
   };
 
@@ -201,27 +208,59 @@ class ArchiveTimeline extends PureComponent {
   }, 300);
 
   // Which *other* episodes contain this query, so we can point the user at
-  // one when the episode they're looking at doesn't have a match.
-  fetchMatchingArchives = debounce(query => {
-    api().get('/api/v1/archives/search', { params: { q: query } }).then(({ data }) => {
+  // one when the episode they're looking at doesn't have a match. Returns
+  // the fetched list directly (in addition to storing it in state) so a
+  // caller that needs to act on it right away — handleSearchEnter below —
+  // doesn't have to guess whether the setState it triggered has landed yet.
+  fetchMatchingArchivesNow = query => {
+    return api().get('/api/v1/archives/search', { params: { q: query } }).then(({ data }) => {
       this.setState({ matchingArchives: data, matchingArchivesQuery: query });
-    }).catch(() => {});
-  }, 300);
+      return data;
+    }).catch(() => null);
+  };
 
-  handleFindNext = () => {
-    const { matchingArchives } = this.state;
+  fetchMatchingArchives = debounce(query => this.fetchMatchingArchivesNow(query), 300);
+
+  jumpToMatch = matches => {
     const { episodeId } = this.props.params;
     const { archives } = this.state;
 
-    if (!matchingArchives || matchingArchives.length === 0) {
+    if (!matches || matches.length === 0) {
       return;
     }
 
     const current = archives.find(archive => archive.id === episodeId);
-    const next = matchingArchives.find(archive => compareId(archive.start_status_id, current.start_status_id) > 0) ?? matchingArchives[0];
+    const next = matches.find(archive => compareId(archive.start_status_id, current.start_status_id) > 0) ?? matches[0];
 
     this.jumpingToMatch = true;
     this.props.history.push(`/archive/${next.id}`);
+  };
+
+  handleFindNext = () => {
+    this.jumpToMatch(this.state.matchingArchives);
+  };
+
+  // Enter in the search box, mirroring a browser's own find-in-page bar:
+  // jump to the next match regardless of whether the current episode also
+  // has one (cycling forward), not just when it doesn't (unlike the "find
+  // next" hint/button, which only appears in the latter case). If the
+  // per-keystroke debounced lookup hasn't settled yet — e.g. Enter right
+  // after typing the last character — this fetches immediately instead of
+  // acting on a possibly-stale matchingArchives.
+  handleSearchEnter = () => {
+    const query = this.state.query.trim();
+
+    if (query.length < 2) {
+      return;
+    }
+
+    if (this.state.matchingArchivesQuery === query && this.state.matchingArchives !== null) {
+      this.jumpToMatch(this.state.matchingArchives);
+      return;
+    }
+
+    this.fetchMatchingArchives.cancel();
+    this.fetchMatchingArchivesNow(query).then(data => this.jumpToMatch(data));
   };
 
   render () {
@@ -300,6 +339,7 @@ class ArchiveTimeline extends PureComponent {
               onActivate={this.handleSearchActivate}
               onBack={this.handleSearchBack}
               onSubmit={this.handleSearchSubmit}
+              onEnter={this.handleSearchEnter}
               placeholder={intl.formatMessage({ id: 'archive_timeline.search_placeholder', defaultMessage: 'Search this archive' })}
               inputClassName='search__input'
             />

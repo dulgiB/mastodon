@@ -6,6 +6,11 @@ export const ColumnSearchHeader: React.FC<{
   onBack: () => void;
   onSubmit: (value: string) => void;
   onActivate: () => void;
+  // Fires on the form's actual submit (Enter in the input), distinct from
+  // onSubmit above (which also fires on every keystroke) — for consumers
+  // that want to tell "still typing" apart from "pressed Enter", the way a
+  // browser's own find-in-page bar jumps to the next match on Enter.
+  onEnter?: () => void;
   placeholder: string;
   active: boolean;
   inputClassName?: string;
@@ -13,6 +18,7 @@ export const ColumnSearchHeader: React.FC<{
   onBack,
   onActivate,
   onSubmit,
+  onEnter,
   placeholder,
   active,
   inputClassName,
@@ -53,9 +59,17 @@ export const ColumnSearchHeader: React.FC<{
     onActivate();
   }, [onActivate]);
 
-  const handleSubmit = useCallback(() => {
-    onSubmit(value);
-  }, [onSubmit, value]);
+  const handleSubmit = useCallback(
+    (e: React.FormEvent<HTMLFormElement>) => {
+      // Without this, the browser performs its default (unprevented) form
+      // submission, which navigates/reloads the page instead of letting
+      // onEnter run.
+      e.preventDefault();
+      onSubmit(value);
+      onEnter?.();
+    },
+    [onSubmit, onEnter, value],
+  );
 
   return (
     <form className='column-search-header' onSubmit={handleSubmit}>

@@ -9,6 +9,10 @@ import ChevronRightIcon from '@/material-icons/400-24px/chevron_right.svg?react'
 import { Icon } from 'mastodon/components/icon';
 import { IconButton } from 'mastodon/components/icon_button';
 
+// The prev/next arrows pass preserveSearch: true (an active search follows
+// you when stepping to an adjacent episode, same as it does jumping via
+// "find next"), but the dropdown doesn't — picking a specific episode by
+// name is a deliberate jump elsewhere, not a continuation of the search.
 export const EpisodePicker = ({ intl, archives, currentId, order, onSelect, onToggleOrder }) => {
   const index = archives.findIndex(archive => archive.id === currentId);
   const previous = index > 0 ? archives[index - 1] : null;
@@ -22,7 +26,7 @@ export const EpisodePicker = ({ intl, archives, currentId, order, onSelect, onTo
         icon='chevron-left'
         iconComponent={ChevronLeftIcon}
         disabled={!previous}
-        onClick={() => previous && onSelect(previous.id)}
+        onClick={() => previous && onSelect(previous.id, { preserveSearch: true })}
       />
 
       <select
@@ -42,7 +46,7 @@ export const EpisodePicker = ({ intl, archives, currentId, order, onSelect, onTo
         icon='chevron-right'
         iconComponent={ChevronRightIcon}
         disabled={!next}
-        onClick={() => next && onSelect(next.id)}
+        onClick={() => next && onSelect(next.id, { preserveSearch: true })}
       />
 
       <button type='button' className='archive-timeline__picker__order' onClick={onToggleOrder}>
