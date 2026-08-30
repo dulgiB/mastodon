@@ -14,9 +14,11 @@ class StatusVisibility
   # @param [ActiveRecord::Relation] base
   # @return [ActiveRecord::Relation]
   def scope(base = Status.all)
-    scoped = base.joins(:account).left_outer_joins(:mentions).merge(Account.without_suspended)
+    scoped = base.joins(:account).merge(Account.without_suspended)
 
     return scoped if privileged_viewer?
+
+    scoped = scoped.left_outer_joins(:mentions)
 
     scoped
       .merge(public_or_unlisted_scope)
