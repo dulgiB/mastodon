@@ -5,7 +5,7 @@ class Api::V1::Timelines::ArchiveController < Api::V1::Timelines::BaseController
   before_action :require_user!
   before_action :set_archive
 
-  PERMITTED_PARAMS = %i(limit).freeze
+  PERMITTED_PARAMS = %i(limit q).freeze
 
   def show
     @statuses = load_statuses
@@ -31,7 +31,8 @@ class Api::V1::Timelines::ArchiveController < Api::V1::Timelines::BaseController
       limit_param(DEFAULT_STATUSES_LIMIT),
       max_id: params[:max_id],
       since_id: params[:since_id],
-      min_id: params[:min_id]
+      min_id: params[:min_id],
+      query: params[:q]
     )
   end
 

@@ -9,7 +9,7 @@ import ChevronRightIcon from '@/material-icons/400-24px/chevron_right.svg?react'
 import { Icon } from 'mastodon/components/icon';
 import { IconButton } from 'mastodon/components/icon_button';
 
-export const EpisodePicker = ({ intl, archives, currentId, order, orderToggleDisabled, onSelect, onToggleOrder }) => {
+export const EpisodePicker = ({ intl, archives, currentId, order, onSelect, onToggleOrder }) => {
   const index = archives.findIndex(archive => archive.id === currentId);
   const previous = index > 0 ? archives[index - 1] : null;
   const next = index >= 0 && index < archives.length - 1 ? archives[index + 1] : null;
@@ -45,13 +45,7 @@ export const EpisodePicker = ({ intl, archives, currentId, order, orderToggleDis
         onClick={() => next && onSelect(next.id)}
       />
 
-      <button
-        type='button'
-        className='archive-timeline__picker__order'
-        disabled={orderToggleDisabled}
-        title={orderToggleDisabled ? intl.formatMessage({ id: 'archive_timeline.order_toggle_disabled', defaultMessage: 'Available once the whole episode has loaded' }) : undefined}
-        onClick={onToggleOrder}
-      >
+      <button type='button' className='archive-timeline__picker__order' onClick={onToggleOrder}>
         <Icon id={order === 'asc' ? 'arrow-up' : 'arrow-down'} icon={order === 'asc' ? ArrowUpwardIcon : ArrowDownwardIcon} />
         {' '}
         {order === 'asc' ? (
@@ -72,7 +66,6 @@ EpisodePicker.propTypes = {
   })).isRequired,
   currentId: PropTypes.string,
   order: PropTypes.oneOf(['asc', 'desc']).isRequired,
-  orderToggleDisabled: PropTypes.bool,
   onSelect: PropTypes.func.isRequired,
   onToggleOrder: PropTypes.func.isRequired,
 };

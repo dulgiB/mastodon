@@ -168,38 +168,11 @@ export const expandAccountDirectTimeline    = (accountId, { maxId} = {}) => expa
 export const expandAccountFeaturedTimeline = (accountId, { tagged } = {}) => expandTimeline(`account:${accountId}:pinned${tagged ? `:${tagged}` : ''}`, `/api/v1/accounts/${accountId}/statuses`, { pinned: true, tagged });
 export const expandAccountMediaTimeline    = (accountId, { maxId, withReplies } = {}) => expandTimeline(`account:${accountId}:media${withReplies ? ':with_replies' : ''}`, `/api/v1/accounts/${accountId}/statuses`, { max_id: maxId, only_media: true, no_direct: true, limit: 40, exclude_replies: !withReplies });
 export const expandListTimeline            = (id, { maxId } = {}) => expandTimeline(`list:${id}`, `/api/v1/timelines/list/${id}`, { max_id: maxId });
-export const expandArchiveTimeline         = (id, { maxId } = {}) => expandTimeline(`archive:${id}`, `/api/v1/timelines/archive/${id}`, { max_id: maxId });
-
-// Default episode page size for expandArchiveTimelineFromStart, chosen
-// explicitly rather than relying on the API's own default so hasMore can be
-// inferred from a full page coming back, without parsing Link headers.
-const ARCHIVE_PAGE_SIZE = 20;
-
-// Unlike expandArchiveTimeline (which walks backward from the newest post,
-// like every other timeline), this walks forward from the start of the
-// episode via min_id, so pages arrive in the same oldest-first order the
-// archive column displays by default — letting the column show and grow the
-// list as pages load, rather than needing the whole episode loaded before
-// anything can be shown the right way up (see loadEntireArchiveTimeline
-// below, still used once the complete episode is actually needed).
-export function expandArchiveTimelineFromStart(id, { minId } = {}) {
-  return async dispatch => {
-    const timelineId = `archive:${id}`;
-    const isLoadingMore = !!minId;
-
-    dispatch(expandTimelineRequest(timelineId, isLoadingMore));
-
-    try {
-      const response = await api().get(`/api/v1/timelines/archive/${id}`, { params: { min_id: minId || '0', limit: ARCHIVE_PAGE_SIZE } });
-      const hasMore = response.data.length === ARCHIVE_PAGE_SIZE;
-
-      dispatch(importFetchedStatuses(response.data));
-      dispatch(expandTimelineSuccess(timelineId, response.data, hasMore ? 'more' : null, response.status === 206, false, isLoadingMore, false));
-    } catch (error) {
-      dispatch(expandTimelineFail(timelineId, error, isLoadingMore));
-    }
-  };
-}
+// Both directions accept an optional `query`, filtered server-side via the
+// same pg_trgm-indexed substring match DatabaseStatusSearch uses — search
+// results page in exactly like an ordinary browse, rather than needing the
+// whole episode loaded client-side first to filter locally.
+export const expandArchiveTimeline         = (id, { maxId, query } = {}) => expandTimeline(`archive:${id}`, `/api/v1/timelines/archive/${id}`, { max_id: maxId, q: query });
 export const expandLinkTimeline            = (url, { maxId } = {}) => expandTimeline(`link:${url}`, `/api/v1/timelines/link`, { url, max_id: maxId });
 export const expandHashtagTimeline         = (hashtag, { maxId, tags, local } = {}, done = noOp) => {
   return expandTimeline(`hashtag:${hashtag}${local ? ':local' : ''}`, `/api/v1/timelines/tag/${hashtag}`, {
@@ -211,30 +184,34 @@ export const expandHashtagTimeline         = (hashtag, { maxId, tags, local } = 
   });
 };
 
-// Full episode load, used once the whole (small, bounded) episode is
-// actually needed — switching to newest-first order, or searching within
-// the episode, both require every post to already be in hand. The default
-// column view instead pages in lazily via expandArchiveTimelineFromStart
-// above, since loading potentially hundreds of posts up front before
-// showing anything was a slow first paint for no benefit on an ordinary
-// scroll-and-read visit. A hard cap guards against a pathological range.
-const ARCHIVE_MAX_PAGES = 200;
+// Default archive page size, chosen explicitly rather than relying on the
+// API's own default so hasMore can be inferred from a full page coming
+// back, without parsing Link headers.
+const ARCHIVE_PAGE_SIZE = 20;
 
-export function loadEntireArchiveTimeline(id) {
-  return async (dispatch, getState) => {
+// Unlike expandArchiveTimeline (which walks backward from the newest post,
+// like every other timeline), this walks forward from the start of the
+// episode via min_id, so pages arrive in the same oldest-first order the
+// archive column displays by default — letting the column show and grow the
+// list as pages load. The column switches between this and
+// expandArchiveTimeline depending on the selected order (see
+// ArchiveTimeline#loadPage), rather than needing the whole episode loaded
+// up front to support reversing/filtering it client-side.
+export function expandArchiveTimelineFromStart(id, { minId, query } = {}) {
+  return async dispatch => {
     const timelineId = `archive:${id}`;
+    const isLoadingMore = !!minId;
 
-    dispatch(clearTimeline(timelineId));
-    await dispatch(expandArchiveTimeline(id));
+    dispatch(expandTimelineRequest(timelineId, isLoadingMore));
 
-    for (let page = 0; page < ARCHIVE_MAX_PAGES && getState().getIn(['timelines', timelineId, 'hasMore']); page += 1) {
-      const maxId = getState().getIn(['timelines', timelineId, 'items'])?.last();
+    try {
+      const response = await api().get(`/api/v1/timelines/archive/${id}`, { params: { min_id: minId || '0', limit: ARCHIVE_PAGE_SIZE, q: query } });
+      const hasMore = response.data.length === ARCHIVE_PAGE_SIZE;
 
-      if (!maxId) {
-        break;
-      }
-
-      await dispatch(expandArchiveTimeline(id, { maxId }));
+      dispatch(importFetchedStatuses(response.data));
+      dispatch(expandTimelineSuccess(timelineId, response.data, hasMore ? 'more' : null, response.status === 206, false, isLoadingMore, false));
+    } catch (error) {
+      dispatch(expandTimelineFail(timelineId, error, isLoadingMore));
     }
   };
 }

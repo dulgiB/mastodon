@@ -1,53 +1,40 @@
 import { List as ImmutableList } from 'immutable';
 import { connect } from 'react-redux';
 
-import { expandArchiveTimelineFromStart, scrollTopTimeline } from 'mastodon/actions/timelines';
-import { isNonStatusId } from 'mastodon/actions/timelines_typed';
+import { expandArchiveTimeline, expandArchiveTimelineFromStart, scrollTopTimeline } from 'mastodon/actions/timelines';
 import StatusList from 'mastodon/components/status_list';
 
 // Unlike the generic status list container, this does not hide direct-visibility
 // statuses: ArchiveFeed already restricts those to ones the viewer is allowed to
 // see (authored or mentioned), so nothing further needs to be filtered here.
 //
-// A search query is only ever active once the parent has loaded the whole
-// (bounded) episode client-side first (see ArchiveTimeline), so it's applied
-// here as a plain, case-insensitive substring match against each status's
-// precomputed `search_index` (spoiler text + content + poll options + media
-// descriptions, HTML stripped) — no stemming, no network round-trip, and it
-// never surfaces anything beyond what ArchiveFeed already decided is visible
-// to this viewer.
-const matchesQuery = (statuses, query) => id => {
-  if (isNonStatusId(id)) {
-    return true;
-  }
-
-  const searchIndex = statuses.getIn([id, 'search_index'], '');
-  return searchIndex.toLowerCase().includes(query);
-};
-
-const mapStateToProps = (state, { timelineId, order, query }) => {
-  let items = state.getIn(['timelines', timelineId, 'items'], ImmutableList());
-
-  const normalizedQuery = query?.trim().toLowerCase();
-  if (normalizedQuery) {
-    items = items.filter(matchesQuery(state.get('statuses'), normalizedQuery));
-  }
+// A search query is applied server-side (see ArchiveFeed#get/matching_scope,
+// the same pg_trgm-indexed substring match DatabaseStatusSearch uses), so
+// `items` already only contains matches once a query is active — no
+// client-side filtering needed here.
+const mapStateToProps = (state, { timelineId, order }) => {
+  const items = state.getIn(['timelines', timelineId, 'items'], ImmutableList());
 
   return {
     statusIds: order === 'asc' ? items.reverse() : items,
     isLoading: state.getIn(['timelines', timelineId, 'isLoading'], true),
     isPartial: state.getIn(['timelines', timelineId, 'isPartial'], false),
-    hasMore: normalizedQuery ? false : state.getIn(['timelines', timelineId, 'hasMore'], false),
+    hasMore: state.getIn(['timelines', timelineId, 'hasMore'], false),
   };
 };
 
-const mapDispatchToProps = (dispatch, { timelineId, episodeId }) => ({
+const mapDispatchToProps = (dispatch, { timelineId, episodeId, order, query }) => ({
   onScrollToTop: () => dispatch(scrollTopTimeline(timelineId, true)),
   onScroll: () => dispatch(scrollTopTimeline(timelineId, false)),
-  // Only relevant in the lazily-loaded default (oldest-first) view: once the
-  // whole episode has been loaded for search or newest-first order, hasMore
-  // is already false and this never fires.
-  onLoadMore: minId => dispatch(expandArchiveTimelineFromStart(episodeId, { minId })),
+  // The displayed list is reversed for 'asc', so the cursor ScrollableList
+  // hands back (the last *displayed* item) is the newest-so-far when
+  // walking forward, or the oldest-so-far when walking backward — exactly
+  // the right cursor for whichever direction matches the current order.
+  onLoadMore: cursor => dispatch(
+    order === 'asc'
+      ? expandArchiveTimelineFromStart(episodeId, { minId: cursor, query })
+      : expandArchiveTimeline(episodeId, { maxId: cursor, query })
+  ),
 });
 
 export default connect(mapStateToProps, mapDispatchToProps)(StatusList);

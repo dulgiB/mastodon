@@ -12,13 +12,12 @@ import { debounce } from 'lodash';
 
 import InventoryIcon from '@/material-icons/400-24px/inventory_2.svg?react';
 import { injectIntl } from '@/mastodon/components/intl';
-import { expandArchiveTimelineFromStart, loadEntireArchiveTimeline } from 'mastodon/actions/timelines';
+import { clearTimeline, expandArchiveTimeline, expandArchiveTimelineFromStart } from 'mastodon/actions/timelines';
 import api from 'mastodon/api';
 import { compareId } from 'mastodon/compare_id';
 import Column from 'mastodon/components/column';
 import ColumnHeader from 'mastodon/components/column_header';
 import { ColumnSearchHeader } from 'mastodon/components/column_search_header';
-import { LoadingIndicator } from 'mastodon/components/loading_indicator';
 import { identityContextPropShape, withIdentity } from 'mastodon/identity_context';
 import { WithRouterPropTypes } from 'mastodon/utils/react_router';
 
@@ -44,23 +43,12 @@ class ArchiveTimeline extends PureComponent {
     query: '',
     matchingArchives: null,
     matchingArchivesQuery: null,
-    // Whether the whole episode has been loaded (rather than just the
-    // lazily-paginated oldest page and whatever's been scrolled since).
-    // Newest-first order and in-episode search both need every post already
-    // in hand — order because it's just a client-side reverse of the full
-    // list, search because it's a client-side substring match with no
-    // network round-trip — so both are gated on this until the user asks
-    // for one of them (see handleSearchActivate/handleToggleOrder).
-    fullyLoaded: false,
-    // True only while the full-episode load triggered by activating search
-    // is in flight (see loadFullEpisode) — the ordinary lazy first-page load
-    // uses the status list's own built-in loading state instead.
-    loadingFullEpisode: false,
   };
 
   // Set right before navigating to another episode because the user picked
   // it from the "find next" prompt, so the still-relevant search stays
-  // active there instead of being reset like an ordinary episode switch.
+  // active (and filtered) there instead of being reset like an ordinary
+  // episode switch.
   jumpingToMatch = false;
 
   searchContainerRef = createRef();
@@ -78,7 +66,7 @@ class ArchiveTimeline extends PureComponent {
       const { episodeId } = this.props.params;
 
       if (episodeId) {
-        this.loadFirstPage(episodeId);
+        this.loadPage(episodeId, { order: this.state.order });
       } else if (data.length > 0) {
         this.props.history.replace(`/archive/${data[data.length - 1].id}`);
       }
@@ -91,31 +79,42 @@ class ArchiveTimeline extends PureComponent {
     const { episodeId } = this.props.params;
 
     if (episodeId && episodeId !== prevProps.params.episodeId) {
-      this.setState({ order: 'asc', fullyLoaded: false, loadingFullEpisode: false });
-      this.loadFirstPage(episodeId);
-
       if (this.jumpingToMatch) {
         this.jumpingToMatch = false;
+        this.loadPage(episodeId, { order: this.state.order, query: this.state.query.trim() || undefined });
       } else {
         this.setState({ searching: false, query: '', matchingArchives: null, matchingArchivesQuery: null });
+        this.loadPage(episodeId, { order: this.state.order });
       }
     }
   }
 
   componentWillUnmount () {
     this.fetchMatchingArchives.cancel();
+    this.searchCurrentEpisode.cancel();
     document.removeEventListener('keydown', this.handleGlobalKeyDown);
   }
 
-  loadFirstPage = episodeId => {
-    this.props.dispatch(expandArchiveTimelineFromStart(episodeId));
+  // Loads one page (the first, if cursor is omitted) in the given
+  // direction — 'asc' walks forward from the start via min_id, 'desc'
+  // walks backward from the newest via max_id, matching whichever
+  // action a column showing that order should paginate with (see
+  // ArchiveStatusListContainer's onLoadMore, which continues whichever of
+  // these this started).
+  loadPage = (episodeId, { order, query, cursor } = {}) => {
+    const action = order === 'desc'
+      ? expandArchiveTimeline(episodeId, { maxId: cursor, query })
+      : expandArchiveTimelineFromStart(episodeId, { minId: cursor, query });
+
+    this.props.dispatch(action);
   };
 
-  loadFullEpisode = episodeId => {
-    this.setState({ loadingFullEpisode: true });
-    this.props.dispatch(loadEntireArchiveTimeline(episodeId)).then(() => {
-      this.setState({ loadingFullEpisode: false, fullyLoaded: true });
-    });
+  // Discards whatever's currently loaded for this episode and starts over —
+  // needed whenever the order or the active search query changes, since
+  // either changes which page "the first page" even is.
+  reload = (episodeId, options = {}) => {
+    this.props.dispatch(clearTimeline(`archive:${episodeId}`));
+    this.loadPage(episodeId, { order: this.state.order, ...options });
   };
 
   setRef = c => {
@@ -130,14 +129,13 @@ class ArchiveTimeline extends PureComponent {
     this.props.history.push(`/archive/${id}`);
   };
 
-  // Disabled (see render) until fullyLoaded, since newest-first is just a
-  // client-side reverse of the complete episode.
   handleToggleOrder = () => {
-    if (!this.state.fullyLoaded) {
-      return;
-    }
+    const { episodeId } = this.props.params;
+    const order = this.state.order === 'asc' ? 'desc' : 'asc';
+    const query = this.state.query.trim() || undefined;
 
-    this.setState(state => ({ order: state.order === 'asc' ? 'desc' : 'asc' }));
+    this.setState({ order });
+    this.reload(episodeId, { order, query });
   };
 
   // Mirrors the browser's own find-in-page shortcut: bring focus to the
@@ -164,27 +162,43 @@ class ArchiveTimeline extends PureComponent {
 
   handleSearchActivate = () => {
     this.setState({ searching: true });
-
-    if (!this.state.fullyLoaded && !this.state.loadingFullEpisode) {
-      this.loadFullEpisode(this.props.params.episodeId);
-    }
   };
 
   handleSearchBack = () => {
     this.fetchMatchingArchives.cancel();
+    this.searchCurrentEpisode.cancel();
+
+    const hadActiveQuery = this.state.query.trim().length >= 2;
+
     this.setState({ searching: false, query: '', matchingArchives: null, matchingArchivesQuery: null });
+
+    if (hadActiveQuery) {
+      this.reload(this.props.params.episodeId, { query: undefined });
+    }
   };
 
   handleSearchSubmit = query => {
     this.setState({ query });
 
     if (query.trim().length >= 2) {
-      this.fetchMatchingArchives(query);
+      this.searchCurrentEpisode(query.trim());
+      this.fetchMatchingArchives(query.trim());
     } else {
+      this.searchCurrentEpisode.cancel();
       this.fetchMatchingArchives.cancel();
       this.setState({ matchingArchives: null, matchingArchivesQuery: null });
+      this.reload(this.props.params.episodeId, { query: undefined });
     }
   };
+
+  // Re-fetches the current episode filtered server-side (via the same
+  // pg_trgm-indexed substring match DatabaseStatusSearch uses), paginated
+  // exactly like an ordinary browse — no need to have the whole episode
+  // loaded client-side first, and no per-keystroke network chatter thanks
+  // to the debounce.
+  searchCurrentEpisode = debounce(query => {
+    this.reload(this.props.params.episodeId, { query });
+  }, 300);
 
   // Which *other* episodes contain this query, so we can point the user at
   // one when the episode they're looking at doesn't have a match.
@@ -213,11 +227,12 @@ class ArchiveTimeline extends PureComponent {
   render () {
     const { columnId, multiColumn, intl, identity } = this.props;
     const { episodeId } = this.props.params;
-    const { archives, order, searching, query, matchingArchives, matchingArchivesQuery, fullyLoaded, loadingFullEpisode } = this.state;
+    const { archives, order, searching, query, matchingArchives, matchingArchivesQuery } = this.state;
     const pinned = !!columnId;
 
     const trimmedQuery = query.trim();
-    const matchesAreCurrent = trimmedQuery.length > 0 && matchingArchivesQuery === query && matchingArchives !== null;
+    const activeQuery = trimmedQuery.length >= 2 ? trimmedQuery : undefined;
+    const matchesAreCurrent = trimmedQuery.length > 0 && matchingArchivesQuery === trimmedQuery && matchingArchives !== null;
     const currentEpisodeHasMatch = matchesAreCurrent && matchingArchives.some(archive => archive.id === episodeId);
     const otherEpisodesWithMatch = matchesAreCurrent ? matchingArchives.filter(archive => archive.id !== episodeId) : [];
     const showFindNext = matchesAreCurrent && !currentEpisodeHasMatch && otherEpisodesWithMatch.length > 0;
@@ -273,7 +288,6 @@ class ArchiveTimeline extends PureComponent {
             archives={archives}
             currentId={episodeId}
             order={order}
-            orderToggleDisabled={!fullyLoaded}
             onSelect={this.handleSelectEpisode}
             onToggleOrder={this.handleToggleOrder}
           />
@@ -313,14 +327,6 @@ class ArchiveTimeline extends PureComponent {
               <FormattedMessage id='empty_column.archive_none' defaultMessage='No archives have been defined yet.' />
             </div>
           </div>
-        ) : loadingFullEpisode ? (
-          <div className='scrollable scrollable--flex'>
-            <div className='empty-column-indicator'>
-              <LoadingIndicator />
-              {' '}
-              <FormattedMessage id='archive_timeline.loading_for_search' defaultMessage='Loading the whole episode to search…' />
-            </div>
-          </div>
         ) : (
           <ArchiveStatusListContainer
             trackScroll={!pinned}
@@ -328,9 +334,9 @@ class ArchiveTimeline extends PureComponent {
             timelineId={`archive:${episodeId}`}
             episodeId={episodeId}
             order={order}
-            query={query}
+            query={activeQuery}
             emptyMessage={
-              query.trim() ? (
+              trimmedQuery ? (
                 <FormattedMessage id='empty_column.archive_search' defaultMessage='No posts in this episode match your search.' />
               ) : (
                 <FormattedMessage id='empty_column.archive' defaultMessage='This episode has no posts.' />
