@@ -1786,6 +1786,22 @@ body.embed .detailed-status__meta .detailed-status__link .fa-retweet,
     height: 44px;
     padding-inline-start: 12px;
   }
+
+  /* Exception for the search results page, where the search field and
+     result-type tabs render as ColumnHeader appendContent and so travel
+     through #tabs-bar__portal alongside the hidden .column-header. The
+     fixed 44px height above would clip them. Let the bar grow and wrap
+     the search UI onto its own full-width row below the corner logo,
+     where it stays sticky with the bar. */
+  .layout-single-column
+    .tabs-bar__wrapper:has(#tabs-bar__portal .explore__search-header) {
+    height: auto;
+    flex-wrap: wrap;
+  }
+
+  .layout-single-column #tabs-bar__portal:has(.explore__search-header) {
+    flex: 1 0 100%;
+  }
 }
 
 @media (width > 889px) {

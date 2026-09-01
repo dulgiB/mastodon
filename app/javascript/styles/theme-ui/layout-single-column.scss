@@ -1919,13 +1919,32 @@ body.embed .detailed-status__meta .detailed-status__link .fa-retweet,
     padding-inline-start: 12px;
   }
 
-  /* .column-header (the portal's only content) is hidden just above at this
-     breakpoint, but the portal itself stayed a flex item of the centered
-     44px bar and still resolved to 1px tall -- painting a stray hairline
-     straight through the middle of the corner logo. The bar's own
-     box-shadow above is the divider here, so drop the empty portal. */
+  /* .column-header (usually the portal's only content) is hidden just
+     above at this breakpoint, but the portal itself stayed a flex item of
+     the centered 44px bar and still resolved to 1px tall -- painting a
+     stray hairline straight through the middle of the corner logo. The
+     bar's own box-shadow above is the divider here, so drop the empty
+     portal. */
   .layout-single-column #tabs-bar__portal {
     display: none;
+  }
+
+  /* ...except on the search results page, where the search field and
+     result-type tabs render as ColumnHeader appendContent and so travel
+     through this same portal alongside the hidden .column-header. Hiding
+     the whole portal there made the search box vanish entirely. Keep it
+     visible, and let the logo bar grow past its fixed 44px and wrap the
+     search UI onto its own full-width row below the corner logo, where it
+     stays sticky with the bar. */
+  .layout-single-column
+    .tabs-bar__wrapper:has(#tabs-bar__portal .explore__search-header) {
+    height: auto;
+    flex-wrap: wrap;
+  }
+
+  .layout-single-column #tabs-bar__portal:has(.explore__search-header) {
+    display: block;
+    flex: 1 0 100%;
   }
 }
 
