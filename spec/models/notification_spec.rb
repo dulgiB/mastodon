@@ -36,6 +36,36 @@ RSpec.describe Notification do
     end
   end
 
+  describe '#set_group_key!' do
+    let(:account)         { Fabricate(:account) }
+    let(:original_status) { Fabricate(:status) }
+    let(:reply_status)    { Fabricate(:status, thread: original_status) }
+
+    def mention_notification_for(status)
+      Fabricate(:notification, account: account, type: :mention, activity: Fabricate(:mention, status: status))
+    end
+
+    it 'groups mentions from the same thread together, no matter how far apart in time' do
+      notification_a = mention_notification_for(original_status)
+      notification_a.set_group_key!
+
+      notification_b = travel(1.year) { mention_notification_for(reply_status) }
+      notification_b.set_group_key!
+
+      expect(notification_b.group_key).to eq notification_a.group_key
+    end
+
+    it 'does not group mentions from different threads together' do
+      notification_a = mention_notification_for(original_status)
+      notification_b = mention_notification_for(Fabricate(:status))
+
+      notification_a.set_group_key!
+      notification_b.set_group_key!
+
+      expect(notification_a.group_key).to_not eq notification_b.group_key
+    end
+  end
+
   describe '#type' do
     it 'returns :reblog for a Status' do
       notification = described_class.new(activity: Status.new)

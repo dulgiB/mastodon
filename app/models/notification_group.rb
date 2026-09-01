@@ -9,7 +9,7 @@ class NotificationGroup < ActiveModelSerializers::Model
   def self.from_notifications(notifications, pagination_range: nil, grouped_types: nil)
     return [] if notifications.empty?
 
-    grouped_types = grouped_types.presence&.map(&:to_sym) || Notification::GROUPABLE_NOTIFICATION_TYPES
+    grouped_types = (grouped_types.presence&.map(&:to_sym) || Notification::GROUPABLE_NOTIFICATION_TYPES) | Notification::Groups::ALWAYS_GROUPED_NOTIFICATION_TYPES
 
     grouped_notifications = notifications.filter { |notification| notification.group_key.present? && grouped_types.include?(notification.type) }
     group_keys = grouped_notifications.pluck(:group_key)

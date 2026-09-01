@@ -234,6 +234,24 @@ RSpec.describe 'Notifications' do
       end
     end
 
+    context 'when multiple mentions happen in the same thread, and grouped_types does not request mention grouping' do
+      let(:params) { { grouped_types: %w(reblog) } }
+
+      before do
+        thread_starter = PostStatusService.new.call(bob.account, text: 'Hello @alice')
+        PostStatusService.new.call(tom.account, thread: thread_starter, text: '@alice same thread')
+      end
+
+      it 'still collapses same-thread mentions into a single group' do
+        subject
+
+        mention_groups = response.parsed_body[:notification_groups].select { |group| group[:type] == 'mention' }
+
+        expect(mention_groups.size).to eq(1)
+        expect(mention_groups.first[:sample_account_ids]).to match_array([bob.account_id.to_s, tom.account_id.to_s])
+      end
+    end
+
     context 'with exclude_types param' do
       let(:params) { { exclude_types: %w(mention) } }
 
