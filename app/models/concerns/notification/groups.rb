@@ -6,10 +6,6 @@ module Notification::Groups
   # `set_group_key!` needs to be updated if this list changes
   GROUPABLE_NOTIFICATION_TYPES = %i(favourite reblog follow admin.sign_up mention).freeze
 
-  # Types in this list are grouped unconditionally, regardless of the `grouped_types`
-  # requested by the client, since older/third-party clients have no way to opt into them.
-  ALWAYS_GROUPED_NOTIFICATION_TYPES = %i(mention).freeze
-
   MAXIMUM_GROUP_SPAN_HOURS = 12
 
   included do
@@ -62,7 +58,7 @@ module Notification::Groups
         if grouped_types.present?
           # Normalize `grouped_types` so the number of different SQL query shapes remains small, and
           # the queries can be analyzed in monitoring/telemetry tools
-          grouped_types = ((grouped_types.map(&:to_sym) & GROUPABLE_NOTIFICATION_TYPES) | ALWAYS_GROUPED_NOTIFICATION_TYPES).sort
+          grouped_types = (grouped_types.map(&:to_sym) & GROUPABLE_NOTIFICATION_TYPES).sort
 
           sanitize_sql_array([<<~SQL.squish, { types: grouped_types }])
             COALESCE(

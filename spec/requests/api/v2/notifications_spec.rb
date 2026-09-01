@@ -234,21 +234,35 @@ RSpec.describe 'Notifications' do
       end
     end
 
-    context 'when multiple mentions happen in the same thread, and grouped_types does not request mention grouping' do
-      let(:params) { { grouped_types: %w(reblog) } }
-
+    context 'when multiple mentions happen in the same thread' do
       before do
         thread_starter = PostStatusService.new.call(bob.account, text: 'Hello @alice')
         PostStatusService.new.call(tom.account, thread: thread_starter, text: '@alice same thread')
       end
 
-      it 'still collapses same-thread mentions into a single group' do
-        subject
+      context 'when the request is scoped to mentions only, even without requesting mention grouping' do
+        let(:params) { { types: %w(mention), grouped_types: %w(reblog) } }
 
-        mention_groups = response.parsed_body[:notification_groups].select { |group| group[:type] == 'mention' }
+        it 'collapses same-thread mentions into a single group' do
+          subject
 
-        expect(mention_groups.size).to eq(1)
-        expect(mention_groups.first[:sample_account_ids]).to match_array([bob.account_id.to_s, tom.account_id.to_s])
+          mention_groups = response.parsed_body[:notification_groups].select { |group| group[:type] == 'mention' }
+
+          expect(mention_groups.size).to eq(1)
+          expect(mention_groups.first[:sample_account_ids]).to match_array([bob.account_id.to_s, tom.account_id.to_s])
+        end
+      end
+
+      context 'when the request is not scoped to mentions only (e.g. "everything")' do
+        let(:params) { { grouped_types: %w(reblog) } }
+
+        it 'does not group the mentions, and returns one entry per mention as before' do
+          subject
+
+          mention_groups = response.parsed_body[:notification_groups].select { |group| group[:type] == 'mention' }
+
+          expect(mention_groups.size).to eq(2)
+        end
       end
     end
 

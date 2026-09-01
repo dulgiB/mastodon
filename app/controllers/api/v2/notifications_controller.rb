@@ -41,7 +41,7 @@ class Api::V2::NotificationsController < Api::BaseController
     limit = limit_param(DEFAULT_NOTIFICATIONS_COUNT_LIMIT, MAX_NOTIFICATIONS_COUNT_LIMIT)
 
     with_read_replica do
-      render json: { count: browserable_account_notifications.paginate_groups_by_min_id(limit, min_id: notification_marker&.last_read_id, grouped_types: params[:grouped_types]).count }
+      render json: { count: browserable_account_notifications.paginate_groups_by_min_id(limit, min_id: notification_marker&.last_read_id, grouped_types: grouped_types_param).count }
     end
   end
 
@@ -67,7 +67,7 @@ class Api::V2::NotificationsController < Api::BaseController
     MastodonOTELTracer.in_span('Api::V2::NotificationsController#load_notifications') do
       notifications = browserable_account_notifications.includes(from_account: [:account_stat, :user]).to_a_grouped_paginated_by_id(
         limit_param(DEFAULT_NOTIFICATIONS_LIMIT),
-        params.slice(:max_id, :since_id, :min_id, :grouped_types).permit(:max_id, :since_id, :min_id, grouped_types: [])
+        params.slice(:max_id, :since_id, :min_id).permit(:max_id, :since_id, :min_id).merge(grouped_types: grouped_types_param)
       )
 
       Notification.preload_cache_collection_target_statuses(notifications) do |target_statuses|
@@ -93,8 +93,24 @@ class Api::V2::NotificationsController < Api::BaseController
         end
       end
 
-      NotificationGroup.from_notifications(@notifications, pagination_range: pagination_range, grouped_types: params[:grouped_types])
+      NotificationGroup.from_notifications(@notifications, pagination_range: pagination_range, grouped_types: grouped_types_param)
     end
+  end
+
+  # The client-requested grouped types, plus `mention` when the request is scoped to
+  # mentions only (`types[]=mention`, nothing else). This lets a dedicated mentions view
+  # collapse same-thread mentions down to the latest one, without requiring any client
+  # to know mentions can be grouped, while leaving mixed feeds (e.g. "everything")
+  # exactly as before.
+  def grouped_types_param
+    requested = Array(params[:grouped_types])
+    return requested unless mentions_only_request?
+
+    requested | ['mention']
+  end
+
+  def mentions_only_request?
+    Array(browserable_params[:types]).map(&:to_s) == ['mention']
   end
 
   def incomplete_page?
