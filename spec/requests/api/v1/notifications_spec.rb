@@ -65,6 +65,25 @@ RSpec.describe 'Notifications' do
       end
     end
 
+    context 'with types param scoped to mentions and multiple mentions in the same thread' do
+      let(:params) { { types: %w(mention) } }
+
+      before do
+        mentioner = Fabricate(:account)
+        thread_starter = PostStatusService.new.call(mentioner, text: 'Hello @alice')
+        PostStatusService.new.call(mentioner, thread: thread_starter, text: '@alice same thread')
+      end
+
+      it 'counts same-thread mentions once' do
+        subject
+
+        expect(response).to have_http_status(200)
+        expect(response.content_type)
+          .to start_with('application/json')
+        expect(response.parsed_body[:count]).to eq 2
+      end
+    end
+
     context 'with a user-provided limit' do
       let(:params) { { limit: 2 } }
 
@@ -216,6 +235,34 @@ RSpec.describe 'Notifications' do
             prev: api_v1_notifications_url(limit: params[:limit], min_id: notifications.last.id),
             next: api_v1_notifications_url(limit: params[:limit], max_id: notifications[2].id)
           )
+      end
+    end
+
+    context 'when multiple mentions happen in the same thread' do
+      before do
+        thread_starter = PostStatusService.new.call(bob.account, text: 'Hello @alice')
+        PostStatusService.new.call(tom.account, thread: thread_starter, text: '@alice same thread')
+      end
+
+      context 'when the request is scoped to mentions only' do
+        let(:params) { { types: %w(mention) } }
+
+        it 'collapses same-thread mentions into a single entry, keeping the latest' do
+          subject
+
+          mention_entries = response.parsed_body.select { |x| x[:type] == 'mention' }
+
+          expect(mention_entries.size).to eq(1)
+          expect(mention_entries.first[:account][:id]).to eq(tom.account_id.to_s)
+        end
+      end
+
+      context 'when the request is not scoped to mentions only (e.g. "everything")' do
+        it 'does not group the mentions, and returns one entry per mention as before' do
+          subject
+
+          expect(body_json_types.count('mention')).to eq(2)
+        end
       end
     end
 
