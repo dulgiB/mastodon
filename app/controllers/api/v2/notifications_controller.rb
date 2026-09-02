@@ -98,10 +98,9 @@ class Api::V2::NotificationsController < Api::BaseController
   end
 
   # The client-requested grouped types, plus `mention` when the request is scoped to
-  # mentions only (`types[]=mention`, nothing else). This lets a dedicated mentions view
-  # collapse same-thread mentions down to the latest one, without requiring any client
-  # to know mentions can be grouped, while leaving mixed feeds (e.g. "everything")
-  # exactly as before.
+  # mentions only. This lets a dedicated mentions view collapse same-thread mentions
+  # down to the latest one, without requiring any client to know mentions can be
+  # grouped, while leaving mixed feeds (e.g. "everything") exactly as before.
   def grouped_types_param
     requested = Array(params[:grouped_types])
     return requested unless mentions_only_request?
@@ -109,8 +108,18 @@ class Api::V2::NotificationsController < Api::BaseController
     requested | ['mention']
   end
 
+  # True when, after applying both `types` and `exclude_types`, the only notification
+  # type left standing is `mention` (ignoring `quote`, which the web UI's "Mentions"
+  # quick filter bundles in alongside `mention` via `exclude_types` rather than an
+  # explicit `types[]=mention`).
   def mentions_only_request?
-    Array(browserable_params[:types]).map(&:to_s) == ['mention']
+    (effective_notification_types - [:quote]) == [:mention]
+  end
+
+  def effective_notification_types
+    requested = Array(browserable_params[:types]).map(&:to_sym)
+    base = requested.empty? ? Notification::TYPES : (requested & Notification::TYPES)
+    (base - Array(browserable_params[:exclude_types]).map(&:to_sym)).sort
   end
 
   def incomplete_page?

@@ -264,6 +264,18 @@ RSpec.describe 'Notifications' do
           expect(mention_groups.size).to eq(2)
         end
       end
+
+      context 'when the request is scoped to mentions only via exclude_types, as the web UI\'s "Mentions" quick filter does' do
+        let(:params) { { exclude_types: Notification::TYPES.excluding(:mention, :quote).map(&:to_s) } }
+
+        it 'collapses same-thread mentions into a single group' do
+          subject
+
+          mention_groups = response.parsed_body[:notification_groups].select { |group| group[:type] == 'mention' }
+
+          expect(mention_groups.size).to eq(1)
+        end
+      end
     end
 
     context 'with exclude_types param' do
