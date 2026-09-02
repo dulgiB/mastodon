@@ -62,6 +62,7 @@ module Notification::Groups
     MAXIMUM_MENTION_CHAIN_DEPTH.times do
       ancestor_notification = Notification
                                .where(account_id: account_id, type: 'mention')
+                               .where.not(id: id) # Exclude self, relevant when recomputing an already-persisted notification's group key (e.g. a backfill)
                                .joins(:mention)
                                .find_by(mentions: { status_id: current.id })
       return ancestor_notification.group_key if ancestor_notification&.group_key

@@ -82,6 +82,15 @@ RSpec.describe Notification do
 
       expect(notification_b.group_key).to eq notification_a.group_key
     end
+
+    it 'recomputes based on the reply chain rather than reusing its own stale group key (e.g. a backfill recomputing an existing row)' do
+      notification = mention_notification_for(original_status)
+      notification.update_column(:group_key, 'mention-stale-value-from-an-old-scheme')
+
+      notification.set_group_key!
+
+      expect(notification.group_key).to eq "mention-#{original_status.id}"
+    end
   end
 
   describe '#type' do
