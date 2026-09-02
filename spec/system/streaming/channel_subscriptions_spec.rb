@@ -43,8 +43,12 @@ RSpec.describe 'Channel Subscriptions', :inline_jobs, :streaming do
       streaming_client.subscribe('public:local')
 
       # We need to publish a status as there is no positive acknowledgement of
-      # subscriptions:
-      status = PostStatusService.new.call(bob_account, text: 'Hello @alice')
+      # subscriptions. PostStatusService always downgrades public posts to
+      # unlisted on this instance (see PostStatusService), so a broadcastable
+      # public status has to be created directly instead — the same as one
+      # arriving from federation would be, bypassing local posting policy.
+      status = Fabricate(:status, account: bob_account, visibility: :public, text: 'Hello @alice')
+      FanOutOnWriteService.new.call(status)
 
       # And then we want to receive that status:
       message = streaming_client.wait_for_message
@@ -88,8 +92,12 @@ RSpec.describe 'Channel Subscriptions', :inline_jobs, :streaming do
       streaming_client.subscribe('public:local')
 
       # We need to publish a status as there is no positive acknowledgement of
-      # subscriptions:
-      status = PostStatusService.new.call(bob_account, text: 'Hello @alice')
+      # subscriptions. PostStatusService always downgrades public posts to
+      # unlisted on this instance (see PostStatusService), so a broadcastable
+      # public status has to be created directly instead — the same as one
+      # arriving from federation would be, bypassing local posting policy.
+      status = Fabricate(:status, account: bob_account, visibility: :public, text: 'Hello @alice')
+      FanOutOnWriteService.new.call(status)
 
       # And then we want to receive that status:
       message = streaming_client.wait_for_message
