@@ -53,10 +53,10 @@ class Api::V1::NotificationsController < Api::BaseController
   def load_notifications
     scope = browserable_account_notifications.includes(from_account: [:account_stat, :user])
 
-    # A dedicated mentions view (`types[]=mention`, nothing else) collapses same-thread
-    # mentions down to the latest one, the same way `Api::V2::NotificationsController`
-    # does for clients that have moved to the grouped notifications API — mixed feeds
-    # (e.g. "everything") are left ungrouped, exactly as before.
+    # A dedicated mentions view collapses same-thread mentions down to the latest one,
+    # the same way `Api::V2::NotificationsController` does for clients that have moved
+    # to the grouped notifications API — mixed feeds (e.g. "everything") are left
+    # ungrouped, exactly as before.
     notifications = if mentions_only_request?
                       scope.to_a_grouped_paginated_by_id(
                         limit_param(DEFAULT_NOTIFICATIONS_LIMIT),
@@ -74,8 +74,18 @@ class Api::V1::NotificationsController < Api::BaseController
     end
   end
 
+  # True when, after applying both `types` and `exclude_types`, the only notification
+  # type left standing is `mention` (ignoring `quote`, which the web UI's "Mentions"
+  # quick filter bundles in alongside `mention` via `exclude_types` rather than an
+  # explicit `types[]=mention`).
   def mentions_only_request?
-    Array(browserable_params[:types]).map(&:to_s) == ['mention']
+    (effective_notification_types - [:quote]) == [:mention]
+  end
+
+  def effective_notification_types
+    requested = Array(browserable_params[:types]).map(&:to_sym)
+    base = requested.empty? ? Notification::TYPES : (requested & Notification::TYPES)
+    (base - Array(browserable_params[:exclude_types]).map(&:to_sym)).sort
   end
 
   def browserable_account_notifications

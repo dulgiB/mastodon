@@ -264,6 +264,19 @@ RSpec.describe 'Notifications' do
           expect(body_json_types.count('mention')).to eq(2)
         end
       end
+
+      context 'when the request is scoped to mentions only via exclude_types, as the web UI\'s "Mentions" quick filter does' do
+        let(:params) { { exclude_types: Notification::TYPES.excluding(:mention, :quote).map(&:to_s) } }
+
+        it 'collapses same-thread mentions into a single entry, keeping the latest' do
+          subject
+
+          mention_entries = response.parsed_body.select { |x| x[:type] == 'mention' }
+
+          expect(mention_entries.size).to eq(1)
+          expect(mention_entries.first[:account][:id]).to eq(tom.account_id.to_s)
+        end
+      end
     end
 
     def body_json_types
