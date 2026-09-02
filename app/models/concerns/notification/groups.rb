@@ -8,6 +8,10 @@ module Notification::Groups
 
   MAXIMUM_GROUP_SPAN_HOURS = 12
 
+  # Safety cap on how far up the reply chain `mention_group_key` will walk. Real
+  # conversations should never get anywhere close to this.
+  MAXIMUM_MENTION_CHAIN_DEPTH = 100
+
   included do
     scope :by_group_key, ->(group_key) { group_key&.start_with?('ungrouped-') ? where(id: group_key.delete_prefix('ungrouped-')) : where(group_key: group_key) }
   end
@@ -16,11 +20,7 @@ module Notification::Groups
     return if filtered? || GROUPABLE_NOTIFICATION_TYPES.exclude?(type)
 
     if type == :mention
-      # Mentions are grouped by conversation rather than by time window: every mention
-      # belonging to the same thread collapses into the same group, no matter how far
-      # apart in time, so a busy thread only ever surfaces its latest mention.
-      conversation_id = target_status&.conversation_id
-      self.group_key = "mention-#{conversation_id}" unless conversation_id.nil?
+      self.group_key = mention_group_key
       return
     end
 
@@ -44,6 +44,36 @@ module Notification::Groups
 
     self.group_key = "#{type_prefix}-#{hour_bucket}"
   end
+
+  private
+
+  # Mentions are grouped by reply-chain branch rather than by time window: a mention
+  # reuses the group of the nearest ancestor status (walking up `in_reply_to_id`) that
+  # already notified this account, no matter how far apart in time, so a continuing
+  # exchange only ever surfaces its latest mention. Two replies to the same parent that
+  # aren't replies to each other (e.g. unrelated side-mentions in a busy thread, or the
+  # same author mentioning a different set of people in a separate reply) are on
+  # different branches and are treated as separate threads.
+  def mention_group_key
+    status = target_status
+    return if status.nil?
+
+    current = status
+    MAXIMUM_MENTION_CHAIN_DEPTH.times do
+      ancestor_notification = Notification
+                               .where(account_id: account_id, type: 'mention')
+                               .joins(:mention)
+                               .find_by(mentions: { status_id: current.id })
+      return ancestor_notification.group_key if ancestor_notification&.group_key
+
+      current = current.thread
+      break if current.nil?
+    end
+
+    "mention-#{status.id}"
+  end
+
+  public
 
   class_methods do
     def paginate_groups(limit, pagination_order, grouped_types: nil)
