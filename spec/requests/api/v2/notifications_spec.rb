@@ -249,7 +249,7 @@ RSpec.describe 'Notifications' do
           mention_groups = response.parsed_body[:notification_groups].select { |group| group[:type] == 'mention' }
 
           expect(mention_groups.size).to eq(1)
-          expect(mention_groups.first[:sample_account_ids]).to match_array([bob.account_id.to_s, tom.account_id.to_s])
+          expect(mention_groups.first[:sample_account_ids]).to contain_exactly(bob.account_id.to_s, tom.account_id.to_s)
         end
       end
 

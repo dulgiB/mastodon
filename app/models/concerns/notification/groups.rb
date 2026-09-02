@@ -61,10 +61,10 @@ module Notification::Groups
     current = status
     MAXIMUM_MENTION_CHAIN_DEPTH.times do
       ancestor_notification = Notification
-                               .where(account_id: account_id, type: 'mention')
-                               .where.not(id: id) # Exclude self, relevant when recomputing an already-persisted notification's group key (e.g. a backfill)
-                               .joins(:mention)
-                               .find_by(mentions: { status_id: current.id })
+        .where(account_id: account_id, type: 'mention')
+        .where.not(id: id) # Exclude self, relevant when recomputing an already-persisted notification's group key (e.g. a backfill)
+        .joins(:mention)
+        .find_by(mentions: { status_id: current.id })
       return ancestor_notification.group_key if ancestor_notification&.group_key
 
       current = current.thread
@@ -73,8 +73,6 @@ module Notification::Groups
 
     "mention-#{status.id}"
   end
-
-  public
 
   class_methods do
     def paginate_groups(limit, pagination_order, grouped_types: nil)
