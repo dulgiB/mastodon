@@ -491,61 +491,66 @@ class ArchiveTimeline extends PureComponent {
 
     return (
       <Column bindToDocument={!multiColumn} ref={this.setRef} label={title}>
-        <ColumnHeader
-          icon='archive'
-          iconComponent={InventoryIcon}
-          title={headerTitle}
-          onClick={this.handleHeaderClick}
-          multiColumn={multiColumn}
-        />
-
-        {archives.length > 0 && (
-          <EpisodePicker
-            intl={intl}
-            archives={archives}
-            currentId={episodeId}
-            order={order}
-            onSelect={this.handleSelectEpisode}
-            onToggleOrder={this.handleToggleOrder}
+        {/* Sticky as one unit so the picker/search/hint rows stay reachable
+            while scrolling through a (potentially long) episode, rather than
+            scrolling away with the posts — see .archive-timeline__header. */}
+        <div className='archive-timeline__header'>
+          <ColumnHeader
+            icon='archive'
+            iconComponent={InventoryIcon}
+            title={headerTitle}
+            onClick={this.handleHeaderClick}
+            multiColumn={multiColumn}
           />
-        )}
 
-        {archives.length > 0 && (
-          <div className='archive-timeline__search' ref={this.searchContainerRef}>
-            <ColumnSearchHeader
-              active={searching}
-              onActivate={this.handleSearchActivate}
-              onBack={this.handleSearchBack}
-              onSubmit={this.handleSearchSubmit}
-              onEnter={this.handleSearchEnter}
-              placeholder={intl.formatMessage({ id: 'archive_timeline.search_placeholder', defaultMessage: 'Search this archive' })}
-              inputClassName='search__input'
+          {archives.length > 0 && (
+            <EpisodePicker
+              intl={intl}
+              archives={archives}
+              currentId={episodeId}
+              order={order}
+              onSelect={this.handleSelectEpisode}
+              onToggleOrder={this.handleToggleOrder}
             />
-          </div>
-        )}
+          )}
 
-        {showFindNext && (
-          <div className='archive-timeline__find-next'>
-            <span>
-              <FormattedMessage
-                id='archive_timeline.find_next_hint'
-                defaultMessage='Not found here. Found in {count, plural, one {# other episode} other {# other episodes}}.'
-                values={{ count: otherEpisodesWithMatch.length }}
+          {archives.length > 0 && (
+            <div className='archive-timeline__search' ref={this.searchContainerRef}>
+              <ColumnSearchHeader
+                active={searching}
+                onActivate={this.handleSearchActivate}
+                onBack={this.handleSearchBack}
+                onSubmit={this.handleSearchSubmit}
+                onEnter={this.handleSearchEnter}
+                placeholder={intl.formatMessage({ id: 'archive_timeline.search_placeholder', defaultMessage: 'Search this archive' })}
+                inputClassName='search__input'
               />
-            </span>
-            <button type='button' className='link-button' onClick={this.handleFindNext}>
-              <FormattedMessage id='archive_timeline.find_next' defaultMessage='Find next' />
-            </button>
-          </div>
-        )}
+            </div>
+          )}
 
-        {showNoMatches && (
-          <div className='archive-timeline__find-next'>
-            <span>
-              <FormattedMessage id='archive_timeline.no_matches' defaultMessage='No posts match your search.' />
-            </span>
-          </div>
-        )}
+          {showFindNext && (
+            <div className='archive-timeline__find-next'>
+              <span>
+                <FormattedMessage
+                  id='archive_timeline.find_next_hint'
+                  defaultMessage='Not found here. Found in {count, plural, one {# other episode} other {# other episodes}}.'
+                  values={{ count: otherEpisodesWithMatch.length }}
+                />
+              </span>
+              <button type='button' className='link-button' onClick={this.handleFindNext}>
+                <FormattedMessage id='archive_timeline.find_next' defaultMessage='Find next' />
+              </button>
+            </div>
+          )}
+
+          {showNoMatches && (
+            <div className='archive-timeline__find-next'>
+              <span>
+                <FormattedMessage id='archive_timeline.no_matches' defaultMessage='No posts match your search.' />
+              </span>
+            </div>
+          )}
+        </div>
 
         {archives.length === 0 ? (
           <div className='scrollable scrollable--flex'>

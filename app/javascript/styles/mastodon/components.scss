@@ -11567,6 +11567,22 @@ noscript {
   }
 }
 
+// Keeps the episode picker, search box, and find-next/no-matches hint
+// reachable while scrolling through a (potentially long) episode, rather
+// than scrolling away with the posts below — same pattern as
+// .tabs-bar__wrapper. `top: 0` sticks relative to whichever actually
+// scrolls: the column's own .scrollable in multi-column layout, or the
+// document itself when bindToDocument is true (single-column layout),
+// where this sits below the fixed .ui__navigation-bar's reserved space
+// rather than under it.
+.archive-timeline__header {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  flex: 0 0 auto;
+  background: var(--color-bg-primary);
+}
+
 .archive-timeline__find-next {
   display: flex;
   align-items: center;
