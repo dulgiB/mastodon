@@ -23,7 +23,13 @@ class Api::V1::NotificationsController < Api::BaseController
     limit = limit_param(DEFAULT_NOTIFICATIONS_COUNT_LIMIT, MAX_NOTIFICATIONS_COUNT_LIMIT)
 
     with_read_replica do
-      render json: { count: browserable_account_notifications.paginate_by_min_id(limit, notification_marker&.last_read_id).count }
+      count = if mentions_only_request?
+                browserable_account_notifications.paginate_groups_by_min_id(limit, min_id: notification_marker&.last_read_id, grouped_types: %w(mention)).count
+              else
+                browserable_account_notifications.paginate_by_min_id(limit, notification_marker&.last_read_id).count
+              end
+
+      render json: { count: count }
     end
   end
 
@@ -45,14 +51,31 @@ class Api::V1::NotificationsController < Api::BaseController
   private
 
   def load_notifications
-    notifications = browserable_account_notifications.includes(from_account: [:account_stat, :user]).to_a_paginated_by_id(
-      limit_param(DEFAULT_NOTIFICATIONS_LIMIT),
-      params_slice(:max_id, :since_id, :min_id)
-    )
+    scope = browserable_account_notifications.includes(from_account: [:account_stat, :user])
+
+    # A dedicated mentions view (`types[]=mention`, nothing else) collapses same-thread
+    # mentions down to the latest one, the same way `Api::V2::NotificationsController`
+    # does for clients that have moved to the grouped notifications API — mixed feeds
+    # (e.g. "everything") are left ungrouped, exactly as before.
+    notifications = if mentions_only_request?
+                      scope.to_a_grouped_paginated_by_id(
+                        limit_param(DEFAULT_NOTIFICATIONS_LIMIT),
+                        params_slice(:max_id, :since_id, :min_id).merge(grouped_types: %w(mention))
+                      )
+                    else
+                      scope.to_a_paginated_by_id(
+                        limit_param(DEFAULT_NOTIFICATIONS_LIMIT),
+                        params_slice(:max_id, :since_id, :min_id)
+                      )
+                    end
 
     Notification.preload_cache_collection_target_statuses(notifications) do |target_statuses|
       preload_collection(target_statuses, Status)
     end
+  end
+
+  def mentions_only_request?
+    Array(browserable_params[:types]).map(&:to_s) == ['mention']
   end
 
   def browserable_account_notifications

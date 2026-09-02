@@ -4,7 +4,8 @@ module Notification::Groups
   extend ActiveSupport::Concern
 
   # `set_group_key!` needs to be updated if this list changes
-  GROUPABLE_NOTIFICATION_TYPES = %i(favourite reblog follow admin.sign_up).freeze
+  GROUPABLE_NOTIFICATION_TYPES = %i(favourite reblog follow admin.sign_up mention).freeze
+
   MAXIMUM_GROUP_SPAN_HOURS = 12
 
   included do
@@ -13,6 +14,15 @@ module Notification::Groups
 
   def set_group_key!
     return if filtered? || GROUPABLE_NOTIFICATION_TYPES.exclude?(type)
+
+    if type == :mention
+      # Mentions are grouped by conversation rather than by time window: every mention
+      # belonging to the same thread collapses into the same group, no matter how far
+      # apart in time, so a busy thread only ever surfaces its latest mention.
+      conversation_id = target_status&.conversation_id
+      self.group_key = "mention-#{conversation_id}" unless conversation_id.nil?
+      return
+    end
 
     type_prefix = case type
                   when :favourite, :reblog
