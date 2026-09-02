@@ -9,6 +9,7 @@ class Api::V2::NotificationsController < Api::BaseController
   DEFAULT_NOTIFICATIONS_LIMIT = 40
   DEFAULT_NOTIFICATIONS_COUNT_LIMIT = 100
   MAX_NOTIFICATIONS_COUNT_LIMIT = 1_000
+  OTHER_GROUPABLE_TYPES = (Notification::GROUPABLE_NOTIFICATION_TYPES - [:mention]).freeze
 
   def index
     with_read_replica do
@@ -108,12 +109,17 @@ class Api::V2::NotificationsController < Api::BaseController
     requested | ['mention']
   end
 
-  # True when, after applying both `types` and `exclude_types`, the only notification
-  # type left standing is `mention` (ignoring `quote`, which the web UI's "Mentions"
-  # quick filter bundles in alongside `mention` via `exclude_types` rather than an
-  # explicit `types[]=mention`).
+  # True when the request, after applying both `types` and `exclude_types`, includes
+  # `mention` but none of the *other* groupable types (favourite/reblog/follow/
+  # admin.sign_up). We don't require the effective type set to be *exactly* `{mention}`:
+  # the web UI's "Mentions" quick filter (via `exclude_types`) also lets through
+  # mention-adjacent types like `quote`, plus `direct`/`quoted_update` — types its own
+  # `allNotificationTypes` list doesn't track, so it never thinks to exclude them either.
+  # None of those are groupable on their own, so their presence can't turn this into a
+  # surprise mixed feed — only sharing space with another *groupable* type could.
   def mentions_only_request?
-    (effective_notification_types - [:quote]) == [:mention]
+    types = effective_notification_types
+    types.include?(:mention) && (types & OTHER_GROUPABLE_TYPES).empty?
   end
 
   def effective_notification_types

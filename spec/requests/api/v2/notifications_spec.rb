@@ -266,7 +266,7 @@ RSpec.describe 'Notifications' do
       end
 
       context 'when the request is scoped to mentions only via exclude_types, as the web UI\'s "Mentions" quick filter does' do
-        let(:params) { { exclude_types: Notification::TYPES.excluding(:mention, :quote).map(&:to_s) } }
+        let(:params) { { exclude_types: Notification::TYPES.excluding(:mention, :quote, :direct, :quoted_update).map(&:to_s) } }
 
         it 'collapses same-thread mentions into a single group' do
           subject
