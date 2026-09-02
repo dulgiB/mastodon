@@ -41,28 +41,46 @@ RSpec.describe Notification do
     let(:original_status) { Fabricate(:status) }
     let(:reply_status)    { Fabricate(:status, thread: original_status) }
 
+    # Mirrors how `NotifyService` actually uses `set_group_key!`: computed and persisted
+    # before the next notification's group key (which may depend on it) is computed.
     def mention_notification_for(status)
-      Fabricate(:notification, account: account, type: :mention, activity: Fabricate(:mention, status: status))
+      notification = Fabricate(:notification, account: account, type: :mention, activity: Fabricate(:mention, status: status))
+      notification.set_group_key!
+      notification.save!
+      notification
     end
 
     it 'groups mentions from the same thread together, no matter how far apart in time' do
       notification_a = mention_notification_for(original_status)
-      notification_a.set_group_key!
-
       notification_b = travel(1.year) { mention_notification_for(reply_status) }
-      notification_b.set_group_key!
 
       expect(notification_b.group_key).to eq notification_a.group_key
     end
 
-    it 'does not group mentions from different threads together' do
+    it 'does not group mentions from unrelated threads together' do
       notification_a = mention_notification_for(original_status)
       notification_b = mention_notification_for(Fabricate(:status))
 
-      notification_a.set_group_key!
-      notification_b.set_group_key!
+      expect(notification_a.group_key).to_not eq notification_b.group_key
+    end
+
+    it 'does not group sibling replies to the same parent that are not replies to each other' do
+      sibling_reply = Fabricate(:status, thread: original_status)
+
+      notification_a = mention_notification_for(reply_status)
+      notification_b = mention_notification_for(sibling_reply)
 
       expect(notification_a.group_key).to_not eq notification_b.group_key
+    end
+
+    it 'groups a reply into an existing branch even if an uninvolved party posts in between' do
+      third_party_reply = Fabricate(:status, thread: reply_status)
+      continuing_reply = Fabricate(:status, thread: third_party_reply)
+
+      notification_a = mention_notification_for(reply_status)
+      notification_b = mention_notification_for(continuing_reply)
+
+      expect(notification_b.group_key).to eq notification_a.group_key
     end
   end
 
