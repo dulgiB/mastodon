@@ -217,7 +217,11 @@ RSpec.describe 'API Web Push Subscriptions' do
       .find_by(endpoint: create_payload[:subscription][:endpoint])
   end
 
+  # `LEGACY_TYPE_CLASS_MAP` is an unrelated, narrower list (legacy activity_type
+  # fallback lookup) and doesn't match `alerts_payload`'s own keys (it has
+  # `direct` where `alerts_payload` has `status`), so iterate the payload
+  # itself rather than a constant that happens to be a similar size.
   def alert_types
-    Notification::LEGACY_TYPE_CLASS_MAP.values.map(&:to_s)
+    alerts_payload[:data][:alerts].keys.map(&:to_s)
   end
 end
