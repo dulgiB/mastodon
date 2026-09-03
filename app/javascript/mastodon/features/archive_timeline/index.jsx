@@ -409,23 +409,37 @@ class ArchiveTimeline extends PureComponent {
   // (chronologically) that has a match; 'prev' picks the nearest one
   // *before* it, landing on its latest match rather than its earliest
   // (see jumpingToMatchDirection) so backward cross-episode steps keep
-  // feeling like walking backward through matches.
+  // feeling like walking backward through matches. Past the last (or
+  // first) matching episode it wraps around to the other end, the way a
+  // find bar loops.
+  //
+  // The current episode is excluded from the candidates: navigating to
+  // the episode already open pushes the same URL, which componentDidUpdate
+  // ignores (episodeId is unchanged) while the column still resets its
+  // scroll — leaving the list at the top, where onLoadMorePrev fires
+  // repeatedly and pages the whole episode in. Returns whether it
+  // actually navigated, so the caller can fall back to wrapping within
+  // this episode when it's the only one with matches.
   jumpToMatchEpisode = (matches, direction = 'next') => {
     const { episodeId } = this.props.params;
     const { archives } = this.state;
 
-    if (!matches || matches.length === 0) {
-      return;
+    const others = (matches ?? []).filter(archive => archive.id !== episodeId);
+
+    if (others.length === 0) {
+      return false;
     }
 
     const current = archives.find(archive => archive.id === episodeId);
     const next = direction === 'prev'
-      ? [...matches].reverse().find(archive => compareId(archive.start_status_id, current.start_status_id) < 0) ?? matches[matches.length - 1]
-      : matches.find(archive => compareId(archive.start_status_id, current.start_status_id) > 0) ?? matches[0];
+      ? [...others].reverse().find(archive => compareId(archive.start_status_id, current.start_status_id) < 0) ?? others[others.length - 1]
+      : others.find(archive => compareId(archive.start_status_id, current.start_status_id) > 0) ?? others[0];
 
     this.jumpingToMatch = true;
     this.jumpingToMatchDirection = direction;
     this.props.history.push(`/archive/${next.id}`);
+
+    return true;
   };
 
   handleFindNext = () => {
@@ -456,13 +470,34 @@ class ArchiveTimeline extends PureComponent {
 
     this.searchCurrentEpisode.cancel();
 
-    this.findMatchInEpisode(episodeId, query, this.state.activeMatchId, direction).then(({ id, index, total }) => {
-      if (id) {
-        this.jumpToStatus(episodeId, id, this.state.order, { flash: !cycling, matchIndex: index, matchTotal: total, matchIndexQuery: query });
-      } else {
-        this.fetchMatchingArchives.cancel();
-        this.fetchMatchingArchivesNow(query).then(data => this.jumpToMatchEpisode(data, direction));
+    const jump = ({ id, index, total }) => {
+      if (!id) {
+        return false;
       }
+
+      this.jumpToStatus(episodeId, id, this.state.order, { flash: !cycling, matchIndex: index, matchTotal: total, matchIndexQuery: query });
+      return true;
+    };
+
+    this.findMatchInEpisode(episodeId, query, this.state.activeMatchId, direction).then(result => {
+      if (jump(result)) {
+        return;
+      }
+
+      // Out of matches this way within this episode. Hand off to the
+      // nearest other episode that has one; failing that (this is the only
+      // episode with matches) wrap around to this episode's own far end —
+      // passing no boundary id makes findMatchInEpisode return the
+      // earliest match for 'next' and the latest for 'prev' — so the last
+      // match loops back to the first instead of the press doing nothing.
+      this.fetchMatchingArchives.cancel();
+      this.fetchMatchingArchivesNow(query).then(data => {
+        if (this.jumpToMatchEpisode(data, direction)) {
+          return;
+        }
+
+        this.findMatchInEpisode(episodeId, query, undefined, direction).then(jump);
+      });
     });
   };
 
