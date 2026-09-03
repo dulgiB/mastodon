@@ -11592,3 +11592,15 @@ noscript {
 .archive-timeline__search input.search__input {
   padding-inline-start: 20px;
 }
+
+// Marks every occurrence of the active search query within a status's
+// content, via the CSS Custom Highlight API rather than an inserted
+// element — see features/archive_timeline/util/highlight.js for why
+// (status content there is real React-managed DOM, not raw HTML).
+::highlight(archive-timeline-match) {
+  background-color: color-mix(
+    in oklab,
+    var(--color-text-warning) 55%,
+    transparent
+  );
+}

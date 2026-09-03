@@ -29,5 +29,17 @@ RSpec.describe 'API V1 Timelines Archive' do
         expect(response).to have_http_status(422)
       end
     end
+
+    context 'with around_id' do
+      let(:statuses) { Array.new(5) { Fabricate(:status, visibility: :public) } }
+      let(:archive) { Fabricate(:archive, start_status_id: statuses.first.id, end_status_id: statuses.last.id) }
+
+      it 'returns the target status and its surrounding context, unfiltered' do
+        get "/api/v1/timelines/archive/#{archive.id}", params: { around_id: statuses[2].id }, headers: headers
+
+        expect(response).to have_http_status(200)
+        expect(response.parsed_body.pluck(:id)).to include(statuses[2].id.to_s)
+      end
+    end
   end
 end

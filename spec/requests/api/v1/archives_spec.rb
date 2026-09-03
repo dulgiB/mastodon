@@ -58,4 +58,31 @@ RSpec.describe 'API V1 Archives' do
       expect(response.parsed_body).to eq([])
     end
   end
+
+  describe 'GET /api/v1/archives/:id/matches' do
+    let!(:earlier_match) { Fabricate(:status, text: 'this one mentions zebras', visibility: :public) }
+    let!(:later_match)   { Fabricate(:status, text: 'more zebras here too', visibility: :public) }
+    let!(:episode)       { Fabricate(:archive, start_status_id: earlier_match.id, end_status_id: later_match.id) }
+
+    it 'returns the id of the earliest match when after_id is omitted' do
+      get "/api/v1/archives/#{episode.id}/matches", params: { q: 'zebras' }, headers: headers
+
+      expect(response).to have_http_status(200)
+      expect(response.parsed_body[:id]).to eq(earlier_match.id.to_s)
+    end
+
+    it 'returns the id of the next match after after_id' do
+      get "/api/v1/archives/#{episode.id}/matches", params: { q: 'zebras', after_id: earlier_match.id }, headers: headers
+
+      expect(response).to have_http_status(200)
+      expect(response.parsed_body[:id]).to eq(later_match.id.to_s)
+    end
+
+    it 'returns a null id when nothing matches' do
+      get "/api/v1/archives/#{episode.id}/matches", params: { q: 'nonexistentqueryxyz' }, headers: headers
+
+      expect(response).to have_http_status(200)
+      expect(response.parsed_body[:id]).to be_nil
+    end
+  end
 end

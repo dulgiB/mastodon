@@ -6,13 +6,14 @@ import { FormattedMessage } from 'react-intl';
 import { Helmet } from '@unhead/react/helmet';
 import { withRouter } from 'react-router-dom';
 
+import { List as ImmutableList } from 'immutable';
 import { connect } from 'react-redux';
 
 import { debounce } from 'lodash';
 
 import InventoryIcon from '@/material-icons/400-24px/inventory_2.svg?react';
 import { injectIntl } from '@/mastodon/components/intl';
-import { clearTimeline, expandArchiveTimeline, expandArchiveTimelineFromStart } from 'mastodon/actions/timelines';
+import { clearTimeline, expandArchiveTimeline, expandArchiveTimelineAround, expandArchiveTimelineFromStart, expandArchiveTimelinePrev } from 'mastodon/actions/timelines';
 import api from 'mastodon/api';
 import { compareId } from 'mastodon/compare_id';
 import Column from 'mastodon/components/column';
@@ -23,6 +24,12 @@ import { WithRouterPropTypes } from 'mastodon/utils/react_router';
 
 import EpisodePicker from './components/episode_picker';
 import ArchiveStatusListContainer from './containers/status_list_container';
+import { applyHighlight, clearHighlight } from './util/highlight';
+
+// How many animation frames to keep retrying a scroll-to-match before
+// giving up — covers the gap between a jump's fetch resolving and the
+// matching status actually landing in the DOM.
+const SCROLL_RETRY_FRAMES = 30;
 
 class ArchiveTimeline extends PureComponent {
 
@@ -43,12 +50,22 @@ class ArchiveTimeline extends PureComponent {
     query: '',
     matchingArchives: null,
     matchingArchivesQuery: null,
+    // The status a search jumped to most recently, kept loaded in its
+    // normal, unfiltered place in the timeline with its surrounding
+    // context — see jumpToStatus and ArchiveFeed#around.
+    activeMatchId: null,
+    // Whether the *opposite* end from the one ScrollableList's own
+    // onLoadMore paginates (see expandArchiveTimelineAround) still has
+    // more to load — driven locally rather than through the timeline's
+    // shared hasMore, which already tracks the other direction.
+    hasMorePrev: false,
   };
 
   // Set right before navigating to another episode because the user picked
-  // it from the "find next" prompt, so the still-relevant search stays
-  // active (and filtered) there instead of being reset like an ordinary
-  // episode switch.
+  // it from the "find next" prompt (or stepped via the prev/next arrows
+  // mid-search), so the still-relevant search is resumed there — see
+  // componentDidUpdate — instead of being reset like an ordinary episode
+  // switch.
   jumpingToMatch = false;
 
   searchContainerRef = createRef();
@@ -79,11 +96,32 @@ class ArchiveTimeline extends PureComponent {
     const { episodeId } = this.props.params;
 
     if (episodeId && episodeId !== prevProps.params.episodeId) {
-      if (this.jumpingToMatch) {
-        this.jumpingToMatch = false;
-        this.loadPage(episodeId, { order: this.state.order, query: this.state.query.trim() || undefined });
+      const wasJumpingToMatch = this.jumpingToMatch;
+      this.jumpingToMatch = false;
+
+      const query = this.state.query.trim();
+
+      // preserveSearch is set unconditionally by the prev/next arrows (see
+      // EpisodePicker), so this can land here with no search actually active
+      // (query empty) or with one that simply has no match in this episode —
+      // fall back to an ordinary load in both cases rather than leaving the
+      // column showing nothing.
+      if (wasJumpingToMatch && query.length >= 2) {
+        this.setState({ hasMorePrev: false });
+        this.findMatchInEpisode(episodeId, query).then(id => {
+          if (id) {
+            this.jumpToStatus(episodeId, id, this.state.order);
+          } else {
+            // No match in this episode after all — fall back to an ordinary
+            // load, and drop the stale activeMatchId so a later order toggle
+            // or "find next" doesn't re-center on/resume from a status that
+            // belongs to a different episode.
+            this.setState({ activeMatchId: null });
+            this.loadPage(episodeId, { order: this.state.order });
+          }
+        });
       } else {
-        this.setState({ searching: false, query: '', matchingArchives: null, matchingArchivesQuery: null });
+        this.setState({ searching: false, query: '', matchingArchives: null, matchingArchivesQuery: null, activeMatchId: null, hasMorePrev: false });
         this.loadPage(episodeId, { order: this.state.order });
       }
     }
@@ -92,6 +130,13 @@ class ArchiveTimeline extends PureComponent {
   componentWillUnmount () {
     this.fetchMatchingArchives.cancel();
     this.searchCurrentEpisode.cancel();
+    this.cancelScroll();
+    this.highlightObserver?.disconnect();
+    if (this.highlightRaf) {
+      cancelAnimationFrame(this.highlightRaf);
+    }
+    clearHighlight();
+    clearTimeout(this.matchTargetTimeout);
     document.removeEventListener('keydown', this.handleGlobalKeyDown);
   }
 
@@ -101,24 +146,126 @@ class ArchiveTimeline extends PureComponent {
   // action a column showing that order should paginate with (see
   // ArchiveStatusListContainer's onLoadMore, which continues whichever of
   // these this started).
-  loadPage = (episodeId, { order, query, cursor } = {}) => {
+  loadPage = (episodeId, { order, cursor } = {}) => {
     const action = order === 'desc'
-      ? expandArchiveTimeline(episodeId, { maxId: cursor, query })
-      : expandArchiveTimelineFromStart(episodeId, { minId: cursor, query });
+      ? expandArchiveTimeline(episodeId, { maxId: cursor })
+      : expandArchiveTimelineFromStart(episodeId, { minId: cursor });
 
     this.props.dispatch(action);
   };
 
   // Discards whatever's currently loaded for this episode and starts over —
-  // needed whenever the order or the active search query changes, since
-  // either changes which page "the first page" even is.
+  // needed whenever the order changes, since that changes which page "the
+  // first page" even is.
   reload = (episodeId, options = {}) => {
     this.props.dispatch(clearTimeline(`archive:${episodeId}`));
-    this.loadPage(episodeId, { order: this.state.order, ...options });
+    this.loadPage(episodeId, options);
   };
+
+  // Jumps the timeline to a window centered on `statusId` (e.g. a search
+  // match), replacing whatever's currently loaded, and scrolls to + starts
+  // highlighting it once it lands in the DOM. Kept unfiltered — the point
+  // is to show the match *with* its surrounding, non-matching context,
+  // like a browser's own find-in-page rather than a filtered result list.
+  // `flash` controls the landed-here highlight below — on for an ordinary
+  // jump (first search hit, landing on another episode), off for cycling
+  // through this episode's matches one Enter press at a time, where
+  // retriggering a ~1s flash on every match got in the way rather than
+  // drawing the eye.
+  jumpToStatus = (episodeId, statusId, order, { flash = true } = {}) => {
+    this.cancelScroll();
+
+    // expandArchiveTimelineAround clears the timeline itself, right before the
+    // replacement page lands (see its comment) — clearing it here up front
+    // instead would leave the list empty for the length of the request, which
+    // flashed on every jump, including cycling through matches with Enter.
+    this.props.dispatch(expandArchiveTimelineAround(episodeId, statusId, order)).then(hasMorePrev => {
+      this.setState({ activeMatchId: statusId, hasMorePrev });
+      this.scrollToActiveMatch(statusId, 0, flash);
+      this.scheduleHighlight();
+    });
+  };
+
+  // Looks up the next match for `query` within one episode (the earliest
+  // one, if afterId is omitted) and jumps to it if found.
+  searchAndJumpInEpisode = (episodeId, query, afterId) => {
+    if (query.length < 2) {
+      return;
+    }
+
+    this.findMatchInEpisode(episodeId, query, afterId).then(id => {
+      if (id) {
+        this.jumpToStatus(episodeId, id, this.state.order);
+      }
+    });
+  };
+
+  findMatchInEpisode = (episodeId, query, afterId) => {
+    return api().get(`/api/v1/archives/${episodeId}/matches`, { params: { q: query, after_id: afterId } })
+      .then(({ data }) => data.id)
+      .catch(() => null);
+  };
+
+  cancelScroll () {
+    if (this.scrollRaf) {
+      cancelAnimationFrame(this.scrollRaf);
+      this.scrollRaf = null;
+    }
+  }
+
+  scrollToActiveMatch = (statusId, attempt = 0, flash = true) => {
+    const container = this.column?.node;
+    const target = container?.querySelector(`[data-id="${CSS.escape(statusId)}"]`);
+
+    if (target) {
+      target.scrollIntoView({ block: 'center' });
+
+      if (flash) {
+        // Reuses the same landed-here flash the thread view gives a newly
+        // arrived reply (see Status#shouldHighlightOnMount) — applied
+        // directly here instead, since jumping doesn't remount the status.
+        target.classList.add('status--highlighted-entry');
+        clearTimeout(this.matchTargetTimeout);
+        this.matchTargetTimeout = setTimeout(() => target.classList.remove('status--highlighted-entry'), 2000);
+      }
+
+      return;
+    }
+
+    if (attempt < SCROLL_RETRY_FRAMES) {
+      this.scrollRaf = requestAnimationFrame(() => this.scrollToActiveMatch(statusId, attempt + 1, flash));
+    }
+  };
+
+  scheduleHighlight = () => {
+    if (this.highlightRaf) {
+      return;
+    }
+
+    this.highlightRaf = requestAnimationFrame(() => {
+      this.highlightRaf = null;
+
+      const query = this.state.query.trim();
+      applyHighlight(this.column?.node, query.length >= 2 ? query : '');
+    });
+  };
+
+  // Keeps highlighting in sync with content that loads in without this
+  // component itself re-rendering — e.g. more pages arriving in the
+  // connected status list below, which lives in Redux state this component
+  // doesn't subscribe to.
+  observeHighlightTarget (node) {
+    if (!node || this.highlightObserver) {
+      return;
+    }
+
+    this.highlightObserver = new MutationObserver(() => this.scheduleHighlight());
+    this.highlightObserver.observe(node, { childList: true, subtree: true });
+  }
 
   setRef = c => {
     this.column = c;
+    this.observeHighlightTarget(c?.node);
   };
 
   handleHeaderClick = () => {
@@ -126,8 +273,8 @@ class ArchiveTimeline extends PureComponent {
   };
 
   // preserveSearch (set by the prev/next arrows, not the episode dropdown —
-  // see EpisodePicker) carries an active search over to the episode landed
-  // on, the same way jumping via "find next" already does.
+  // see EpisodePicker) resumes an active search on the episode landed on,
+  // the same way jumping via "find next" already does.
   handleSelectEpisode = (id, { preserveSearch = false } = {}) => {
     if (preserveSearch) {
       this.jumpingToMatch = true;
@@ -139,10 +286,17 @@ class ArchiveTimeline extends PureComponent {
   handleToggleOrder = () => {
     const { episodeId } = this.props.params;
     const order = this.state.order === 'asc' ? 'desc' : 'asc';
-    const query = this.state.query.trim() || undefined;
 
-    this.setState({ order });
-    this.reload(episodeId, { order, query });
+    this.setState({ order, hasMorePrev: false });
+
+    if (this.state.activeMatchId) {
+      // Forward/backward flip meaning with the order, so re-center on the
+      // same match to recompute them rather than leaving stale ones in
+      // place — see expandArchiveTimelineAround.
+      this.jumpToStatus(episodeId, this.state.activeMatchId, order);
+    } else {
+      this.reload(episodeId, { order });
+    }
   };
 
   // Mirrors the browser's own find-in-page shortcut: bring focus to the
@@ -175,17 +329,17 @@ class ArchiveTimeline extends PureComponent {
     this.fetchMatchingArchives.cancel();
     this.searchCurrentEpisode.cancel();
 
-    const hadActiveQuery = this.state.query.trim().length >= 2;
-
-    this.setState({ searching: false, query: '', matchingArchives: null, matchingArchivesQuery: null });
-
-    if (hadActiveQuery) {
-      this.reload(this.props.params.episodeId, { query: undefined });
-    }
+    this.setState({ searching: false, query: '', matchingArchives: null, matchingArchivesQuery: null }, this.scheduleHighlight);
   };
 
   handleSearchSubmit = query => {
-    this.setState({ query });
+    // ColumnSearchHeader calls onSubmit immediately followed by onEnter on
+    // the form's actual submit — synchronously, in the same event, before
+    // the setState below has actually landed — so handleSearchEnter reads
+    // this instead of (necessarily stale) state to know the just-typed
+    // value.
+    this.currentQuery = query;
+    this.setState({ query }, this.scheduleHighlight);
 
     if (query.trim().length >= 2) {
       this.searchCurrentEpisode(query.trim());
@@ -194,17 +348,13 @@ class ArchiveTimeline extends PureComponent {
       this.searchCurrentEpisode.cancel();
       this.fetchMatchingArchives.cancel();
       this.setState({ matchingArchives: null, matchingArchivesQuery: null });
-      this.reload(this.props.params.episodeId, { query: undefined });
     }
   };
 
-  // Re-fetches the current episode filtered server-side (via the same
-  // pg_trgm-indexed substring match DatabaseStatusSearch uses), paginated
-  // exactly like an ordinary browse — no need to have the whole episode
-  // loaded client-side first, and no per-keystroke network chatter thanks
-  // to the debounce.
+  // Re-looks-up (and jumps to, if found) the earliest match in the current
+  // episode — debounced so it doesn't fire on every keystroke.
   searchCurrentEpisode = debounce(query => {
-    this.reload(this.props.params.episodeId, { query });
+    this.searchAndJumpInEpisode(this.props.params.episodeId, query);
   }, 300);
 
   // Which *other* episodes contain this query, so we can point the user at
@@ -221,7 +371,7 @@ class ArchiveTimeline extends PureComponent {
 
   fetchMatchingArchives = debounce(query => this.fetchMatchingArchivesNow(query), 300);
 
-  jumpToMatch = matches => {
+  jumpToMatchEpisode = matches => {
     const { episodeId } = this.props.params;
     const { archives } = this.state;
 
@@ -237,44 +387,72 @@ class ArchiveTimeline extends PureComponent {
   };
 
   handleFindNext = () => {
-    this.jumpToMatch(this.state.matchingArchives);
+    this.jumpToMatchEpisode(this.state.matchingArchives);
   };
 
   // Enter in the search box, mirroring a browser's own find-in-page bar:
-  // jump to the next match regardless of whether the current episode also
-  // has one (cycling forward), not just when it doesn't (unlike the "find
-  // next" hint/button, which only appears in the latter case). If the
-  // per-keystroke debounced lookup hasn't settled yet — e.g. Enter right
-  // after typing the last character — this fetches immediately instead of
-  // acting on a possibly-stale matchingArchives.
+  // jump to the next match — cycling through this episode's matches one at
+  // a time before falling back to another episode (unlike the "find next"
+  // hint/button, which only ever crosses episodes). If the per-keystroke
+  // debounced lookup hasn't settled yet — e.g. Enter right after typing the
+  // last character — this fetches immediately instead of acting on a
+  // possibly-stale result.
   handleSearchEnter = () => {
-    const query = this.state.query.trim();
+    const query = (this.currentQuery ?? this.state.query).trim();
 
     if (query.length < 2) {
       return;
     }
 
-    if (this.state.matchingArchivesQuery === query && this.state.matchingArchives !== null) {
-      this.jumpToMatch(this.state.matchingArchives);
-      return;
-    }
+    const { episodeId } = this.props.params;
+    // An activeMatchId already set here means this Enter is continuing a
+    // cycle through this episode's matches rather than landing on the first
+    // one — skip the flash in that case (see jumpToStatus).
+    const cycling = this.state.activeMatchId != null;
 
-    this.fetchMatchingArchives.cancel();
-    this.fetchMatchingArchivesNow(query).then(data => this.jumpToMatch(data));
+    this.searchCurrentEpisode.cancel();
+
+    this.findMatchInEpisode(episodeId, query, this.state.activeMatchId).then(id => {
+      if (id) {
+        this.jumpToStatus(episodeId, id, this.state.order, { flash: !cycling });
+      } else {
+        this.fetchMatchingArchives.cancel();
+        this.fetchMatchingArchivesNow(query).then(data => this.jumpToMatchEpisode(data));
+      }
+    });
+  };
+
+  handleLoadMorePrev = () => {
+    const { episodeId } = this.props.params;
+    const { order } = this.state;
+
+    this.props.dispatch((dispatch, getState) => {
+      const items = getState().getIn(['timelines', `archive:${episodeId}`, 'items'], ImmutableList());
+
+      if (items.isEmpty()) {
+        return;
+      }
+
+      const cursor = order === 'asc' ? items.last() : items.first();
+
+      dispatch(expandArchiveTimelinePrev(episodeId, { cursor, order })).then(hasMorePrev => {
+        this.setState({ hasMorePrev });
+      });
+    });
   };
 
   render () {
     const { columnId, multiColumn, intl, identity } = this.props;
     const { episodeId } = this.props.params;
-    const { archives, order, searching, query, matchingArchives, matchingArchivesQuery } = this.state;
+    const { archives, order, searching, query, matchingArchives, matchingArchivesQuery, hasMorePrev } = this.state;
     const pinned = !!columnId;
 
     const trimmedQuery = query.trim();
-    const activeQuery = trimmedQuery.length >= 2 ? trimmedQuery : undefined;
     const matchesAreCurrent = trimmedQuery.length > 0 && matchingArchivesQuery === trimmedQuery && matchingArchives !== null;
     const currentEpisodeHasMatch = matchesAreCurrent && matchingArchives.some(archive => archive.id === episodeId);
     const otherEpisodesWithMatch = matchesAreCurrent ? matchingArchives.filter(archive => archive.id !== episodeId) : [];
     const showFindNext = matchesAreCurrent && !currentEpisodeHasMatch && otherEpisodesWithMatch.length > 0;
+    const showNoMatches = matchesAreCurrent && matchingArchives.length === 0;
 
     if (!identity.signedIn) {
       return (
@@ -361,6 +539,14 @@ class ArchiveTimeline extends PureComponent {
           </div>
         )}
 
+        {showNoMatches && (
+          <div className='archive-timeline__find-next'>
+            <span>
+              <FormattedMessage id='archive_timeline.no_matches' defaultMessage='No posts match your search.' />
+            </span>
+          </div>
+        )}
+
         {archives.length === 0 ? (
           <div className='scrollable scrollable--flex'>
             <div className='empty-column-indicator'>
@@ -374,13 +560,10 @@ class ArchiveTimeline extends PureComponent {
             timelineId={`archive:${episodeId}`}
             episodeId={episodeId}
             order={order}
-            query={activeQuery}
+            hasMorePrev={hasMorePrev}
+            onLoadMorePrev={this.handleLoadMorePrev}
             emptyMessage={
-              trimmedQuery ? (
-                <FormattedMessage id='empty_column.archive_search' defaultMessage='No posts in this episode match your search.' />
-              ) : (
-                <FormattedMessage id='empty_column.archive' defaultMessage='This episode has no posts.' />
-              )
+              <FormattedMessage id='empty_column.archive' defaultMessage='This episode has no posts.' />
             }
             bindToDocument={!multiColumn}
           />

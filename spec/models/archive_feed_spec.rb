@@ -103,4 +103,62 @@ RSpec.describe ArchiveFeed do
       expect(described_class.new(wildcard_archive, viewer).match?('50% off')).to be(false)
     end
   end
+
+  describe '#next_match_id' do
+    it 'returns the earliest visible match when after_id is omitted' do
+      earlier = Fabricate(:status, account: stranger, text: 'zebras are here', visibility: :public)
+      later = Fabricate(:status, account: stranger, text: 'more zebras later', visibility: :public)
+      archive = Fabricate(:archive, start_status_id: earlier.id, end_status_id: later.id)
+
+      expect(described_class.new(archive, viewer).next_match_id('zebras')).to eq(earlier.id)
+    end
+
+    it 'returns the next visible match after after_id' do
+      earlier = Fabricate(:status, account: stranger, text: 'zebras are here', visibility: :public)
+      later = Fabricate(:status, account: stranger, text: 'more zebras later', visibility: :public)
+      archive = Fabricate(:archive, start_status_id: earlier.id, end_status_id: later.id)
+
+      expect(described_class.new(archive, viewer).next_match_id('zebras', after_id: earlier.id)).to eq(later.id)
+    end
+
+    it 'returns nil once every match has been passed' do
+      status = Fabricate(:status, account: stranger, text: 'zebras are here', visibility: :public)
+      archive = Fabricate(:archive, start_status_id: status.id, end_status_id: status.id)
+
+      expect(described_class.new(archive, viewer).next_match_id('zebras', after_id: status.id)).to be_nil
+    end
+
+    it 'skips a match the viewer is not allowed to see' do
+      hidden = Fabricate(:status, account: stranger, text: 'zebras only for followers', visibility: :private)
+      visible = Fabricate(:status, account: stranger, text: 'zebras for everyone', visibility: :public)
+      archive = Fabricate(:archive, start_status_id: hidden.id, end_status_id: visible.id)
+
+      expect(described_class.new(archive, viewer).next_match_id('zebras')).to eq(visible.id)
+    end
+  end
+
+  describe '#around' do
+    it 'returns the target status plus up to `limit` on each side, unfiltered by any query' do
+      statuses = Array.new(7) { Fabricate(:status, account: stranger, visibility: :public) }
+      archive = Fabricate(:archive, start_status_id: statuses.first.id, end_status_id: statuses.last.id)
+      target = statuses[3]
+
+      results = described_class.new(archive, viewer).around(target.id, 2)
+
+      expect(results).to match_array(statuses[1..5])
+    end
+
+    it 'excludes statuses outside the archived range or not visible to the viewer' do
+      before_range = Fabricate(:status, account: stranger, visibility: :public)
+      hidden = Fabricate(:status, account: stranger, visibility: :private)
+      target = Fabricate(:status, account: stranger, visibility: :public)
+      after_range = Fabricate(:status, account: stranger, visibility: :public)
+      archive = Fabricate(:archive, start_status_id: hidden.id, end_status_id: target.id)
+
+      results = described_class.new(archive, viewer).around(target.id, 5)
+
+      expect(results).to contain_exactly(target)
+      expect(results).to_not include(before_range, hidden, after_range)
+    end
+  end
 end

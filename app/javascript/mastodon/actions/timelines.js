@@ -168,11 +168,7 @@ export const expandAccountDirectTimeline    = (accountId, { maxId} = {}) => expa
 export const expandAccountFeaturedTimeline = (accountId, { tagged } = {}) => expandTimeline(`account:${accountId}:pinned${tagged ? `:${tagged}` : ''}`, `/api/v1/accounts/${accountId}/statuses`, { pinned: true, tagged });
 export const expandAccountMediaTimeline    = (accountId, { maxId, withReplies } = {}) => expandTimeline(`account:${accountId}:media${withReplies ? ':with_replies' : ''}`, `/api/v1/accounts/${accountId}/statuses`, { max_id: maxId, only_media: true, no_direct: true, limit: 40, exclude_replies: !withReplies });
 export const expandListTimeline            = (id, { maxId } = {}) => expandTimeline(`list:${id}`, `/api/v1/timelines/list/${id}`, { max_id: maxId });
-// Both directions accept an optional `query`, filtered server-side via the
-// same pg_trgm-indexed substring match DatabaseStatusSearch uses — search
-// results page in exactly like an ordinary browse, rather than needing the
-// whole episode loaded client-side first to filter locally.
-export const expandArchiveTimeline         = (id, { maxId, query } = {}) => expandTimeline(`archive:${id}`, `/api/v1/timelines/archive/${id}`, { max_id: maxId, q: query });
+export const expandArchiveTimeline         = (id, { maxId } = {}) => expandTimeline(`archive:${id}`, `/api/v1/timelines/archive/${id}`, { max_id: maxId });
 export const expandLinkTimeline            = (url, { maxId } = {}) => expandTimeline(`link:${url}`, `/api/v1/timelines/link`, { url, max_id: maxId });
 export const expandHashtagTimeline         = (hashtag, { maxId, tags, local } = {}, done = noOp) => {
   return expandTimeline(`hashtag:${hashtag}${local ? ':local' : ''}`, `/api/v1/timelines/tag/${hashtag}`, {
@@ -189,6 +185,11 @@ export const expandHashtagTimeline         = (hashtag, { maxId, tags, local } = 
 // back, without parsing Link headers.
 const ARCHIVE_PAGE_SIZE = 20;
 
+// How many statuses to pull on each side of a search-match jump — mirrors
+// ARCHIVE_CONTEXT_LIMIT on the server (see
+// Api::V1::Timelines::ArchiveController).
+const ARCHIVE_CONTEXT_LIMIT = 15;
+
 // Unlike expandArchiveTimeline (which walks backward from the newest post,
 // like every other timeline), this walks forward from the start of the
 // episode via min_id, so pages arrive in the same oldest-first order the
@@ -197,7 +198,7 @@ const ARCHIVE_PAGE_SIZE = 20;
 // expandArchiveTimeline depending on the selected order (see
 // ArchiveTimeline#loadPage), rather than needing the whole episode loaded
 // up front to support reversing/filtering it client-side.
-export function expandArchiveTimelineFromStart(id, { minId, query } = {}) {
+export function expandArchiveTimelineFromStart(id, { minId } = {}) {
   return async dispatch => {
     const timelineId = `archive:${id}`;
     const isLoadingMore = !!minId;
@@ -205,13 +206,98 @@ export function expandArchiveTimelineFromStart(id, { minId, query } = {}) {
     dispatch(expandTimelineRequest(timelineId, isLoadingMore));
 
     try {
-      const response = await api().get(`/api/v1/timelines/archive/${id}`, { params: { min_id: minId || '0', limit: ARCHIVE_PAGE_SIZE, q: query } });
+      const response = await api().get(`/api/v1/timelines/archive/${id}`, { params: { min_id: minId || '0', limit: ARCHIVE_PAGE_SIZE } });
       const hasMore = response.data.length === ARCHIVE_PAGE_SIZE;
 
       dispatch(importFetchedStatuses(response.data));
       dispatch(expandTimelineSuccess(timelineId, response.data, hasMore ? 'more' : null, response.status === 206, false, isLoadingMore, false));
     } catch (error) {
       dispatch(expandTimelineFail(timelineId, error, isLoadingMore));
+    }
+  };
+}
+
+// Fetches a window of statuses centered on `aroundId` (unfiltered) and
+// replaces the episode's timeline with it — used to jump to a specific
+// status (e.g. a search match) while keeping its surrounding, non-matching
+// context visible, rather than filtering the episode down to matches only.
+// `order` decides which side of the window continues to page in as an
+// ordinary "load more" (see ArchiveTimeline#loadPage): the other side has
+// to be paged in via expandArchiveTimelinePrev instead, since ScrollableList
+// only ever loads more at the *bottom* of the list. Resolves to whether
+// that other, "prev" side has more left to load.
+//
+// Whether each side has more is inferred from whether it came back full
+// (ARCHIVE_CONTEXT_LIMIT statuses), the same way expandArchiveTimelineFromStart
+// infers hasMore from a full page — rather than from the response's Link
+// header, which the archive API (like every other Mastodon timeline
+// endpoint) includes unconditionally whenever the page isn't fully empty,
+// regardless of whether more actually follows.
+export function expandArchiveTimelineAround(id, aroundId, order) {
+  return async dispatch => {
+    const timelineId = `archive:${id}`;
+
+    dispatch(expandTimelineRequest(timelineId, false));
+
+    try {
+      const response = await api().get(`/api/v1/timelines/archive/${id}`, { params: { around_id: aroundId, limit: ARCHIVE_CONTEXT_LIMIT } });
+      const statuses = response.data;
+      const newerCount = statuses.filter(status => compareId(status.id, aroundId) > 0).length;
+      // The server's own older-side fetch includes aroundId itself (see
+      // ArchiveFeed#around), so a full older side comes back as
+      // ARCHIVE_CONTEXT_LIMIT statuses total, aroundId included.
+      const olderOrEqualCount = statuses.length - newerCount;
+      const hasOlder = olderOrEqualCount === ARCHIVE_CONTEXT_LIMIT;
+      const hasNewer = newerCount === ARCHIVE_CONTEXT_LIMIT;
+      const hasForward = order === 'asc' ? hasNewer : hasOlder;
+      const hasPrev = order === 'asc' ? hasOlder : hasNewer;
+
+      dispatch(importFetchedStatuses(statuses));
+      // Cleared here, right before the replacement page lands, rather than by the
+      // caller up front — expandNormalizedTimeline below only ever merges into
+      // whatever's already in the timeline, so a wholesale replace still needs a
+      // clear, but doing it earlier left the list visibly empty for the length of
+      // the request (a flash on every jump, including cycling through matches
+      // with Enter). Both dispatches land in the same tick, so React batches them
+      // into one render straight from the old window to the new one.
+      dispatch(clearTimeline(timelineId));
+      dispatch(expandTimelineSuccess(timelineId, statuses, hasForward ? 'more' : null, response.status === 206, false, false, false));
+
+      return hasPrev;
+    } catch (error) {
+      dispatch(expandTimelineFail(timelineId, error, false));
+      return false;
+    }
+  };
+}
+
+// Pages in more statuses at the *opposite* end from the one ScrollableList's
+// own onLoadMore paginates (see expandArchiveTimelineAround above) — older
+// statuses when order is 'asc' (since onLoadMore there already walks
+// forward/newer), newer statuses when order is 'desc'. Merged into the same
+// timeline via expandTimelineSuccess like any other page, but with a
+// perpetually-truthy `next` so it never touches the timeline's shared
+// `hasMore` flag, which already tracks the *other* direction.
+export function expandArchiveTimelinePrev(id, { cursor, order }) {
+  return async dispatch => {
+    const timelineId = `archive:${id}`;
+    const params = order === 'asc'
+      ? { max_id: cursor, limit: ARCHIVE_PAGE_SIZE }
+      : { min_id: cursor, limit: ARCHIVE_PAGE_SIZE };
+
+    dispatch(expandTimelineRequest(timelineId, true));
+
+    try {
+      const response = await api().get(`/api/v1/timelines/archive/${id}`, { params });
+      const hasMore = response.data.length === ARCHIVE_PAGE_SIZE;
+
+      dispatch(importFetchedStatuses(response.data));
+      dispatch(expandTimelineSuccess(timelineId, response.data, 'more', response.status === 206, false, true, false));
+
+      return hasMore;
+    } catch (error) {
+      dispatch(expandTimelineFail(timelineId, error, true));
+      return false;
     }
   };
 }

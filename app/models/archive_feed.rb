@@ -33,6 +33,38 @@ class ArchiveFeed
     matching_scope(query).exists?
   end
 
+  # The id of the earliest-in-time visible match for `query` that comes
+  # after `after_id`, letting the client cycle through in-episode matches
+  # one at a time (find-next), the same way a browser's own find-in-page
+  # does, rather than jumping straight to another episode whenever the one
+  # currently open contains more than one match.
+  # @param [String] query
+  # @param [Integer, String, nil] after_id
+  # @return [Integer, nil]
+  def next_match_id(query, after_id: nil)
+    relation = matching_scope(query).reorder(id: :asc)
+    relation = relation.where(Status.arel_table[:id].gt(after_id)) if after_id.present?
+    relation.limit(1).pick(:id)
+  end
+
+  # A window of statuses centered on `around_id` — up to `limit` immediately
+  # older and `limit` immediately newer, in addition to `around_id` itself —
+  # unfiltered by any search query. Used to jump to a specific status (e.g.
+  # a search match) while still showing its surrounding, non-matching
+  # context, rather than only ever displaying statuses that match.
+  # @param [Integer, String] around_id
+  # @param [Integer] limit
+  # @return [Array<Status>]
+  def around(around_id, limit)
+    newer = scope.to_a_paginated_by_id(limit, min_id: around_id)
+    # `max_id` is exclusive, so `around_id + 1` folds the target status itself
+    # into this side's results — pad the limit by one to still get `limit`
+    # older statuses in addition to it.
+    older = scope.to_a_paginated_by_id(limit + 1, max_id: (around_id.to_i + 1).to_s)
+
+    newer + older
+  end
+
   private
 
   attr_reader :archive, :viewer
