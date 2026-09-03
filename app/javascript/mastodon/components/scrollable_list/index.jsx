@@ -65,6 +65,7 @@ class ScrollableList extends PureComponent {
   static propTypes = {
     scrollKey: PropTypes.string.isRequired,
     onLoadMore: PropTypes.func,
+    onLoadMorePrev: PropTypes.func,
     onLoadPending: PropTypes.func,
     onScrollToTop: PropTypes.func,
     onScroll: PropTypes.func,
@@ -72,6 +73,7 @@ class ScrollableList extends PureComponent {
     isLoading: PropTypes.bool,
     showLoading: PropTypes.bool,
     hasMore: PropTypes.bool,
+    hasMorePrev: PropTypes.bool,
     numPending: PropTypes.number,
     prepend: PropTypes.node,
     append: PropTypes.node,
@@ -113,6 +115,10 @@ class ScrollableList extends PureComponent {
 
       if (scrollTop > 0 && offset < 400 && this.props.onLoadMore && this.props.hasMore && !this.props.isLoading) {
         this.props.onLoadMore();
+      }
+
+      if (scrollTop < 400 && this.props.onLoadMorePrev && this.props.hasMorePrev && !this.props.isLoading) {
+        this.props.onLoadMorePrev();
       }
 
       if (scrollTop < 100 && this.props.onScrollToTop) {

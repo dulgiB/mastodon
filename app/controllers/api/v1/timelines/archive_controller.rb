@@ -7,6 +7,12 @@ class Api::V1::Timelines::ArchiveController < Api::V1::Timelines::BaseController
 
   PERMITTED_PARAMS = %i(limit q).freeze
 
+  # How many statuses to pull on each side of an around_id window — enough
+  # to give real context without loading the whole episode, and roughly the
+  # same order of magnitude as an ordinary page (see ARCHIVE_PAGE_SIZE on
+  # the client).
+  ARCHIVE_CONTEXT_LIMIT = 15
+
   def show
     @statuses = load_statuses
     render json: @statuses, each_serializer: REST::StatusSerializer, relationships: StatusRelationshipsPresenter.new(@statuses, current_user.account_id)
@@ -27,13 +33,17 @@ class Api::V1::Timelines::ArchiveController < Api::V1::Timelines::BaseController
   end
 
   def archive_statuses
-    archive_feed.get(
-      limit_param(DEFAULT_STATUSES_LIMIT),
-      max_id: params[:max_id],
-      since_id: params[:since_id],
-      min_id: params[:min_id],
-      query: params[:q]
-    )
+    if params[:around_id].present?
+      archive_feed.around(params[:around_id], ARCHIVE_CONTEXT_LIMIT)
+    else
+      archive_feed.get(
+        limit_param(DEFAULT_STATUSES_LIMIT),
+        max_id: params[:max_id],
+        since_id: params[:since_id],
+        min_id: params[:min_id],
+        query: params[:q]
+      )
+    end
   end
 
   def archive_feed

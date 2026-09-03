@@ -73,6 +73,7 @@ namespace :api, format: false do
 
     resources :archives, only: [:index] do
       get :search, on: :collection
+      get :matches, on: :member
     end
 
     with_options to: 'streaming#index' do
