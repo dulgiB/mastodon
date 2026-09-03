@@ -11609,6 +11609,29 @@ noscript {
   padding-inline-start: 20px;
 }
 
+// The active match's "3/10" position and the previous/next-match arrows,
+// sitting inside the search box's own row between the input and Cancel
+// (see ColumnSearchHeader's `trailing`) the way a code editor's find bar
+// does — rather than on a row of their own, which made the sticky header
+// noticeably taller.
+.archive-timeline__search-nav {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  flex: 0 0 auto;
+
+  &__arrow {
+    flex: 0 0 auto;
+  }
+}
+
+.archive-timeline__match-count {
+  font-size: 13px;
+  color: var(--color-text-secondary);
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+
 // Marks every occurrence of the active search query within a status's
 // content, via the CSS Custom Highlight API rather than an inserted
 // element — see features/archive_timeline/util/highlight.js for why

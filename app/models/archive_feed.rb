@@ -47,6 +47,40 @@ class ArchiveFeed
     relation.limit(1).pick(:id)
   end
 
+  # The id of the latest-in-time visible match for `query` that comes
+  # before `before_id` — symmetric to next_match_id, letting the client
+  # step backward through matches one at a time (find-previous) the same
+  # way next_match_id already supports find-next. before_id blank returns
+  # the latest match overall, the backward equivalent of next_match_id's
+  # "earliest match" when after_id is omitted.
+  # @param [String] query
+  # @param [Integer, String, nil] before_id
+  # @return [Integer, nil]
+  def previous_match_id(query, before_id: nil)
+    relation = matching_scope(query).reorder(id: :desc)
+    relation = relation.where(Status.arel_table[:id].lt(before_id)) if before_id.present?
+    relation.limit(1).pick(:id)
+  end
+
+  # The 1-based position of `match_id` among all of this episode's visible
+  # matches for `query` (chronological order, same as next_match_id's
+  # cycling order), and the total match count — e.g. index 3 of total 10,
+  # for a "3/10" indicator alongside the find-next cycling next_match_id
+  # already supports. `match_id` is assumed to itself be a match (as
+  # returned by next_match_id); nil short-circuits to no position.
+  # @param [String] query
+  # @param [Integer, String, nil] match_id
+  # @return [Array(Integer, Integer), Array(nil, Integer)] [index, total]
+  def match_position(query, match_id)
+    relation = matching_scope(query)
+    total = count_matches(relation)
+
+    return [nil, total] if match_id.blank?
+
+    index = count_matches(relation.where(Status.arel_table[:id].lteq(match_id)))
+    [index, total]
+  end
+
   # A window of statuses centered on `around_id` — up to `limit` immediately
   # older and `limit` immediately newer, in addition to `around_id` itself —
   # unfiltered by any search query. Used to jump to a specific status (e.g.
@@ -75,6 +109,19 @@ class ArchiveFeed
 
   def matching_scope(query)
     query.present? ? scope.merge(Status.matching_text(query)) : scope
+  end
+
+  # StatusVisibility#scope GROUPs by status id for ordinary viewers (to
+  # collapse the duplicate rows its mentions LEFT JOIN produces), and
+  # #count on a *grouped* relation returns a Hash of per-group counts
+  # rather than a number — which is not what any caller here wants, and
+  # silently reached the API as an object. Counting distinct ids instead
+  # is a plain number either way, and still collapses those join
+  # duplicates. Privileged viewers take StatusVisibility's early return
+  # and get no GROUP BY at all, which is why this only ever misbehaved
+  # for ordinary accounts.
+  def count_matches(relation)
+    relation.unscope(:group).distinct.count(:id)
   end
 
   def range_scope

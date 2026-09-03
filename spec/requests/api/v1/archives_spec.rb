@@ -64,25 +64,58 @@ RSpec.describe 'API V1 Archives' do
     let!(:later_match)   { Fabricate(:status, text: 'more zebras here too', visibility: :public) }
     let!(:episode)       { Fabricate(:archive, start_status_id: earlier_match.id, end_status_id: later_match.id) }
 
-    it 'returns the id of the earliest match when after_id is omitted' do
+    it 'returns the id of the earliest match when after_id is omitted, alongside its position and the total' do
       get "/api/v1/archives/#{episode.id}/matches", params: { q: 'zebras' }, headers: headers
 
       expect(response).to have_http_status(200)
       expect(response.parsed_body[:id]).to eq(earlier_match.id.to_s)
+      expect(response.parsed_body[:index]).to eq(1)
+      expect(response.parsed_body[:total]).to eq(2)
     end
 
-    it 'returns the id of the next match after after_id' do
+    it 'returns the id of the next match after after_id, with an incremented position' do
       get "/api/v1/archives/#{episode.id}/matches", params: { q: 'zebras', after_id: earlier_match.id }, headers: headers
 
       expect(response).to have_http_status(200)
       expect(response.parsed_body[:id]).to eq(later_match.id.to_s)
+      expect(response.parsed_body[:index]).to eq(2)
+      expect(response.parsed_body[:total]).to eq(2)
     end
 
-    it 'returns a null id when nothing matches' do
+    it 'returns a null id and index, but the (zero) total, when nothing matches' do
       get "/api/v1/archives/#{episode.id}/matches", params: { q: 'nonexistentqueryxyz' }, headers: headers
 
       expect(response).to have_http_status(200)
       expect(response.parsed_body[:id]).to be_nil
+      expect(response.parsed_body[:index]).to be_nil
+      expect(response.parsed_body[:total]).to eq(0)
+    end
+
+    it 'returns a null id/index and zero total for a blank query' do
+      get "/api/v1/archives/#{episode.id}/matches", params: { q: '' }, headers: headers
+
+      expect(response).to have_http_status(200)
+      expect(response.parsed_body[:id]).to be_nil
+      expect(response.parsed_body[:index]).to be_nil
+      expect(response.parsed_body[:total]).to eq(0)
+    end
+
+    it 'returns the id of the latest match when direction is prev and after_id is omitted' do
+      get "/api/v1/archives/#{episode.id}/matches", params: { q: 'zebras', direction: 'prev' }, headers: headers
+
+      expect(response).to have_http_status(200)
+      expect(response.parsed_body[:id]).to eq(later_match.id.to_s)
+      expect(response.parsed_body[:index]).to eq(2)
+      expect(response.parsed_body[:total]).to eq(2)
+    end
+
+    it 'returns the id of the previous match before after_id when direction is prev' do
+      get "/api/v1/archives/#{episode.id}/matches", params: { q: 'zebras', after_id: later_match.id, direction: 'prev' }, headers: headers
+
+      expect(response).to have_http_status(200)
+      expect(response.parsed_body[:id]).to eq(earlier_match.id.to_s)
+      expect(response.parsed_body[:index]).to eq(1)
+      expect(response.parsed_body[:total]).to eq(2)
     end
   end
 end
