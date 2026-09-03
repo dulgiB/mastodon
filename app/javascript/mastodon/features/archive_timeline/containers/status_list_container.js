@@ -8,10 +8,10 @@ import StatusList from 'mastodon/components/status_list';
 // statuses: ArchiveFeed already restricts those to ones the viewer is allowed to
 // see (authored or mentioned), so nothing further needs to be filtered here.
 //
-// A search query is applied server-side (see ArchiveFeed#get/matching_scope,
-// the same pg_trgm-indexed substring match DatabaseStatusSearch uses), so
-// `items` already only contains matches once a query is active — no
-// client-side filtering needed here.
+// Browsing an episode is always unfiltered, even while a search is active —
+// see ArchiveTimeline, which jumps the whole timeline to a window around a
+// match (ArchiveFeed#around) instead of filtering it down to matches only,
+// so the matched post's surrounding context stays visible.
 const mapStateToProps = (state, { timelineId, order }) => {
   const items = state.getIn(['timelines', timelineId, 'items'], ImmutableList());
 
@@ -23,7 +23,7 @@ const mapStateToProps = (state, { timelineId, order }) => {
   };
 };
 
-const mapDispatchToProps = (dispatch, { timelineId, episodeId, order, query }) => ({
+const mapDispatchToProps = (dispatch, { timelineId, episodeId, order }) => ({
   onScrollToTop: () => dispatch(scrollTopTimeline(timelineId, true)),
   onScroll: () => dispatch(scrollTopTimeline(timelineId, false)),
   // The displayed list is reversed for 'asc', so the cursor ScrollableList
@@ -32,8 +32,8 @@ const mapDispatchToProps = (dispatch, { timelineId, episodeId, order, query }) =
   // the right cursor for whichever direction matches the current order.
   onLoadMore: cursor => dispatch(
     order === 'asc'
-      ? expandArchiveTimelineFromStart(episodeId, { minId: cursor, query })
-      : expandArchiveTimeline(episodeId, { maxId: cursor, query })
+      ? expandArchiveTimelineFromStart(episodeId, { minId: cursor })
+      : expandArchiveTimeline(episodeId, { maxId: cursor })
   ),
 });
 

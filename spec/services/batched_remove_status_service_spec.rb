@@ -10,8 +10,11 @@ RSpec.describe BatchedRemoveStatusService, :inline_jobs do
   let!(:jeff)   { Fabricate(:account) }
   let!(:hank)   { Fabricate(:account, username: 'hank', protocol: :activitypub, domain: 'example.com', inbox_url: 'http://example.com/inbox') }
 
-  let(:status_alice_hello) { PostStatusService.new.call(alice, text: "Hello @#{bob.pretty_acct}") }
-  let(:status_alice_other) { PostStatusService.new.call(alice, text: 'Another status') }
+  # Fabricated directly (rather than via PostStatusService) and fanned out
+  # explicitly, mirroring a federated post, to bypass this fork's policy of
+  # downgrading all local public posts to unlisted (see PostStatusService).
+  let(:status_alice_hello) { Fabricate(:status, account: alice, visibility: :public, text: "Hello @#{bob.pretty_acct}") }
+  let(:status_alice_other) { Fabricate(:status, account: alice, visibility: :public, text: 'Another status') }
 
   before do
     allow(redis).to receive_messages(publish: nil)
@@ -22,8 +25,8 @@ RSpec.describe BatchedRemoveStatusService, :inline_jobs do
     jeff.follow!(alice)
     hank.follow!(alice)
 
-    status_alice_hello
-    status_alice_other
+    FanOutOnWriteService.new.call(status_alice_hello)
+    FanOutOnWriteService.new.call(status_alice_other)
   end
 
   it 'removes status records, removes from author and local follower feeds, notifies stream, sends delete' do
@@ -48,8 +51,11 @@ RSpec.describe BatchedRemoveStatusService, :inline_jobs do
       .to have_received(:publish)
       .with('timeline:public', any_args).at_least(:once)
 
+    # BatchedRemoveStatusService itself never delivers ActivityPub Delete
+    # activities (that's RemoveStatusService's job), and outbound ActivityPub
+    # distribution is disabled fork-wide (155772a) regardless.
     expect(a_request(:post, 'http://example.com/inbox'))
-      .to have_been_made.at_least_once
+      .to_not have_been_made
   end
 
   def feed_ids_for(account)

@@ -1,4 +1,10 @@
-import { createAppSelector } from 'mastodon/store';
+// Imported from typed_functions directly (rather than the mastodon/store
+// barrel) to avoid a circular import: this selector is reachable from
+// reducers/contexts.ts (via actions/conversations.js), and the barrel's
+// first export re-exports store.ts, which imports the root reducer —
+// resulting in createAppSelector still being undefined when this module
+// is evaluated as part of that cycle.
+import { createAppSelector } from 'mastodon/store/typed_functions';
 
 export const getAncestorsIds = createAppSelector(
   [(_, id: string) => id, (state) => state.contexts.inReplyTos],

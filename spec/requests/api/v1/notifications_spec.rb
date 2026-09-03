@@ -252,7 +252,9 @@ RSpec.describe 'Notifications' do
 
           mention_entries = response.parsed_body.select { |x| x[:type] == 'mention' }
 
-          expect(mention_entries.size).to eq(1)
+          # 2 entries: the thread's (collapsed to tom, the latest) and the outer
+          # `before` block's own unrelated "Hello @alice" mention from bob.
+          expect(mention_entries.size).to eq(2)
           expect(mention_entries.first[:account][:id]).to eq(tom.account_id.to_s)
         end
       end
@@ -261,7 +263,9 @@ RSpec.describe 'Notifications' do
         it 'does not group the mentions, and returns one entry per mention as before' do
           subject
 
-          expect(body_json_types.count('mention')).to eq(2)
+          # 3 ungrouped entries: the thread's 2 mentions plus the outer `before`
+          # block's own unrelated "Hello @alice" mention from bob.
+          expect(body_json_types.count('mention')).to eq(3)
         end
       end
 
@@ -273,7 +277,9 @@ RSpec.describe 'Notifications' do
 
           mention_entries = response.parsed_body.select { |x| x[:type] == 'mention' }
 
-          expect(mention_entries.size).to eq(1)
+          # 2 entries: the thread's (collapsed to tom, the latest) and the outer
+          # `before` block's own unrelated "Hello @alice" mention from bob.
+          expect(mention_entries.size).to eq(2)
           expect(mention_entries.first[:account][:id]).to eq(tom.account_id.to_s)
         end
       end

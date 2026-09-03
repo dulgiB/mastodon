@@ -216,10 +216,11 @@ RSpec.describe UpdateStatusService do
     end
   end
 
-  it 'notifies ActivityPub about the update' do
+  it 'does not notify ActivityPub about the update' do
+    # Outbound ActivityPub distribution on update is disabled fork-wide (155772a).
     status = Fabricate(:status, text: 'Foo')
     allow(ActivityPub::DistributionWorker).to receive(:perform_async)
     subject.call(status, status.account_id, text: 'Bar')
-    expect(ActivityPub::DistributionWorker).to have_received(:perform_async)
+    expect(ActivityPub::DistributionWorker).to_not have_received(:perform_async)
   end
 end
