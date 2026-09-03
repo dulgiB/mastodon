@@ -228,7 +228,8 @@ RSpec.describe PostStatusService do
     status = subject.call(account, text: 'test status update')
 
     expect(DistributionWorker).to have_received(:perform_async).with(status.id)
-    expect(ActivityPub::DistributionWorker).to have_received(:perform_async).with(status.id)
+    # Outbound ActivityPub distribution on post is disabled fork-wide (155772a).
+    expect(ActivityPub::DistributionWorker).to_not have_received(:perform_async)
   end
 
   it 'crawls links' do

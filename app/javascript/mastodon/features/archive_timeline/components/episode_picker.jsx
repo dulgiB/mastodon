@@ -15,8 +15,14 @@ import { IconButton } from 'mastodon/components/icon_button';
 // name is a deliberate jump elsewhere, not a continuation of the search.
 export const EpisodePicker = ({ intl, archives, currentId, order, onSelect, onToggleOrder }) => {
   const index = archives.findIndex(archive => archive.id === currentId);
-  const previous = index > 0 ? archives[index - 1] : null;
-  const next = index >= 0 && index < archives.length - 1 ? archives[index + 1] : null;
+  // Wrap around at either end, matching how the search box's own
+  // prev/next-match arrows loop past the last match (see
+  // ArchiveTimeline#jumpToAdjacentMatch) — stopping dead here while those
+  // looped read as inconsistent. With a single episode there's nowhere to
+  // go, so both stay disabled rather than re-selecting the open one.
+  const canStep = index >= 0 && archives.length > 1;
+  const previous = canStep ? archives[(index - 1 + archives.length) % archives.length] : null;
+  const next = canStep ? archives[(index + 1) % archives.length] : null;
 
   return (
     <div className='archive-timeline__picker'>

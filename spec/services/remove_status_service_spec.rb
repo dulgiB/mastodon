@@ -21,9 +21,13 @@ RSpec.describe RemoveStatusService, :inline_jobs do
 
   context 'when removed status is not a reblog' do
     let!(:media_attachment) { Fabricate(:media_attachment, account: alice) }
-    let!(:status) { PostStatusService.new.call(alice, text: "Hello @#{bob.pretty_acct} ThisIsASecret", media_ids: [media_attachment.id]) }
+    # Fabricated directly (rather than via PostStatusService) and fanned out
+    # explicitly, mirroring a federated post, to bypass this fork's policy of
+    # downgrading all local public posts to unlisted (see PostStatusService).
+    let!(:status) { Fabricate(:status, account: alice, visibility: :public, text: "Hello @#{bob.pretty_acct} ThisIsASecret", media_attachments: [media_attachment]) }
 
     before do
+      FanOutOnWriteService.new.call(status)
       FavouriteService.new.call(jeff, status)
       Fabricate(:status, account: bill, reblog: status, uri: 'hoge')
     end

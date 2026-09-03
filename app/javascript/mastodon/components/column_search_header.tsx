@@ -14,6 +14,11 @@ export const ColumnSearchHeader: React.FC<{
   placeholder: string;
   active: boolean;
   inputClassName?: string;
+  // Rendered inside the form, between the input and the Cancel button —
+  // for controls that belong to the search box itself rather than below it
+  // (e.g. the archive timeline's prev/next-match arrows and match count),
+  // keeping the header a single row instead of growing another one.
+  trailing?: React.ReactNode;
 }> = ({
   onBack,
   onActivate,
@@ -22,6 +27,7 @@ export const ColumnSearchHeader: React.FC<{
   placeholder,
   active,
   inputClassName,
+  trailing,
 }) => {
   const inputRef = useRef<HTMLInputElement>(null);
   const [value, setValue] = useState('');
@@ -83,6 +89,8 @@ export const ColumnSearchHeader: React.FC<{
         placeholder={placeholder}
         onFocus={handleFocus}
       />
+
+      {trailing}
 
       {active && (
         <button type='button' className='link-button' onClick={onBack}>
