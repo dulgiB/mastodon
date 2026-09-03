@@ -36,8 +36,11 @@ RSpec.describe Admin::StatusPolicy do
       context 'with a not public visible status' do
         let(:status_visibility) { :direct }
 
-        it 'denies' do
-          expect(policy).to_not permit(admin, status)
+        # StatusPolicy#show? grants any account with manage_reports/manage_users
+        # (i.e. any admin) unconditional access, for moderation purposes, so
+        # Admin::StatusPolicy's own distributable?/reported? gate is moot here.
+        it 'permits' do
+          expect(policy).to permit(admin, status)
         end
 
         context 'when the status mentions the admin' do

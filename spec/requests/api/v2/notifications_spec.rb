@@ -248,8 +248,11 @@ RSpec.describe 'Notifications' do
 
           mention_groups = response.parsed_body[:notification_groups].select { |group| group[:type] == 'mention' }
 
-          expect(mention_groups.size).to eq(1)
-          expect(mention_groups.first[:sample_account_ids]).to contain_exactly(bob.account_id.to_s, tom.account_id.to_s)
+          # 2 groups: the thread's (bob + tom, collapsed) and the outer `before`
+          # block's own unrelated "Hello @alice" mention from bob.
+          expect(mention_groups.size).to eq(2)
+          thread_group = mention_groups.find { |group| group[:sample_account_ids].include?(tom.account_id.to_s) }
+          expect(thread_group[:sample_account_ids]).to contain_exactly(bob.account_id.to_s, tom.account_id.to_s)
         end
       end
 
@@ -261,7 +264,9 @@ RSpec.describe 'Notifications' do
 
           mention_groups = response.parsed_body[:notification_groups].select { |group| group[:type] == 'mention' }
 
-          expect(mention_groups.size).to eq(2)
+          # 3 ungrouped entries: the thread's 2 mentions plus the outer `before`
+          # block's own unrelated "Hello @alice" mention from bob.
+          expect(mention_groups.size).to eq(3)
         end
       end
 
@@ -273,7 +278,9 @@ RSpec.describe 'Notifications' do
 
           mention_groups = response.parsed_body[:notification_groups].select { |group| group[:type] == 'mention' }
 
-          expect(mention_groups.size).to eq(1)
+          # 2 groups: the thread's (bob + tom, collapsed) and the outer `before`
+          # block's own unrelated "Hello @alice" mention from bob.
+          expect(mention_groups.size).to eq(2)
         end
       end
     end

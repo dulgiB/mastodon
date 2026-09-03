@@ -29,8 +29,9 @@ RSpec.describe 'Pins' do
         expect(response.parsed_body).to match(
           a_hash_including(id: status.id.to_s, pinned: true)
         )
+        # Outbound ActivityPub distribution of pins is disabled fork-wide (155772a).
         expect(ActivityPub::RawDistributionWorker)
-          .to have_enqueued_sidekiq_job(match_json_values(type: 'Add'), user.account.id)
+          .to_not have_enqueued_sidekiq_job(match_json_values(type: 'Add'), user.account.id)
       end
     end
 
@@ -120,8 +121,9 @@ RSpec.describe 'Pins' do
         expect(response.parsed_body).to match(
           a_hash_including(id: status.id.to_s, pinned: false)
         )
+        # Outbound ActivityPub distribution of pins is disabled fork-wide (155772a).
         expect(ActivityPub::RawDistributionWorker)
-          .to have_enqueued_sidekiq_job(match_json_values(type: 'Remove'), user.account.id)
+          .to_not have_enqueued_sidekiq_job(match_json_values(type: 'Remove'), user.account.id)
       end
     end
 

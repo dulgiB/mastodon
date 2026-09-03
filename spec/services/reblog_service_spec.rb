@@ -83,8 +83,9 @@ RSpec.describe ReblogService do
       end
     end
 
-    it 'distributes to followers' do
-      expect(ActivityPub::DistributionWorker).to have_received(:perform_async)
+    it 'does not distribute via ActivityPub' do
+      # Outbound ActivityPub distribution on reblog is disabled fork-wide (155772a).
+      expect(ActivityPub::DistributionWorker).to_not have_received(:perform_async)
     end
   end
 end

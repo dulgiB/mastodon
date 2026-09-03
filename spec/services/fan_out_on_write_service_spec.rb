@@ -80,12 +80,16 @@ RSpec.describe FanOutOnWriteService do
   context 'when status is limited' do
     let(:visibility) { 'limited' }
 
-    it 'adds status to home feed of author and mentioned followers and does not broadcast', :inline_jobs do
+    # This fork keeps limited/direct statuses out of everyone's home feed
+    # (including the author's own), by design: they're only ever surfaced
+    # through the separate conversations view, never mixed into a timeline.
+    it 'does not add status to any home feed and does not broadcast', :inline_jobs do
       subject.call(status)
 
       expect(status.id)
-        .to be_in(home_feed_of(alice))
-        .and be_in(home_feed_of(bob))
+        .to_not be_in(home_feed_of(alice))
+      expect(status.id)
+        .to_not be_in(home_feed_of(bob))
       expect(status.id)
         .to_not be_in(home_feed_of(tom))
 
@@ -111,12 +115,16 @@ RSpec.describe FanOutOnWriteService do
   context 'when status is direct' do
     let(:visibility) { 'direct' }
 
-    it 'is added to the home feed of its author and mentioned followers and does not broadcast', :inline_jobs do
+    # This fork keeps limited/direct statuses out of everyone's home feed
+    # (including the author's own), by design: they're only ever surfaced
+    # through the separate conversations view, never mixed into a timeline.
+    it 'does not add status to any home feed and does not broadcast', :inline_jobs do
       subject.call(status)
 
       expect(status.id)
-        .to be_in(home_feed_of(alice))
-        .and be_in(home_feed_of(bob))
+        .to_not be_in(home_feed_of(alice))
+      expect(status.id)
+        .to_not be_in(home_feed_of(bob))
       expect(status.id)
         .to_not be_in(home_feed_of(tom))
 
