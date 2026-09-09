@@ -1833,27 +1833,13 @@ body > [data-popper-placement] {
 }
 
 .status__wrapper-direct,
+.notification-ungrouped--direct,
+.notification-group--direct,
 .notification-group--annual-report {
   background: var(--color-bg-brand-softest);
 
   &:focus {
     background: var(--color-bg-brand-soft);
-  }
-}
-
-// Being a private-reply notification alone no longer paints an opaque
-// background (it used to, unconditionally, via this same selector) — that
-// looked flatly out of place next to every other card's translucent tint
-// on this fork's frosted-glass surfaces, and stayed on even once read,
-// unlike every other "new" indicator in the app. Only actually-unread
-// notifications get a background now (translucent, not the opaque token
-// above), same as any other unread item.
-.notification-group--unread,
-.notification-ungrouped--unread {
-  background: rgb(from var(--color-bg-brand-softest) r g b / 35%);
-
-  &:focus {
-    background: rgb(from var(--color-bg-brand-soft) r g b / 45%);
   }
 }
 
@@ -8566,247 +8552,6 @@ noscript {
   }
 }
 
-// Twitter/X-style chat view for an opened direct conversation. The thread view
-// (features/status) switches to this layout when the root status is a direct
-// message, rendering each message as an aligned bubble via <DmBubble>.
-.conversation-thread {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-  padding: 16px;
-
-  // Strip the detailed-status chrome so the focused message reads as a bubble.
-  .detailed-status__wrapper {
-    border: 0;
-    padding: 0;
-    background: transparent;
-  }
-}
-
-// Floating "jump to latest message" button for an open DM thread. A child
-// of .dm-composer-anchor (see there) so it's positioned relative to that
-// sticky wrapper — anchored just above it — rather than the viewport or
-// `.column`, which keeps it correctly placed regardless of which ancestor
-// ends up owning the scroll (container itself in multi-column, the page in
-// single-column) or establishes an unrelated containing block.
-.scroll-to-bottom-button {
-  position: absolute;
-  inset-inline-end: 16px;
-  bottom: calc(100% + 12px);
-  z-index: 5;
-  width: 40px;
-  height: 40px;
-  border-radius: 50%;
-  background: var(--color-bg-primary);
-  color: var(--color-text-primary);
-  box-shadow: 0 2px 8px var(--color-shadow-primary);
-
-  &:hover,
-  &:focus-visible {
-    background: var(--color-bg-secondary);
-  }
-
-  .icon-button__counter {
-    position: absolute;
-    inset-inline-end: -4px;
-    top: -4px;
-    color: var(--color-text-on-brand-base);
-    background: var(--color-bg-brand-base);
-    border: 2px solid var(--color-bg-primary);
-    padding: 1px 5px;
-    border-radius: 6px;
-    font-size: 10px;
-    font-weight: 500;
-    line-height: 14px;
-  }
-}
-
-.conversation-bubble {
-  display: flex;
-  align-items: flex-end;
-  gap: 8px;
-  width: fit-content;
-  max-width: 85%;
-  margin-inline-end: auto;
-
-  &__avatar {
-    flex: 0 0 auto;
-  }
-
-  // Per-message actions (delete, report, favourite, copy link) live behind
-  // an ellipsis instead of a full action bar under every bubble. Faint by
-  // default rather than hover-only, since hover reveal isn't reachable on
-  // touch devices.
-  &__menu {
-    align-self: center;
-    flex: 0 0 auto;
-    opacity: 0.5;
-
-    &:hover,
-    &:focus-within {
-      opacity: 1;
-    }
-  }
-
-  // Background and text are a matched token pair (--color-bg-primary /
-  // --color-text-primary, the same surface .dropdown-menu uses). This used
-  // to pin the text to #000 !important because token pairings "kept ending
-  // up low/no-contrast" — that was true while theme-ui's own color
-  // variables were disconnected from these tokens, but it meant black text
-  // on the dark scheme's dark bubble, which is the worse failure.
-  &__body {
-    min-width: 0;
-    padding: 10px 14px;
-    border-radius: 18px;
-    background: var(--color-bg-primary);
-    color: var(--color-text-primary);
-  }
-
-  &__time {
-    display: block;
-    margin-top: 4px;
-    font-size: 12px;
-    color: var(--color-text-secondary);
-    text-align: end;
-  }
-
-  // Own messages sit on the trailing (right) edge with a brand-colored
-  // bubble. --color-bg-brand-base/--color-text-on-brand-base are a real
-  // "on-X" pair (guaranteed to be readable together by design), unlike the
-  // pairings that caused trouble for the other party's bubble above, so
-  // this one stays theme-driven.
-  &--own {
-    flex-direction: row-reverse;
-    margin-inline-start: auto;
-    margin-inline-end: 0;
-
-    .conversation-bubble__body {
-      background: var(--color-bg-brand-base);
-      color: var(--color-text-on-brand-base);
-    }
-
-    .conversation-bubble__time {
-      color: var(--color-text-on-brand-base);
-      opacity: 0.7;
-    }
-  }
-}
-
-// The bubble's own text color has to reach .status__content and the links
-// inside it, but theme-ui/bird-ui set `.layout-single-column .status__content`
-// and `... .status__content a` at equal specificity and load after this file,
-// so they win the tie. Repeating .conversation-bubble adds the extra class
-// needed to outrank them without !important.
-// Links matter most here: mentions/hashtags take a brand color, and an own
-// bubble's background *is* the brand color, so a mention inside one rendered
-// brand-on-brand and vanished. Inheriting the bubble's text color keeps every
-// combination readable by construction; the underline carries "this is a link"
-// instead of the color.
-.conversation-bubble .conversation-bubble__body {
-  .status__content {
-    color: inherit;
-  }
-
-  .status__content a {
-    color: inherit;
-    text-decoration: underline;
-    text-underline-offset: 2px;
-  }
-}
-
-// A thin status line pinned above the DM composer (see DmComposer/
-// TypingIndicator) — intentionally just italic text, no avatar or bubble,
-// so an ephemeral presence signal doesn't compete visually with real
-// messages the way a full chat bubble would.
-.typing-indicator {
-  padding: 4px 16px 0;
-  font-size: 12px;
-  font-style: italic;
-  color: var(--color-text-secondary);
-}
-
-// Sticky wrapper around the reply bar (see DmComposer) and its floating
-// scroll-to-bottom button/typing indicator. Pinning stickiness here rather
-// than on .dm-composer itself gives the button a `position: relative`
-// anchor at a fixed viewport offset to sit above, regardless of layout —
-// notably `.columns-area__panels__main`'s `contain: layout` establishes a
-// containing block for any `position: fixed` descendant, which broke the
-// button positioning against the viewport in single-column mode.
-.dm-composer-anchor {
-  position: sticky;
-  bottom: 0;
-  z-index: 2;
-  background: var(--color-bg-primary);
-
-  // Below $mobile-menu-breakpoint the fixed .ui__navigation-bar sits on top
-  // of a scrolling page rather than a bounded column (bindToDocument), so
-  // `sticky` only ever pins once scrolling *past* this element's in-flow
-  // position happens -- on a short thread there's nothing to scroll yet,
-  // so it just sits in flow instead of at the visual bottom, leaving a
-  // gap down to the nav bar. `position: fixed` (the same strategy
-  // .ui__navigation-bar itself already uses one breakpoint down) pins it
-  // unconditionally instead of depending on scroll state.
-  @media screen and (max-width: #{$mobile-menu-breakpoint - 1}) {
-    position: fixed;
-    width: 100%;
-    bottom: var(--mobile-bottom-nav-height);
-  }
-}
-
-@media screen and (max-width: #{$mobile-menu-breakpoint - 1}) {
-  .conversation-thread {
-    // Compensate for .dm-composer-anchor switching to `fixed` above: it's
-    // no longer in flow, so nothing else reserves room for it below the
-    // last message. ~64px covers the single-line composer's rendered
-    // height (padding + textarea); it grows for multi-line drafts, but
-    // that's a much smaller miss than the gap this replaces.
-    padding-bottom: 64px;
-  }
-}
-
-// Messenger-style reply bar pinned under the thread, used only for direct
-// conversations (see DmComposer). Sits as a flex sibling after the
-// scrollable message list, not overlaid, so it never covers the last bubble.
-.dm-composer {
-  flex: 0 0 auto;
-  display: flex;
-  align-items: flex-end;
-  gap: 8px;
-  padding: 10px 16px;
-  border-top: 1px solid var(--color-border-primary);
-  background: var(--color-bg-primary);
-
-  &__textarea {
-    flex: 1 1 auto;
-    resize: none;
-    max-height: 160px;
-    padding: 8px 14px;
-    border: 1px solid var(--color-border-primary);
-    border-radius: 18px;
-    background: var(--color-bg-secondary);
-    color: var(--color-text-primary);
-    font: inherit;
-
-    // `font: inherit` otherwise pulls `body`'s 13px base -- nothing between
-    // here and there sets a larger size the way .status__content does for
-    // the messages themselves, so the composer read noticeably smaller
-    // than the thread it's replying in. Match that 15px.
-    font-size: 15px;
-    line-height: 1.4;
-
-    &:focus {
-      outline: 0;
-      border-color: var(--color-border-brand);
-    }
-  }
-
-  &__error {
-    flex-basis: 100%;
-    font-size: 13px;
-    color: var(--color-text-error);
-  }
-}
-
 .conversation {
   display: flex;
   border-bottom: 1px solid var(--color-border-primary);
@@ -11438,10 +11183,12 @@ noscript {
   bottom: 0;
   background: var(--color-bg-primary);
 
-  // Same issue and fix as .dm-composer-anchor (see there): below this
-  // breakpoint the page scrolls rather than a bounded column, so on
-  // short content `sticky` never activates and this sits in flow with a
-  // gap down to the fixed nav bar instead of pinning to the viewport.
+  // Below $mobile-menu-breakpoint the page scrolls rather than a bounded
+  // column (bindToDocument), so on short content `sticky` never activates
+  // and this sits in flow with a gap down to the fixed nav bar instead of
+  // pinning to the viewport. `position: fixed` (the same strategy
+  // .ui__navigation-bar itself already uses one breakpoint down) pins it
+  // unconditionally instead of depending on scroll state.
   @media screen and (max-width: #{$mobile-menu-breakpoint - 1}) {
     position: fixed;
     width: 100%;
