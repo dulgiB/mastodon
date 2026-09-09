@@ -41,7 +41,6 @@ import { useBreakpoint } from 'mastodon/features/ui/hooks/useBreakpoint';
 import { useIdentity } from 'mastodon/identity_context';
 import { me } from 'mastodon/initial_state';
 import { transientSingleColumn } from 'mastodon/is_mobile';
-import { selectUnreadConversationsCount } from 'mastodon/selectors/conversations';
 import { selectUnreadNotificationGroupsCount } from 'mastodon/selectors/notifications';
 import { useAppSelector, useAppDispatch } from 'mastodon/store';
 
@@ -124,32 +123,6 @@ const NotificationsLink = () => {
         />
       }
       text={intl.formatMessage(messages.notifications)}
-    />
-  );
-};
-
-const DirectMessagesLink: React.FC = () => {
-  const intl = useIntl();
-  // Replies to a direct message are excluded from the Notifications badge
-  // (see selectors/notifications.ts) so they don't show up twice — this is
-  // where they surface instead. Shared with the mobile bottom bar's menu
-  // button (navigation_bar.tsx), since single-column mode has no direct
-  // link to here in that bar.
-  const count = useAppSelector(selectUnreadConversationsCount);
-
-  return (
-    <ColumnLink
-      transparent
-      to='/conversations'
-      icon={
-        <IconWithBadge
-          id='at'
-          icon={AlternateEmailIcon}
-          count={count}
-          className='column-link__icon'
-        />
-      }
-      text={intl.formatMessage(messages.direct)}
     />
   );
 };
@@ -344,7 +317,13 @@ export const NavigationPanel: React.FC<{ multiColumn?: boolean }> = ({
               />
             </li>
             <li>
-              <DirectMessagesLink />
+              <ColumnLink
+                transparent
+                to='/conversations'
+                icon='at'
+                iconComponent={AlternateEmailIcon}
+                text={intl.formatMessage(messages.direct)}
+              />
             </li>
 
             <li role='separator' />
