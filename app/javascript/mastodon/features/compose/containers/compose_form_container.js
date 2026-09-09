@@ -11,7 +11,6 @@ import {
   uploadCompose,
 } from 'mastodon/actions/compose';
 import { pasteLinkCompose } from 'mastodon/actions/compose_typed';
-import { sendComposeTyping } from 'mastodon/actions/conversations';
 import { openModal } from 'mastodon/actions/modal';
 import { PRIVATE_QUOTE_MODAL_ID } from 'mastodon/features/ui/components/confirmation_modals/private_quote_notify';
 import { me } from 'mastodon/initial_state';
@@ -66,7 +65,6 @@ const mapDispatchToProps = (dispatch, props) => ({
 
   onChange (text) {
     dispatch(changeCompose(text));
-    dispatch(sendComposeTyping());
   },
 
   onSubmit ({ missingAltText, quoteToPrivate }) {
