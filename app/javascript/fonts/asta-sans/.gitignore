@@ -1,0 +1,4 @@
+# build.py download cache / scratch -- never committed
+_upstream-*.ttf
+_patched.ttf
+__pycache__/
