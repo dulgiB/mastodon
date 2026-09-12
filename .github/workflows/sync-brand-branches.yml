@@ -1,0 +1,120 @@
+name: Sync brand branches and deploy production
+
+# When the default branch moves, carry it down the brand-branch chain and
+# redeploy production:
+#
+#   stable-whippy-4.6.5
+#     └── xetead-brand-theme            (theme + branding, placeholder env values)
+#           ├── xetead-brand-theme-test (test host's compose/nginx)
+#           └── xetead-brand-theme-prod (prod host's compose/nginx)
+#
+# The chain is merged, never rebased: -test and -prod carry per-environment
+# files that must not be rewritten. A conflict anywhere fails the run and
+# leaves production untouched.
+#
+# Required repository secrets:
+#   PROD_SSH_HOST         prod host address
+#   PROD_SSH_PORT         prod SSH port
+#   PROD_SSH_USER         prod SSH user
+#   PROD_SSH_KEY          private key whose public half is in that user's
+#                         authorized_keys (use a key dedicated to this)
+#   PROD_SSH_KNOWN_HOSTS  output of `ssh-keyscan -p <port> <host>`, so the
+#                         runner verifies the host instead of trusting it
+
+on:
+  push:
+    branches:
+      - stable-whippy-4.6.5
+  workflow_dispatch:
+
+# One run at a time, and never cancel a run that may be mid-deploy.
+concurrency:
+  group: sync-brand-branches
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+
+jobs:
+  sync:
+    name: Merge down the brand-branch chain
+    runs-on: ubuntu-latest
+    steps:
+      - name: Clone repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Configure git identity
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+
+      - name: Merge the default branch into xetead-brand-theme
+        run: |
+          git checkout xetead-brand-theme
+          git merge --no-ff origin/stable-whippy-4.6.5 \
+            -m "Merge branch 'stable-whippy-4.6.5' into xetead-brand-theme"
+          git push origin xetead-brand-theme
+
+      - name: Merge xetead-brand-theme into the environment branches
+        run: |
+          for env in test prod; do
+            branch="xetead-brand-theme-$env"
+            if ! git show-ref --verify --quiet "refs/remotes/origin/$branch"; then
+              echo "::warning::$branch does not exist, skipping"
+              continue
+            fi
+            git checkout "$branch"
+            git merge --no-ff xetead-brand-theme \
+              -m "Merge branch 'xetead-brand-theme' into $branch"
+            git push origin "$branch"
+          done
+
+  deploy:
+    name: Redeploy production
+    needs: sync
+    runs-on: ubuntu-latest
+    # Configure this environment in repository settings to gate the deploy
+    # behind a required reviewer. With no reviewers it deploys straight through.
+    environment: production
+    timeout-minutes: 120
+    steps:
+      - name: Install the deploy key and host key
+        env:
+          SSH_KEY: ${{ secrets.PROD_SSH_KEY }}
+          KNOWN_HOSTS: ${{ secrets.PROD_SSH_KNOWN_HOSTS }}
+        run: |
+          mkdir -p ~/.ssh
+          chmod 700 ~/.ssh
+          printf '%s\n' "$KNOWN_HOSTS" > ~/.ssh/known_hosts
+          printf '%s\n' "$SSH_KEY" > ~/.ssh/id_deploy
+          chmod 600 ~/.ssh/known_hosts ~/.ssh/id_deploy
+
+      - name: Pull and rebuild on the prod host
+        env:
+          PROD_HOST: ${{ secrets.PROD_SSH_HOST }}
+          PROD_PORT: ${{ secrets.PROD_SSH_PORT }}
+          PROD_USER: ${{ secrets.PROD_SSH_USER }}
+        run: |
+          ssh -i ~/.ssh/id_deploy -p "$PROD_PORT" \
+            "$PROD_USER@$PROD_HOST" 'bash -s' <<'REMOTE'
+          set -euo pipefail
+          cd ~/mastodon
+
+          # docker-compose.yml and nginx/conf.d/mastodon.conf hold this host's
+          # real values and have the skip-worktree bit set, which makes git
+          # quietly ignore changes to them. --ff-only means a genuine
+          # divergence fails loudly here instead of being silently resolved.
+          git fetch origin xetead-brand-theme-prod
+          git checkout xetead-brand-theme-prod
+          git merge --ff-only origin/xetead-brand-theme-prod
+
+          # Named services only: bringing up the whole file would also start
+          # anything this host is not meant to run.
+          docker compose up -d --build web sidekiq streaming bot
+          REMOTE
+
+      - name: Remove the deploy key
+        if: always()
+        run: rm -f ~/.ssh/id_deploy
