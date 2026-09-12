@@ -1,4 +1,12 @@
+// XETEAD theme (dark) -- Mastodon Bird UI 4.0.0 + the XETEAD brand layer.
+
+// Order matters and is the whole design:
+//   1. application      -- core Mastodon styles and its token layer
+//   2. theme-ui         -- upstream Bird UI, including its own token palette
+//   3. mastodon-dark/brand -- the XETEAD palette, overriding both of the above
+//   4. theme-ui/xetead  -- Bird UI's variables re-pointed at that palette,
+//                          plus the brand chrome and fork-only fixes
 @use 'application';
+@use 'theme-ui';
 @use 'mastodon-dark/brand';
-@use 'theme-ui/layout-single-column';
-@use 'theme-ui/layout-multiple-columns';
+@use 'theme-ui/xetead';

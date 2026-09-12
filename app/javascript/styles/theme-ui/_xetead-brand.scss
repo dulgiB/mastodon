@@ -1,0 +1,239 @@
+// XETEAD -- brand chrome on top of Bird UI
+
+// Structural rules that make the instance look like itself: the wallpaper
+// behind the columns, the wordmark in place of Bird UI's 50x50 mark, and the
+// translucent "card" the timeline floats in. Colour values all come from
+// _xetead-tokens.scss / _xetead-light.scss, never hardcoded here.
+
+// Wallpaper. Bird UI paints a flat --color-bg on the body; this theme puts
+// the brand photo there instead and lets the panels above it be translucent.
+body.layout-single-column,
+body.layout-multiple-columns {
+  background-attachment: fixed;
+  background-image: var(--xetead-wallpaper);
+  background-position: center bottom;
+  background-size: cover;
+  color: var(--color-fg);
+}
+
+// Wordmark. Upstream's components/_logo.scss puts the small mark in a fixed
+// 50x50 box; the sidebar here carries the full wordmark across the column
+// instead. `contain` plus the wordmark's own aspect-ratio is what makes it
+// span the width -- see --xetead-wordmark-aspect-ratio.
+.layout-single-column,
+.layout-multiple-columns {
+  .column-link.column-link--logo {
+    aspect-ratio: var(--xetead-wordmark-aspect-ratio);
+    background-clip: content-box;
+    background-image: var(--xetead-wordmark);
+    background-position: 0 50%;
+    background-repeat: no-repeat;
+    background-size: contain;
+    height: auto;
+    padding: 0;
+    width: 100%;
+  }
+}
+
+// Between the in-between and desktop breakpoints there is not enough column
+// width for the full-width wordmark, so pin it to the bar's height instead.
+@media (width >= 889px) and (width <= 1174px) {
+  .layout-single-column,
+  .layout-multiple-columns {
+    .column-link.column-link--logo {
+      aspect-ratio: auto;
+      background-size: auto 50px;
+      height: 50px;
+      width: 230px;
+    }
+  }
+}
+
+// On mobile the wordmark does not fit at all; fall back to the square mark,
+// which is what upstream's box was sized for.
+@media screen and (width <= 889px) {
+  .layout-single-column,
+  .layout-multiple-columns {
+    .column-link.column-link--logo {
+      aspect-ratio: auto;
+      background-image: var(--logo);
+      background-position: 50%;
+      background-size: auto 50px;
+      height: 50px;
+      width: 50px;
+    }
+  }
+}
+
+// Core hides the panel wordmark below $no-gap-breakpoint (components.scss)
+// since the old persistent header is gone; this theme still wants it at the
+// top of the mobile slide-out menu.
+@media screen and (width <= 759px) {
+  .layout-single-column .navigation-panel__logo {
+    display: block;
+  }
+}
+
+.layout-single-column,
+.layout-multiple-columns {
+  // .columns-area__panels__main carries an opaque --color-bg-primary
+  // background of its own (components.scss), but the actual tinted card is
+  // one of its child divs (below) -- this parent is only ever meant to be a
+  // transparent frame that lets the wallpaper show through around it.
+  // Unconditional, not just at the desktop breakpoint: below 1175px this
+  // parent still carries that opaque background, so the child's translucent
+  // tint would sit on solid --color-bg-primary instead of the wallpaper,
+  // reading as flat grey instead of frosted glass.
+  .columns-area__panels__main {
+    background: transparent;
+  }
+
+  // The card itself. Upstream gives this child its side borders
+  // (components/_status.scss); the tint is what makes it read as glass.
+  .columns-area__panels__main > div {
+    background-color: var(--xetead-column-tint);
+  }
+
+  // Upstream uses --color-dark here, an opaque solid (brand-dark in the dark
+  // bundle, near-white in the light one) that does not match this theme's
+  // translucent card surfaces -- it paints a flat block over the wallpaper.
+  // --color-column-link-hover is the same soft translucent tint already used
+  // for nav-link hover states, so it blends in either bundle.
+  .notification-ungrouped--unread,
+  .conversation--unread,
+  .notification.unread:hover,
+  .notification.unread,
+  .status__wrapper.unread,
+  .notification-group.notification-group--unread {
+    background-color: var(--color-column-link-hover);
+  }
+
+  // Upstream's 16px top/bottom reads as excess whitespace next to denser
+  // timelines (Twitter/X sits at ~12px); tighten vertically only, so avatar
+  // and content indentation are unaffected.
+  .status {
+    padding-bottom: 12px;
+    padding-top: 12px;
+  }
+
+  .status__action-bar {
+    margin-top: 10px;
+  }
+
+  .status__prepend {
+    padding-top: 12px;
+  }
+
+  .status__prepend + .status {
+    padding-top: 8px;
+  }
+
+  .column-link:focus-visible {
+    border-color: var(--color-accent-dark);
+  }
+}
+
+// Avatars. Mastodon has drawn avatars as rounded squares since it introduced
+// --avatar-border-radius; Bird UI still forces the pre-4.x circle on the
+// inner <img>, which left a circular photo inside the square frame the core
+// `.account__avatar` container still draws. Follow core's shape.
+.layout-single-column,
+.layout-multiple-columns {
+  .account-card__title__avatar .account__avatar,
+  .account-card__title__avatar img,
+  .account__avatar > img,
+  .column > .scrollable .status__avatar img {
+    border-radius: var(--avatar-border-radius);
+  }
+}
+
+.layout-single-column
+  .inline-follow-suggestions__body__scrollable__card
+  .account__avatar,
+.inline-follow-suggestions__body__scrollable__card .account__avatar,
+.account__avatar.account__avatar--loading,
+body.embed .detailed-status__display-avatar > img {
+  border-radius: var(--avatar-border-radius);
+}
+
+// Bottom navigation: keep the magnifier. Core renders a SearchIcon for the
+// /explore item (navigation_bar.tsx) and Bird UI hides that path and paints a
+// hashtag over it, which reads as "tags" rather than "search". Put core's own
+// icon back -- as an inline SVG it takes its colour from currentColor, so it
+// also tracks the palette instead of a baked-in data-URI fill.
+.layout-single-column,
+.layout-multiple-columns {
+  .ui__navigation-bar__item[href='/explore'] svg path {
+    display: revert;
+  }
+
+  .ui__navigation-bar__item[href='/explore'] .icon,
+  .ui__navigation-bar__item[href='/explore'].active .icon {
+    background-image: none;
+  }
+}
+
+// Navigation panel alignment. The panel's blocks each carried their own
+// inset: the search field and the profile card at core's 16px, the compose
+// button at core's `margin: 12px`, and the nav links at Bird UI's
+// --gap-column-link (12px) -- so nothing lined up down the left edge.
+
+// Settle on a single axis for the link icons, the profile card and the
+// compose button's pill. The search field keeps core's 16px on purpose: it is
+// a full-width field rather than an item in that column, and widening its
+// inset only makes it look cramped.
+.layout-single-column,
+.layout-multiple-columns {
+  .navigation-panel__menu .column-link:not(.navigation-panel__compose-button) {
+    padding-left: var(--xetead-nav-inset);
+  }
+
+  [dir='rtl']
+    .navigation-panel__menu
+    .column-link:not(.navigation-panel__compose-button) {
+    padding-left: var(--gap-column-link);
+    padding-right: var(--xetead-nav-inset);
+  }
+
+  // The compose button is not an item in that column at all -- like the search
+  // field above it, it is a full-width control. Bird UI shrinks it to its
+  // content (`display: inline-flex` plus `align-self: center` in
+  // components/_mobile-navigation.scss); let it fill the panel instead, inset
+  // by the same amount on both sides.
+  .navigation-panel__compose-button {
+    align-self: stretch;
+    display: flex;
+
+    // Core left-aligns the button's contents, which reads fine while the
+    // button hugs them but leaves the label adrift once it spans the panel.
+    justify-content: center;
+    margin-inline: var(--xetead-nav-inset);
+  }
+
+  // ProfileCard (navigation_panel/index.tsx) renders .navigation-bar, which
+  // core insets with `padding: 16px`.
+  .navigation-panel .navigation-bar {
+    padding-left: var(--xetead-nav-inset);
+  }
+
+  [dir='rtl'] .navigation-panel .navigation-bar {
+    padding-left: 16px;
+    padding-right: var(--xetead-nav-inset);
+  }
+}
+
+// Content warnings. Upstream lays the box out as two grid columns, putting the
+// "Show more" button in a 88px-minimum column on the right -- which narrows
+// the spoiler text to 3/4 width and makes a long warning hard to read. Give
+// the text the full width and let the button sit on its own row underneath.
+.layout-single-column,
+.layout-multiple-columns {
+  .content-warning {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .content-warning .link-button {
+    justify-self: flex-end;
+    margin-top: calc(var(--gap-default) / 2);
+  }
+}
