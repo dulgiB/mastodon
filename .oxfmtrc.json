@@ -22,6 +22,16 @@
     // Vendored CSS
     "app/javascript/styles/mastodon/reset.scss",
 
+    // Vendored upstream Mastodon Bird UI, kept byte-identical to its release
+    // tag so it can be re-synced with a plain file copy. The XETEAD layer
+    // beside it (styles/theme-ui/_xetead-*.scss) is formatted normally.
+    "app/javascript/styles/theme-ui/_index.scss",
+    "app/javascript/styles/theme-ui/components/**",
+    "app/javascript/styles/theme-ui/layouts/**",
+    "app/javascript/styles/theme-ui/micro-interactions/**",
+    "app/javascript/styles/theme-ui/variables/**",
+    "app/javascript/styles/theme-ui/variants/**",
+
     // Automatically generated
     "/app/javascript/mastodon/features/emoji/emoji_map.json",
     "/app/javascript/mastodon/features/emoji/emoji_data.json",

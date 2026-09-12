@@ -1,0 +1,75 @@
+// XETEAD -- Bird UI variables backed by Mastodon's own theme tokens
+
+// Upstream Bird UI ships its own hardcoded palette in variables/_tokens.scss
+// and variables/_variables-base.scss, which overrides Mastodon's token layer
+// so that core surfaces (admin pages, modals, settings) match Bird UI.
+
+// This instance goes the other way round: mastodon-light/_brand.scss and
+// mastodon-dark/_brand.scss define the XETEAD palette (amber #f2a007 for the
+// light bundle, indigo #6064ec for the dark one) on Mastodon's tokens, and
+// every Bird UI surface resolves through those tokens instead of carrying a
+// second, independent palette that would have to be kept in sync by hand.
+
+// Loaded after both upstream's tokens and the brand file, so these win. The
+// selector list matches variables/_variables-light.scss -- a plain `:root`
+// would lose to that file's `html:not([data-color-scheme])` (0,1,1).
+
+:root,
+[data-color-scheme='light'],
+[data-color-scheme='dark'],
+html:not([data-color-scheme]) {
+  --color-bg: var(--color-bg-primary);
+  --color-bg-75: color-mix(in oklab, var(--color-bg-primary) 75%, transparent);
+  --color-fg: var(--color-text-primary);
+  --color-border: var(--color-border-primary);
+  --color-dim: var(--color-text-secondary);
+  --color-accent: var(--color-text-brand);
+  --color-accent-dark: var(--color-bg-brand-base);
+  --color-accent-dark-50: color-mix(
+    in oklab,
+    var(--color-bg-brand-base) 50%,
+    transparent
+  );
+  --color-green: var(--color-text-success);
+  --color-red: var(--color-text-error);
+  --color-red-75: color-mix(in oklab, var(--color-text-error) 75%, transparent);
+  --color-yellow: var(--color-text-warning);
+  --color-focusable-toot: color-mix(
+    in oklab,
+    var(--color-text-primary) 3.5%,
+    transparent
+  );
+  --color-light-text: var(--color-text-primary);
+  --color-modal-overlay: var(--color-bg-overlay-base);
+  --color-thread-line: var(--color-border-primary);
+
+  // Upstream's --logo is the small Mastodon mark shown in the 50x50 corner
+  // box (components/_logo.scss); swap in the instance's own mark. The
+  // wordmark is a separate asset with its own box -- see _xetead-brand.scss.
+  --logo: url('../../images/theme/m_logo.png');
+  --xetead-wordmark: url('../../images/theme/wordmark_dark.png');
+
+  // The wordmark box has to carry the mark's own ratio for `contain` to fill
+  // the full width: with a fixed height, `contain` scales to whichever axis
+  // runs out first, so a short box just letterboxes the mark and leaves empty
+  // space beside it instead of spanning the column. Ships next to
+  // --xetead-wordmark so an instance swapping in its own can override both.
+  --xetead-wordmark-aspect-ratio: 350 / 170;
+  --xetead-wallpaper: url('../../images/theme/bg_dark.png');
+
+  // Tint for the timeline "card" that floats over the wallpaper.
+  --xetead-column-tint: rgb(0 0 0 / 40%);
+
+  // Shared left axis for the navigation panel -- see _xetead-brand.scss.
+  --xetead-nav-inset: 22px;
+
+  // Bird UI ships these as fixed greys (#9baec8/#a5b8d3 dark, #9388a6 light)
+  // and uses them purely as text colours -- content-warning bodies, CW
+  // buttons, hashtag pills, display names, scrollbar thumbs. On this theme's
+  // translucent panels the light one fell to ~3:1, which is what made the CW
+  // preview hard to read. Resolve them through the token layer instead, so
+  // they track the palette and stay legible in both bundles.
+  // --color-lighter-purple is the hover state, so it steps up to primary.
+  --color-light-purple: var(--color-text-secondary);
+  --color-lighter-purple: var(--color-text-primary);
+}
