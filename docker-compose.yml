@@ -77,7 +77,7 @@ services:
     environment:
       MASTODON_API_BASE_URL: https://test.xetead.quest
       TZ: Asia/Seoul
-    command: ["uv", "run", "--frozen", "--no-dev", "python", "-m", "bot.main"]
+    command: ['uv', 'run', '--frozen', '--no-dev', 'python', '-m', 'bot.main']
     depends_on: [web_test]
     networks: [internal, external]
 
