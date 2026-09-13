@@ -1,0 +1,8 @@
+// theme-ui -- everything this fork layers on top of upstream Bird UI.
+
+// Loaded by the theme-ui entry points after bird-ui/_index.scss and after the
+// brand palette, so these win the cascade. bird-ui/ is upstream vendored
+// verbatim at a release tag; nothing here edits it.
+@use 'tokens';
+@use 'chrome';
+@use 'fixes';

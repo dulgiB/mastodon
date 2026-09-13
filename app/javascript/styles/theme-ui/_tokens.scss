@@ -1,0 +1,72 @@
+// theme-ui -- Bird UI variables backed by Mastodon's own theme tokens
+
+// Upstream Bird UI ships its own hardcoded palette in variables/_tokens.scss
+// and variables/_variables-base.scss, which overrides Mastodon's token layer
+// so that core surfaces (admin pages, modals, settings) match Bird UI.
+
+// This theme goes the other way round: it resolves every Bird UI surface
+// through Mastodon's tokens, so the palette a bundle loads --
+// mastodon-light/_brand.scss, or core's dark tokens -- reaches Bird UI too
+// instead of a second palette having to be kept in sync by hand.
+
+// Loaded after both upstream's tokens and the brand file, so these win. The
+// selector list matches bird-ui/variables/_variables-light.scss -- a plain
+// `:root` would lose to that file's `html:not([data-color-scheme])` (0,1,1).
+
+:root,
+[data-color-scheme='light'],
+[data-color-scheme='dark'],
+html:not([data-color-scheme]) {
+  --color-bg: var(--color-bg-primary);
+  --color-bg-75: color-mix(in oklab, var(--color-bg-primary) 75%, transparent);
+  --color-fg: var(--color-text-primary);
+  --color-border: var(--color-border-primary);
+  --color-dim: var(--color-text-secondary);
+  --color-accent: var(--color-text-brand);
+  --color-accent-dark: var(--color-bg-brand-base);
+  --color-accent-dark-50: color-mix(
+    in oklab,
+    var(--color-bg-brand-base) 50%,
+    transparent
+  );
+  --color-green: var(--color-text-success);
+  --color-red: var(--color-text-error);
+  --color-red-75: color-mix(in oklab, var(--color-text-error) 75%, transparent);
+  --color-yellow: var(--color-text-warning);
+  --color-focusable-toot: color-mix(
+    in oklab,
+    var(--color-text-primary) 3.5%,
+    transparent
+  );
+  --color-light-text: var(--color-text-primary);
+  --color-modal-overlay: var(--color-bg-overlay-base);
+  --color-thread-line: var(--color-border-primary);
+
+  // Bird UI ships these as fixed greys and uses them purely as text colours --
+  // content-warning bodies, CW buttons, hashtag pills, display names,
+  // scrollbar thumbs. On this theme's translucent panels the light one falls
+  // to about 3:1, so resolve them through the token layer instead.
+  // --color-lighter-purple is the hover state, so it steps up to primary.
+  --color-light-purple: var(--color-text-secondary);
+  --color-lighter-purple: var(--color-text-primary);
+
+  // Upstream's --logo is the small Mastodon mark shown in the 50x50 corner
+  // box (bird-ui/components/_logo.scss); swap in this instance's own mark.
+  // The wordmark is a separate asset with its own box -- see _chrome.scss.
+  --logo: url('../../images/theme/m_logo_dark.png');
+  --theme-wordmark: url('../../images/theme/wordmark_dark.png');
+
+  // The wordmark box has to carry the mark's own ratio for `contain` to fill
+  // the full width: with a fixed height, `contain` scales to whichever axis
+  // runs out first, so a short box just letterboxes the mark and leaves empty
+  // space beside it instead of spanning the column. Ships next to
+  // --theme-wordmark so an instance swapping in its own can override both.
+  --theme-wordmark-aspect-ratio: 350 / 170;
+  --theme-wallpaper: url('../../images/theme/bg_dark.png');
+
+  // Tint for the timeline "card" that floats over the wallpaper.
+  --theme-column-tint: rgb(0 0 0 / 40%);
+
+  // Shared left axis for the navigation panel -- see _chrome.scss.
+  --theme-nav-inset: 22px;
+}
