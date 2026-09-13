@@ -35,6 +35,7 @@ html:not([data-color-scheme]) {
   --color-indigo-800: #393dd0;
   --color-indigo-900: #2f3193;
   --color-indigo-950: #212359;
+
   // Desaturated on purpose: this is what shows behind any transparent area
   // (avatar PNGs, etc.), not just the general page fill, so a fully
   // saturated brand tone reads as an arbitrary color cast no matter what's

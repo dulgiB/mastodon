@@ -1,0 +1,5 @@
+// XETEAD layer -- what this instance changes on top of the shared theme-ui
+// layer. Loaded by the theme-ui entry points after theme-ui/_index.scss and
+// after mastodon-{light,dark}/_brand.scss, so these win the cascade.
+@use 'xetead-tokens';
+@use 'xetead-icons';

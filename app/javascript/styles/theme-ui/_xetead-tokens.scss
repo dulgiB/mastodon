@@ -1,0 +1,17 @@
+// XETEAD -- what this instance changes on top of the shared theme-ui layer.
+
+// theme-ui/_tokens.scss and _chrome.scss already carry the structure: the
+// token mapping, the wallpaper, the wordmark box, the column tint. The
+// instance's own artwork is picked up automatically, because it ships under
+// the same filenames (bg_dark.png, wordmark_light.png, ...). Only the things
+// that genuinely differ belong here.
+
+:root,
+[data-color-scheme='light'],
+[data-color-scheme='dark'],
+html:not([data-color-scheme]) {
+  // The shared layer uses a light and a dark variant of the square mark;
+  // this instance's mark reads correctly on either background, so one asset
+  // covers both bundles.
+  --logo: url('../../images/theme/m_logo.png');
+}

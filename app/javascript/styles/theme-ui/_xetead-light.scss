@@ -1,0 +1,28 @@
+// XETEAD -- light-bundle overrides, on top of theme-ui/_light.scss.
+@use 'xetead-icons-light';
+
+:root,
+[data-color-scheme='light'],
+[data-color-scheme='dark'],
+html:not([data-color-scheme]) {
+  // Upstream's light --color-mud is a lavender (#e5e1ed), which reads as a
+  // stray cool patch against this instance's cream. Same HSL lightness
+  // (0.906) and saturation (0.375), rotated to the brand's amber hue (39deg).
+  --color-mud: #f0eade;
+
+  // Bird UI 4.0 extended the compose focus tint from the textarea to
+  // .compose-form__highlightable -- the whole box, including the
+  // visibility/language row. At upstream's strength the brand amber stopped
+  // reading as a tint there and became a solid gold slab, so both steps are
+  // halved from the 20%/40% this instance used when the tint covered less.
+  --color-bg-compose-form: color-mix(
+    in oklab,
+    var(--color-bg-brand-base) 10%,
+    transparent
+  );
+  --color-bg-compose-form-focus: color-mix(
+    in oklab,
+    var(--color-bg-brand-base) 20%,
+    transparent
+  );
+}
