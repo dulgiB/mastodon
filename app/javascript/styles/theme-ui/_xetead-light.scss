@@ -1,36 +1,20 @@
-// XETEAD -- light-bundle brand overrides
-
-// Loaded only by theme-ui-light.scss, after _xetead-tokens.scss. Everything
-// colour-related that differs between the two bundles already comes from
-// mastodon-light/_brand.scss via the token mapping there; what is left here
-// is the light artwork and the few Bird-UI-only variables that have no
-// Mastodon token to resolve through.
+// XETEAD -- light-bundle overrides, on top of theme-ui/_light.scss.
+@use 'xetead-icons-light';
 
 :root,
 [data-color-scheme='light'],
 [data-color-scheme='dark'],
 html:not([data-color-scheme]) {
-  --xetead-wordmark: url('../../images/theme/wordmark_light.png');
-  --xetead-wallpaper: url('../../images/theme/bg_light.png');
-  --xetead-column-tint: rgb(255 255 255 / 40%);
-
-  // Was #f0dee2, a leftover of the old rose brand. Same HSL lightness (0.906)
-  // and saturation (0.375), rotated to the brand's amber hue (39deg).
+  // Upstream's light --color-mud is a lavender (#e5e1ed), which reads as a
+  // stray cool patch against this instance's cream. Same HSL lightness
+  // (0.906) and saturation (0.375), rotated to the brand's amber hue (39deg).
   --color-mud: #f0eade;
 
-  // In the light bundle --color-text-brand is too light to read as a link
-  // against the cream background; use the (darker) brand base instead.
-  --color-accent: var(--color-bg-brand-base);
-  --color-ghost-button-text: var(--color-bg-brand-base);
-  --color-hashtag: var(--color-bg-brand-base);
-  --color-mention: var(--color-bg-brand-base);
-
-  // Halved from 20%/40%. Bird UI 4.0 extended the focus tint from just the
-  // textarea to .compose-form__highlightable, i.e. the whole compose box
-  // including the visibility/language row -- at the old strength the brand
-  // amber stopped reading as a tint and became a solid gold slab. Upstream's
-  // own light values sit at 20%/30% of a muted grey, so this is still the
-  // more saturated of the two, just no longer overwhelming.
+  // Bird UI 4.0 extended the compose focus tint from the textarea to
+  // .compose-form__highlightable -- the whole box, including the
+  // visibility/language row. At upstream's strength the brand amber stopped
+  // reading as a tint there and became a solid gold slab, so both steps are
+  // halved from the 20%/40% this instance used when the tint covered less.
   --color-bg-compose-form: color-mix(
     in oklab,
     var(--color-bg-brand-base) 10%,
@@ -41,13 +25,4 @@ html:not([data-color-scheme]) {
     var(--color-bg-brand-base) 20%,
     transparent
   );
-}
-
-// The compositional pane's footer sits directly over the wallpaper photo (no
-// opaque panel behind it here) and --color-text-secondary is dark in the
-// light bundle -- illegible against the photo's darker regions. Force it
-// white instead of touching the photo itself.
-.columns-area__panels__pane--compositional footer,
-.columns-area__panels__pane--compositional footer a {
-  color: #fff;
 }

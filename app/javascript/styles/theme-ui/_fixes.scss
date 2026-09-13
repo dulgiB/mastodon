@@ -1,4 +1,4 @@
-// XETEAD -- local fixes upstream Bird UI does not cover
+// theme-ui -- local fixes upstream Bird UI does not cover
 
 // Two kinds of thing live here, and nothing else:
 //   1. markup this fork adds that upstream cannot know about (_feat_* CSS
@@ -10,7 +10,7 @@
 .layout-single-column,
 .layout-multiple-columns {
   // Upstream indents .status__content, .attachment-list, .status__action-bar
-  // and .collection-preview past the avatar column (components/_status-layout
+  // and .collection-preview past the avatar column (bird-ui/components/_status-layout
   // .scss) but not these four, which this fork renders in the same place.
   .status:not(.status--in-thread) .picture-in-picture-placeholder,
   .status:not(.status--in-thread) .more-from-author,

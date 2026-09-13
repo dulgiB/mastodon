@@ -1,0 +1,170 @@
+name: Sync brand branches and deploy prod
+
+# 기본 브랜치나 xetead-brand-theme이 움직이면 브랜치 체인을 따라 머지하고
+# 운영 서버를 재배포한다.
+#
+#   stable-whippy-4.6.5
+#     └── xetead-brand-theme            (테마 + 브랜딩, 환경값은 placeholder)
+#           ├── xetead-brand-theme-test (test 호스트의 compose/nginx)
+#           └── xetead-brand-theme-prod (prod 호스트의 compose/nginx)
+#
+# 두 갈래를 모두 받는다: 기본 브랜치에 머지한 경우와, 브랜드 변경만
+# xetead-brand-theme에 직접 머지한 경우.
+#
+# 체인은 리베이스하지 않고 머지한다 -- -test/-prod는 환경별 compose/nginx를
+# 들고 있어 다시 쓰면 안 된다. 어디서든 충돌이 나면 run이 실패하고 운영
+# 서버는 건드리지 않는다.
+#
+# environment: prod에 required reviewer가 걸려 있어, 실제 배포는 승인을
+# 누른 뒤에만 진행된다(web/sidekiq 재시작은 사용자 세션을 끊는다).
+#
+# bot 서비스는 여기서 재배포하지 않는다 -- xetead-bot 저장소의 Deploy prod가
+# 담당하며, 여기서 같이 올리면 진행 중인 전투의 스트리밍 연결이 끊긴다.
+
+on:
+  push:
+    branches:
+      - stable-whippy-4.6.5
+      - xetead-brand-theme
+  workflow_dispatch:
+
+# 배포는 한 번에 하나만 — 승인 대기 중 머지가 더 쌓여도 순차 실행한다.
+concurrency:
+  group: sync-brand-branches
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+
+jobs:
+  sync:
+    name: 브랜치 체인 머지
+    runs-on: ubuntu-latest
+    outputs:
+      prod_sha: ${{ steps.chain.outputs.prod_sha }}
+    steps:
+      - name: 저장소 클론
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: git 신원 설정
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+
+      - name: 체인 머지
+        id: chain
+        env:
+          # xetead-brand-theme으로 들어온 push는 기본 브랜치 머지를 건너뛴다.
+          FROM_DEFAULT: ${{ github.ref_name == 'stable-whippy-4.6.5' || github.event_name == 'workflow_dispatch' }}
+        run: |
+          set -euo pipefail
+
+          if [ "$FROM_DEFAULT" = 'true' ]; then
+            git checkout xetead-brand-theme
+            git merge --no-ff origin/stable-whippy-4.6.5 \
+              -m "Merge branch 'stable-whippy-4.6.5' into xetead-brand-theme"
+            git push origin xetead-brand-theme
+          else
+            echo '::notice::xetead-brand-theme으로 직접 들어온 push, 기본 브랜치 머지는 건너뜀'
+            git checkout xetead-brand-theme
+          fi
+
+          for env in test prod; do
+            branch="xetead-brand-theme-$env"
+            if ! git show-ref --verify --quiet "refs/remotes/origin/$branch"; then
+              echo "::warning::$branch 없음, 건너뜀"
+              continue
+            fi
+            git checkout "$branch"
+            git merge --no-ff xetead-brand-theme \
+              -m "Merge branch 'xetead-brand-theme' into $branch"
+            git push origin "$branch"
+          done
+
+          echo "prod_sha=$(git rev-parse xetead-brand-theme-prod)" >> "$GITHUB_OUTPUT"
+
+  deploy:
+    name: 운영 서버 재배포
+    needs: sync
+    runs-on: ubuntu-latest
+    environment: prod
+    timeout-minutes: 120
+
+    steps:
+      - name: SSH 키 준비
+        env:
+          SSH_KEY: ${{ secrets.PROD_SSH_KEY }}
+          KNOWN_HOSTS: ${{ secrets.PROD_SSH_KNOWN_HOSTS }}
+        run: |
+          mkdir -p ~/.ssh && chmod 700 ~/.ssh
+          printf '%s\n' "$SSH_KEY" > ~/.ssh/deploy_key
+          printf '%s\n' "$KNOWN_HOSTS" > ~/.ssh/known_hosts
+          chmod 600 ~/.ssh/deploy_key
+          chmod 644 ~/.ssh/known_hosts
+
+      - name: 운영 서버 재배포
+        env:
+          SSH_HOST: ${{ secrets.PROD_SSH_HOST }}
+          SSH_USER: ${{ secrets.PROD_SSH_USER }}
+          SSH_PORT: ${{ secrets.PROD_SSH_PORT || '22' }}
+          TARGET_SHA: ${{ needs.sync.outputs.prod_sha }}
+        run: |
+          ssh -i ~/.ssh/deploy_key \
+              -o IdentitiesOnly=yes \
+              -o BatchMode=yes \
+              -o StrictHostKeyChecking=yes \
+              -o UserKnownHostsFile="$HOME/.ssh/known_hosts" \
+              -o ServerAliveInterval=30 \
+              -p "$SSH_PORT" \
+              "$SSH_USER@$SSH_HOST" \
+              'bash -s' -- "$TARGET_SHA" <<'REMOTE'
+          set -euo pipefail
+
+          TARGET_SHA="${1:-}"
+          BRANCH=xetead-brand-theme-prod
+          REPO_DIR="$HOME/mastodon"
+
+          cd "$REPO_DIR"
+          git fetch --prune origin "$BRANCH"
+          if [ -z "$TARGET_SHA" ]; then
+            TARGET_SHA="$(git rev-parse "origin/$BRANCH")"
+          fi
+          # origin/$BRANCH에 포함된 커밋만 배포한다.
+          git merge-base --is-ancestor "$TARGET_SHA" "origin/$BRANCH"
+
+          # docker-compose.yml과 nginx/conf.d/mastodon.conf는 이 호스트의 실제
+          # 값을 담고 있고 skip-worktree 비트가 걸려 있다 -- git이 변경을 조용히
+          # 무시하므로, 로그에 먼저 드러내 둔다.
+          skipped="$(git ls-files -v | awk '/^S/ {print $2}' || true)"
+          if [ -n "$skipped" ]; then
+            echo "==> skip-worktree: $skipped"
+          fi
+
+          echo "==> $(git rev-parse --short HEAD) -> $(git rev-parse --short "$TARGET_SHA")"
+          git checkout "$BRANCH"
+          # --ff-only: 실제로 갈라졌다면 조용히 봉합하지 말고 여기서 실패한다.
+          # skip-worktree가 걸린 파일을 건드리는 커밋이 올라오면 여기서 멈추므로,
+          # 그때는 사람이 그 호스트에서 직접 정리한다.
+          git merge --ff-only "$TARGET_SHA"
+          git --no-pager log -1 --format='%h %s'
+
+          # 이름을 명시한 서비스만 — compose 파일에는 이 호스트가 띄우지 않을
+          # 서비스도 정의돼 있고, bot은 xetead-bot 저장소가 따로 배포한다.
+          docker compose up -d --build web sidekiq streaming
+
+          sleep 20
+          for svc in web sidekiq streaming; do
+            status="$(docker compose ps -q "$svc" | xargs -r docker inspect -f '{{.State.Status}}')"
+            echo "==> $svc status: $status"
+            [ "$status" = "running" ] || { docker compose logs --tail 40 "$svc"; exit 1; }
+          done
+
+          # Pi 디스크가 빌드 잔여 레이어로 차지 않게 오래된 dangling 이미지만 정리.
+          docker image prune -f --filter 'until=168h' >/dev/null || true
+          REMOTE
+
+      - name: SSH 키 정리
+        if: always()
+        run: rm -f ~/.ssh/deploy_key

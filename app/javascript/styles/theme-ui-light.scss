@@ -1,18 +1,17 @@
-// XETEAD theme (light) -- Mastodon Bird UI 4.0.0 + the XETEAD brand layer.
+// theme-ui (light) -- Bird UI plus this fork's own chrome, on the XETEAD
+// palette.
 
-// Same order as theme-ui-dark.scss, with two additions:
-//   - theme-ui/variables/variables-light forces Bird UI's light values for the
-//     Bird-UI-only variables that have no Mastodon token to resolve through
-//   - theme-ui/xetead-light carries the light artwork and the few light-only
-//     colour choices
+// Same order as theme-ui-dark.scss, with the shared layer's light artwork
+// last.
 
 // This is a forced-light bundle, not an auto one: the theme dropdown is what
 // selects light or dark here, so a user picks it explicitly rather than
 // inheriting the browser's prefers-color-scheme.
 @use 'application';
-@use 'theme-ui';
-@use 'theme-ui/variables/variables-light';
+@use 'bird-ui';
+@use 'bird-ui/variables/variables-light';
 @use 'mastodon-light/brand';
+@use 'theme-ui';
+@use 'theme-ui/light';
 @use 'theme-ui/xetead';
-@use 'theme-ui/xetead-icons-light';
 @use 'theme-ui/xetead-light';

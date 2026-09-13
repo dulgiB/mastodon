@@ -1,31 +1,31 @@
-// XETEAD -- brand chrome on top of Bird UI
+// theme-ui -- chrome on top of Bird UI
 
-// Structural rules that make the instance look like itself: the wallpaper
-// behind the columns, the wordmark in place of Bird UI's 50x50 mark, and the
-// translucent "card" the timeline floats in. Colour values all come from
-// _xetead-tokens.scss / _xetead-light.scss, never hardcoded here.
+// Structural rules that give this theme its look: the wallpaper behind the
+// columns, the wordmark in place of Bird UI's 50x50 mark, and the translucent
+// "card" the timeline floats in. Colour values all come from _tokens.scss /
+// _light.scss, never hardcoded here.
 
 // Wallpaper. Bird UI paints a flat --color-bg on the body; this theme puts
 // the brand photo there instead and lets the panels above it be translucent.
 body.layout-single-column,
 body.layout-multiple-columns {
   background-attachment: fixed;
-  background-image: var(--xetead-wallpaper);
+  background-image: var(--theme-wallpaper);
   background-position: center bottom;
   background-size: cover;
   color: var(--color-fg);
 }
 
-// Wordmark. Upstream's components/_logo.scss puts the small mark in a fixed
+// Wordmark. Upstream's bird-ui/components/_logo.scss puts the small mark in a fixed
 // 50x50 box; the sidebar here carries the full wordmark across the column
 // instead. `contain` plus the wordmark's own aspect-ratio is what makes it
-// span the width -- see --xetead-wordmark-aspect-ratio.
+// span the width -- see --theme-wordmark-aspect-ratio.
 .layout-single-column,
 .layout-multiple-columns {
   .column-link.column-link--logo {
-    aspect-ratio: var(--xetead-wordmark-aspect-ratio);
+    aspect-ratio: var(--theme-wordmark-aspect-ratio);
     background-clip: content-box;
-    background-image: var(--xetead-wordmark);
+    background-image: var(--theme-wordmark);
     background-position: 0 50%;
     background-repeat: no-repeat;
     background-size: contain;
@@ -89,9 +89,9 @@ body.layout-multiple-columns {
   }
 
   // The card itself. Upstream gives this child its side borders
-  // (components/_status.scss); the tint is what makes it read as glass.
+  // (bird-ui/components/_status.scss); the tint is what makes it read as glass.
   .columns-area__panels__main > div {
-    background-color: var(--xetead-column-tint);
+    background-color: var(--theme-column-tint);
   }
 
   // Upstream uses --color-dark here, an opaque solid (brand-dark in the dark
@@ -185,14 +185,14 @@ body.embed .detailed-status__display-avatar > img {
 .layout-single-column,
 .layout-multiple-columns {
   .navigation-panel__menu .column-link:not(.navigation-panel__compose-button) {
-    padding-left: var(--xetead-nav-inset);
+    padding-left: var(--theme-nav-inset);
   }
 
   [dir='rtl']
     .navigation-panel__menu
     .column-link:not(.navigation-panel__compose-button) {
     padding-left: var(--gap-column-link);
-    padding-right: var(--xetead-nav-inset);
+    padding-right: var(--theme-nav-inset);
   }
 
   // The compose button is not an item in that column at all -- like the search
@@ -207,18 +207,18 @@ body.embed .detailed-status__display-avatar > img {
     // Core left-aligns the button's contents, which reads fine while the
     // button hugs them but leaves the label adrift once it spans the panel.
     justify-content: center;
-    margin-inline: var(--xetead-nav-inset);
+    margin-inline: var(--theme-nav-inset);
   }
 
   // ProfileCard (navigation_panel/index.tsx) renders .navigation-bar, which
   // core insets with `padding: 16px`.
   .navigation-panel .navigation-bar {
-    padding-left: var(--xetead-nav-inset);
+    padding-left: var(--theme-nav-inset);
   }
 
   [dir='rtl'] .navigation-panel .navigation-bar {
     padding-left: 16px;
-    padding-right: var(--xetead-nav-inset);
+    padding-right: var(--theme-nav-inset);
   }
 }
 

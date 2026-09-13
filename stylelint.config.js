@@ -5,15 +5,9 @@ module.exports = {
     // Vendored upstream Mastodon Bird UI (github.com/rollecode/mastodon-bird-ui),
     // copied in verbatim at a release tag so it can be re-synced with a plain
     // file copy. It carries its own stylelint setup, including rules and a
-    // plugin this project does not have. Only the XETEAD layer next to it
-    // (app/javascript/styles/theme-ui/_xetead-*.scss) is ours, and that is
-    // linted normally.
-    'app/javascript/styles/theme-ui/_index.scss',
-    'app/javascript/styles/theme-ui/components/**/*',
-    'app/javascript/styles/theme-ui/layouts/**/*',
-    'app/javascript/styles/theme-ui/micro-interactions/**/*',
-    'app/javascript/styles/theme-ui/variables/**/*',
-    'app/javascript/styles/theme-ui/variants/**/*',
+    // plugin this project does not have. The theme-ui layer next to it is ours
+    // and is linted normally.
+    'app/javascript/styles/bird-ui/**/*',
     'coverage/**/*',
     'node_modules/**/*',
     'public/assets/**/*',
