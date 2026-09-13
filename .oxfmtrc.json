@@ -22,6 +22,11 @@
     // Vendored CSS
     "app/javascript/styles/mastodon/reset.scss",
 
+    // Vendored upstream Mastodon Bird UI, kept byte-identical to its release
+    // tag so it can be re-synced with a plain file copy. The theme-ui layer
+    // next to it is formatted normally.
+    "app/javascript/styles/bird-ui/**",
+
     // Automatically generated
     "/app/javascript/mastodon/features/emoji/emoji_map.json",
     "/app/javascript/mastodon/features/emoji/emoji_data.json",

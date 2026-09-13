@@ -1,0 +1,84 @@
+// theme-ui -- local fixes upstream Bird UI does not cover
+
+// Two kinds of thing live here, and nothing else:
+//   1. markup this fork adds that upstream cannot know about (_feat_* CSS
+//      module classes), and
+//   2. elements upstream's status indentation rules miss.
+// Anything that is really an upstream bug belongs in a PR to
+// https://github.com/rollecode/mastodon-bird-ui instead of this file.
+
+.layout-single-column,
+.layout-multiple-columns {
+  // Upstream indents .status__content, .attachment-list, .status__action-bar
+  // and .collection-preview past the avatar column (bird-ui/components/_status-layout
+  // .scss) but not these four, which this fork renders in the same place.
+  .status:not(.status--in-thread) .picture-in-picture-placeholder,
+  .status:not(.status--in-thread) .more-from-author,
+  .status:not(.status--in-thread) .status__quote {
+    font-size: var(--font-size);
+    padding-left: calc(var(--size-avatar) + var(--gap-default));
+    padding-top: 0;
+  }
+
+  // .filter-warning paints its own background+border box (unlike the
+  // transparent elements above), so padding would only push its text over --
+  // the box itself would still start under the avatar and cover it. Shift the
+  // box with margin, the same way upstream handles .content-warning.
+  .status:not(.status--in-thread) .filter-warning {
+    font-size: var(--font-size);
+    margin-left: calc(var(--size-avatar) + var(--gap-default));
+  }
+
+  [dir='rtl'] .status .picture-in-picture-placeholder,
+  [dir='rtl'] .status .more-from-author,
+  [dir='rtl'] .status .status__quote {
+    padding-left: 0;
+    padding-right: calc(var(--size-avatar) + var(--gap-default));
+  }
+
+  [dir='rtl'] .status .filter-warning {
+    margin-left: 0;
+    margin-right: calc(var(--size-avatar) + var(--gap-default));
+  }
+
+  // Pinned posts on a profile (the account_timeline feature) render a 3-item
+  // CSS grid header instead of the normal 2-item flex one: display-name
+  // (which contains the avatar) spanning both rows on the left, the "Pinned"
+  // badge and relative-time stacked on the right. `order` affects grid
+  // auto-placement too, and upstream's values -- meant for the plain flex
+  // header -- sort the badge (unset, order 0) ahead of display-name (order 1),
+  // so the grid auto-places the avatar into the second column. Reset to DOM
+  // order inside this specific grid so it lays out as designed.
+  .status__info._feat_account_timeline__pinnedStatusHeader
+    .status__display-name,
+  .status__info._feat_account_timeline__pinnedStatusHeader
+    .status__relative-time {
+    order: initial;
+  }
+}
+
+// SymbolLogo (components/logo.tsx) renders an empty <span> that this fork uses
+// in place of the stock Mastodon "M" in column headers -- it has no content of
+// its own, so without a background it draws nothing at all. Use the same
+// square mark the rest of the theme uses; light/dark comes from --logo.
+.logo--icon-themed {
+  background-image: var(--logo);
+  background-position: center;
+  background-repeat: no-repeat;
+  background-size: contain;
+  display: inline-block;
+  height: 24px;
+  width: 24px;
+}
+
+// Archive is a nav item this fork adds (navigation_panel/index.tsx, icon
+// 'archive'). Bird UI blanks every `.column-link .icon path` and paints a
+// --icon-* data URI back over it, but it only ships URIs for the nav items
+// upstream Mastodon has -- so a fork-only item ends up with no icon at all.
+// Re-show its own SVG; as inline markup it follows currentColor.
+.layout-single-column,
+.layout-multiple-columns {
+  .column-link .icon-archive path {
+    display: revert;
+  }
+}

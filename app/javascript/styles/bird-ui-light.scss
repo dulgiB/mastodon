@@ -1,4 +1,7 @@
+// Mastodon Bird UI (light) -- upstream vendored verbatim, forced to its light
+// values. The brand palette loads after Bird UI so it wins: upstream 4.0
+// overrides Mastodon's own tokens, which would otherwise bury the palette.
 @use 'application';
+@use 'bird-ui';
+@use 'bird-ui/variables/variables-light';
 @use 'mastodon-light/brand';
-@use 'bird-ui/layout-single-column';
-@use 'bird-ui/layout-multiple-columns';

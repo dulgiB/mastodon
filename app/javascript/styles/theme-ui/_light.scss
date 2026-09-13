@@ -1,0 +1,33 @@
+// theme-ui -- light-bundle overrides
+
+// Loaded only by theme-ui-light.scss, after _tokens.scss. Everything
+// colour-related that differs between the two bundles already comes from
+// mastodon-light/_brand.scss through the token mapping there; what is left
+// here is the light artwork and the few Bird-UI-only variables that have no
+// Mastodon token to resolve through.
+
+:root,
+[data-color-scheme='light'],
+[data-color-scheme='dark'],
+html:not([data-color-scheme]) {
+  --logo: url('../../images/theme/m_logo_light.png');
+  --theme-wordmark: url('../../images/theme/wordmark_light.png');
+  --theme-wallpaper: url('../../images/theme/bg_light.png');
+  --theme-column-tint: rgb(255 255 255 / 40%);
+
+  // In the light bundle --color-text-brand is too light to read as a link
+  // against the background; use the (darker) brand base instead.
+  --color-accent: var(--color-bg-brand-base);
+  --color-ghost-button-text: var(--color-bg-brand-base);
+  --color-hashtag: var(--color-bg-brand-base);
+  --color-mention: var(--color-bg-brand-base);
+}
+
+// The compositional pane's footer sits directly over the wallpaper photo (no
+// opaque panel behind it here) and --color-text-secondary is dark in the
+// light bundle -- illegible against the photo's darker regions. Force it
+// white instead of touching the photo itself.
+.columns-area__panels__pane--compositional footer,
+.columns-area__panels__pane--compositional footer a {
+  color: #fff;
+}
