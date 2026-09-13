@@ -7,7 +7,9 @@
 //   3. mastodon-dark/brand -- the XETEAD palette, overriding both of the above
 //   4. theme-ui            -- Bird UI's variables re-pointed at that palette,
 //                             plus the wallpaper, wordmark and fork-only fixes
+//   5. theme-ui/xetead    -- what this instance changes on top
 @use 'application';
 @use 'bird-ui';
 @use 'mastodon-dark/brand';
 @use 'theme-ui';
+@use 'theme-ui/xetead';
