@@ -1,4 +1,15 @@
+// theme-ui (light) -- Bird UI plus this fork's own chrome, on the XETEAD
+// palette.
+
+// Same order as theme-ui-dark.scss, with the shared layer's light artwork
+// last.
+
+// This is a forced-light bundle, not an auto one: the theme dropdown is what
+// selects light or dark here, so a user picks it explicitly rather than
+// inheriting the browser's prefers-color-scheme.
 @use 'application';
+@use 'bird-ui';
+@use 'bird-ui/variables/variables-light';
 @use 'mastodon-light/brand';
-@use 'theme-ui/layout-single-column';
-@use 'theme-ui/layout-multiple-columns';
+@use 'theme-ui';
+@use 'theme-ui/light';
