@@ -33,6 +33,14 @@ body.layout-multiple-columns {
     padding: 0;
     width: 100%;
   }
+
+  // WordmarkLogo (components/logo.tsx) renders an <img>, not an <svg> --
+  // upstream only hides the svg (bird-ui/components/_panel-order.scss), so
+  // the inline wordmark stayed visible and painted a second, offset copy over
+  // the background one above.
+  .column-link.column-link--logo img {
+    display: none;
+  }
 }
 
 // Between the in-between and desktop breakpoints there is not enough column
