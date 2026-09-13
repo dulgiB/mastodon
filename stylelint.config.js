@@ -2,6 +2,12 @@ module.exports = {
   extends: ['stylelint-config-standard-scss'],
   ignoreFiles: [
     'app/javascript/styles/mastodon/reset.scss',
+    // Vendored upstream Mastodon Bird UI (github.com/rollecode/mastodon-bird-ui),
+    // copied in verbatim at a release tag so it can be re-synced with a plain
+    // file copy. It carries its own stylelint setup, including rules and a
+    // plugin this project does not have. The theme-ui layer next to it is ours
+    // and is linted normally.
+    'app/javascript/styles/bird-ui/**/*',
     'coverage/**/*',
     'node_modules/**/*',
     'public/assets/**/*',
