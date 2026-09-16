@@ -20,7 +20,7 @@ body.layout-multiple-columns {
 // 50x50 box; the sidebar here carries the full wordmark across the column
 // instead. `contain` plus the wordmark's own aspect-ratio is what makes it
 // span the width -- see --theme-wordmark-aspect-ratio.
-//
+
 // --theme-wordmark-width leaves slack between the box and the panel, so the
 // box is centred in it rather than pinned to the panel's left padding: the
 // mark is the panel's masthead, not an item on the nav links' left axis.
