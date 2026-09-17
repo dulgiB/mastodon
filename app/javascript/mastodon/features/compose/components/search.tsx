@@ -30,7 +30,7 @@ import {
 } from 'mastodon/actions/search';
 import { Icon } from 'mastodon/components/icon';
 import { useIdentity } from 'mastodon/identity_context';
-import { domain, searchEnabled } from 'mastodon/initial_state';
+import { domain, searchEnabled, searchOperators } from 'mastodon/initial_state';
 import type { RecentSearch, SearchType } from 'mastodon/models/search';
 import { useAppSelector, useAppDispatch } from 'mastodon/store';
 import { HASHTAG_REGEX } from 'mastodon/utils/hashtags';
@@ -90,6 +90,20 @@ interface SearchOption {
   forget?: (e: React.MouseEvent | React.KeyboardEvent) => void;
 }
 
+// Which operators work depends on the search backend: Elasticsearch runs the
+// whole query syntax, while the database fallback serves only the ones that map
+// onto a status column. The server ships the list it can honour, so the popout
+// never offers an operator that would silently come back empty.
+const operatorValues = (prefix: string) =>
+  searchOperators
+    .filter((operator) => operator.startsWith(`${prefix}:`))
+    .map((operator) => operator.slice(prefix.length + 1));
+
+const supportsOperator = (prefix: string) =>
+  searchOperators.some(
+    (operator) => operator === prefix || operator.startsWith(`${prefix}:`),
+  );
+
 export const Search: React.FC<{
   singleColumn: boolean;
   initialValue?: string;
@@ -135,7 +149,7 @@ export const Search: React.FC<{
               <mark>has:</mark>{' '}
               <FormattedList
                 type='disjunction'
-                value={['media', 'poll', 'embed']}
+                value={operatorValues('has')}
               />
             </>
           ),
@@ -151,7 +165,7 @@ export const Search: React.FC<{
               <mark>is:</mark>{' '}
               <FormattedList
                 type='disjunction'
-                value={['reply', 'sensitive']}
+                value={operatorValues('is')}
               />
             </>
           ),
@@ -244,7 +258,7 @@ export const Search: React.FC<{
               <mark>in:</mark>{' '}
               <FormattedList
                 type='disjunction'
-                value={['all', 'library', 'public']}
+                value={operatorValues('in')}
               />
             </>
           ),
@@ -254,7 +268,10 @@ export const Search: React.FC<{
           },
         },
       ];
-      return options;
+
+      return options.filter(({ key }) =>
+        supportsOperator(key.replace('prompt-', '')),
+      );
     }
   }, [insertText]);
 

@@ -30,6 +30,7 @@ interface InitialStateMeta {
   reduce_motion: boolean;
   repository: string;
   search_enabled: boolean;
+  search_operators: string[];
   trends_enabled: boolean;
   single_user_mode: boolean;
   source_url: string;
@@ -129,6 +130,7 @@ export const reduceMotion = getMeta('reduce_motion');
 export const registrationsOpen = getMeta('registrations_open');
 export const repository = getMeta('repository');
 export const searchEnabled = getMeta('search_enabled');
+export const searchOperators = getMeta('search_operators') ?? [];
 export const trendsEnabled = getMeta('trends_enabled');
 export const showTrends = getMeta('show_trends');
 export const singleUserMode = getMeta('single_user_mode');
