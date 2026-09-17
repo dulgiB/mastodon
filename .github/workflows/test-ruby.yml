@@ -148,6 +148,9 @@ jobs:
           ruby-version: ${{ matrix.ruby-version}}
           additional-system-dependencies: ffmpeg libpam-dev
 
+      - name: Set up pg_bigm
+        uses: ./.github/actions/setup-pg-bigm
+
       - name: Load database schema
         run: |
           bin/rails db:setup
@@ -246,6 +249,9 @@ jobs:
 
       - name: Set up Javascript environment
         uses: ./.github/actions/setup-javascript
+
+      - name: Set up pg_bigm
+        uses: ./.github/actions/setup-pg-bigm
 
       - name: Load database schema
         run: './bin/rails db:create db:schema:load db:seed'
@@ -393,6 +399,9 @@ jobs:
           fi
           docker restart "$container_id"
           timeout 60 bash -c 'until curl -sf http://localhost:9200/_cluster/health >/dev/null 2>&1; do sleep 2; done'
+
+      - name: Set up pg_bigm
+        uses: ./.github/actions/setup-pg-bigm
 
       - name: Load database schema
         run: './bin/rails db:create db:schema:load db:seed'

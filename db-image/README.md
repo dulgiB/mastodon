@@ -1,8 +1,8 @@
-# pg_bigm 평가
+# pg_bigm
 
-`DatabaseStatusSearch`의 pg_trgm 인덱스를 2-gram 인덱스로 바꿨을 때의 부하를
-실측한 기록. 결론부터: **1~2자 한국어 질의가 8배 빨라지고, 인덱스는 37%
-작아진다.** prod에 넣으면 메모리도 디스크도 줄어든다.
+`DatabaseStatusSearch`가 쓰는 인덱스를 pg_trgm에서 2-gram으로 바꾼 근거와 운영
+절차. **1~2자 한국어 질의가 8배 빨라지고 인덱스는 37% 작아진다** — 메모리도
+디스크도 줄어든다.
 
 ## 왜 필요한가
 
@@ -143,6 +143,51 @@ docker가 보고하는 크기는 동일하다.
 
 `shared_buffers`가 128 MB이므로 pg_trgm은 10만 건 부근에서 인덱스만으로 버퍼의
 절반을 요구한다. pg_bigm이면 그 시점이 더 뒤로 밀린다.
+
+## 배포 절차
+
+순서가 중요하다. 마이그레이션이 `CREATE EXTENSION pg_bigm`을 하므로 **새 DB
+이미지가 먼저 떠 있어야 한다.**
+
+```
+# 1. DB 이미지 교체 (postgres 재시작, 데이터 볼륨은 유지된다)
+docker compose build db        # test 호스트에서는 db_test
+docker compose up -d db
+
+# 2. 마이그레이션
+docker compose exec web bin/rails db:migrate
+
+# 3. 앱 재배포 (Status.matching_text가 lower(...) LIKE로 바뀐다)
+docker compose up -d --build web sidekiq streaming
+```
+
+**sync 워크플로는 `web sidekiq streaming`만 배포한다.** db는 건드리지 않으므로
+1번은 각 호스트에서 사람이 직접 해야 한다. prod의 `docker-compose.yml`은
+skip-worktree라 `db` 서비스의 `build: ./db-image` 변경도 그 호스트에서 직접
+적용해야 한다.
+
+2번과 3번 사이에는 앱이 아직 `ILIKE`를 쓰는데 트라이그램 인덱스는 이미 없는
+구간이 생긴다. 검색이 전체 스캔으로 떨어질 뿐 결과는 정확하므로, 짧게만 두면
+된다.
+
+## 되돌리기
+
+```
+docker compose exec web bin/rails db:rollback
+```
+
+`down`이 트라이그램 인덱스를 되살린다. 그 뒤 `Status.matching_text`를 되돌린
+앱을 배포하고, DB 이미지를 `postgres:14-alpine`으로 되돌리면 된다. 이미지를
+먼저 되돌리면 안 된다 — 롤백 마이그레이션이 pg_bigm 인덱스를 지워야 하는데
+확장이 사라지면 그 자체는 되지만, 순서를 지키는 편이 안전하다.
+
+## CI
+
+`db/schema.rb`가 `enable_extension "pg_bigm"`을 선언하므로 stock postgres 이미지
+위에서는 `db:schema:load`와 `db:migrate`가 실패한다. 러너가 서비스 컨테이너의
+이미지를 바꿀 수는 없지만 컨테이너에는 닿을 수 있으므로,
+`.github/actions/setup-pg-bigm`이 실행 중인 컨테이너 안에서 확장을 컴파일한다.
+`test-ruby.yml` 3개 잡과 `test-migrations.yml`(PG 14~17 매트릭스)에 연결돼 있다.
 
 ## 상시 비용
 

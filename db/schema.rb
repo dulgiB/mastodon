@@ -10,8 +10,9 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_08_29_090000) do
+ActiveRecord::Schema[8.1].define(version: 2026_09_17_060000) do
   # These are extensions that must be enabled in order to support this database
+  enable_extension "pg_bigm"
   enable_extension "pg_catalog.plpgsql"
   enable_extension "pg_trgm"
 
@@ -1247,6 +1248,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_29_090000) do
     t.string "uri"
     t.string "url"
     t.integer "visibility", default: 0, null: false
+    t.index "lower(spoiler_text) gin_bigm_ops", name: "index_statuses_on_spoiler_text_bigm", using: :gin
+    t.index "lower(text) gin_bigm_ops", name: "index_statuses_on_text_bigm", using: :gin
     t.index ["account_id", "id", "visibility", "updated_at"], name: "index_statuses_20190820", order: { id: :desc }, where: "(deleted_at IS NULL)"
     t.index ["account_id"], name: "index_statuses_on_account_id"
     t.index ["conversation_id"], name: "index_statuses_on_conversation_id"
@@ -1256,8 +1259,6 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_29_090000) do
     t.index ["in_reply_to_account_id"], name: "index_statuses_on_in_reply_to_account_id", where: "(in_reply_to_account_id IS NOT NULL)"
     t.index ["in_reply_to_id"], name: "index_statuses_on_in_reply_to_id", where: "(in_reply_to_id IS NOT NULL)"
     t.index ["reblog_of_id", "account_id"], name: "index_statuses_on_reblog_of_id_and_account_id"
-    t.index ["spoiler_text"], name: "index_statuses_on_spoiler_text_trigram", opclass: :gin_trgm_ops, using: :gin
-    t.index ["text"], name: "index_statuses_on_text_trigram", opclass: :gin_trgm_ops, using: :gin
     t.index ["uri"], name: "index_statuses_on_uri", unique: true, opclass: :text_pattern_ops, where: "(uri IS NOT NULL)"
   end
 
