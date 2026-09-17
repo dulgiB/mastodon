@@ -161,10 +161,20 @@ docker compose exec web bin/rails db:migrate
 docker compose up -d --build web sidekiq streaming
 ```
 
+`docker-compose.yml`의 `image: postgres:14-alpine` → `build: ./db-image` 변경은
+**의도적으로 기본 브랜치에 넣지 않았다.** 넣으면 체인이 두 군데서 깨진다:
+
+- `xetead-brand-theme-test`는 운영 서비스 블록을 통째로 지운 상태라, `db:`
+  서비스를 수정하는 커밋이 내려오면 "한쪽은 삭제, 한쪽은 수정" 충돌이 난다
+  (실측으로 확인했다).
+- prod의 `docker-compose.yml`은 skip-worktree라 배포 스크립트의
+  `git merge --ff-only`가 그 파일을 갱신하려다 멈춘다.
+
+그래서 compose 수정은 **각 호스트에서 직접** 한다. 이 저장소가 환경별
+compose를 호스트 소유로 두는 방식과 일치한다.
+
 **sync 워크플로는 `web sidekiq streaming`만 배포한다.** db는 건드리지 않으므로
-1번은 각 호스트에서 사람이 직접 해야 한다. prod의 `docker-compose.yml`은
-skip-worktree라 `db` 서비스의 `build: ./db-image` 변경도 그 호스트에서 직접
-적용해야 한다.
+1번은 각 호스트에서 사람이 직접 해야 한다.
 
 2번과 3번 사이에는 앱이 아직 `ILIKE`를 쓰는데 트라이그램 인덱스는 이미 없는
 구간이 생긴다. 검색이 전체 스캔으로 떨어질 뿐 결과는 정확하므로, 짧게만 두면

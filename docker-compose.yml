@@ -1,7 +1,7 @@
 services:
   # ── 본 인스턴스 ─────────────────────────────────
   db:
-    build: ./db-image
+    image: postgres:14-alpine
     restart: always
     env_file: .env.mastodon
     environment:
@@ -70,7 +70,7 @@ services:
 
   # ── 테스트 인스턴스 ──────────────────────────────
   db_test:
-    build: ./db-image
+    image: postgres:14-alpine
     restart: always
     env_file: .env.mastodon-test
     environment:
