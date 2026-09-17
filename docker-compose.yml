@@ -1,6 +1,6 @@
 services:
   db_test:
-    image: postgres:14-alpine
+    build: ./db-image
     restart: always
     env_file: .env.mastodon-test
     environment:
