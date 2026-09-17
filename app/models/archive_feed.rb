@@ -15,7 +15,7 @@ class ArchiveFeed
   # @param [Integer] since_id
   # @param [Integer] min_id
   # @param [String] query restrict to statuses matching this text (same
-  #   pg_trgm-indexed substring match as match?/DatabaseStatusSearch), so
+  #   pg_bigm-indexed substring match as match?/DatabaseStatusSearch), so
   #   in-episode search can be paginated server-side instead of requiring
   #   the whole episode client-side first
   # @return [Array<Status>]

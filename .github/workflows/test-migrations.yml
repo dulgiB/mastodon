@@ -78,6 +78,9 @@ jobs:
       - name: Set up Ruby environment
         uses: ./.github/actions/setup-ruby
 
+      - name: Set up pg_bigm
+        uses: ./.github/actions/setup-pg-bigm
+
       - name: Ensure no errors with `db:prepare`
         run: |
           bin/rails db:drop
