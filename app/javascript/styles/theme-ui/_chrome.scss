@@ -20,6 +20,10 @@ body.layout-multiple-columns {
 // 50x50 box; the sidebar here carries the full wordmark across the column
 // instead. `contain` plus the wordmark's own aspect-ratio is what makes it
 // span the width -- see --theme-wordmark-aspect-ratio.
+
+// --theme-wordmark-width leaves slack between the box and the panel, so the
+// box is centred in it rather than pinned to the panel's left padding: the
+// mark is the panel's masthead, not an item on the nav links' left axis.
 .layout-single-column,
 .layout-multiple-columns {
   .column-link.column-link--logo {
@@ -30,6 +34,8 @@ body.layout-multiple-columns {
     background-repeat: no-repeat;
     background-size: contain;
     height: auto;
+    margin-inline: auto;
+    max-width: var(--theme-wordmark-width);
     padding: 0;
     width: 100%;
   }
@@ -58,7 +64,9 @@ body.layout-multiple-columns {
 }
 
 // On mobile the wordmark does not fit at all; fall back to the square mark,
-// which is what upstream's box was sized for.
+// which is what upstream's box was sized for. Drop the centring with it: a
+// 50px square adrift in the middle of the slide-out panel reads as misplaced
+// next to the left-aligned nav links, where the full-width mark did not.
 @media screen and (width <= 889px) {
   .layout-single-column,
   .layout-multiple-columns {
@@ -68,6 +76,7 @@ body.layout-multiple-columns {
       background-position: 50%;
       background-size: auto 50px;
       height: 50px;
+      margin-inline: 0;
       width: 50px;
     }
   }
