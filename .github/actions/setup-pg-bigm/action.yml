@@ -1,0 +1,54 @@
+name: 'Setup pg_bigm'
+description: 'Builds pg_bigm into the running Postgres service container'
+
+# db/schema.rb declares the pg_bigm extension, so db:schema:load and db:migrate
+# fail on a stock Postgres image. The runner cannot swap a service container's
+# image, but it can reach the container, so the extension is compiled in place.
+#
+# Kept in step with db-image/Dockerfile, which does the same for the instances:
+# no LLVM (PGXS only emits JIT bitcode, which the extension works without), and
+# the ICU/libxml2/OpenSSL headers the server headers include.
+
+inputs:
+  port:
+    description: 'Host port the Postgres service is published on'
+    required: false
+    default: '5432'
+  version:
+    description: 'pg_bigm release tag to build'
+    required: false
+    default: 'v1.2-20250903'
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Build pg_bigm into the Postgres service container
+      shell: bash
+      env:
+        PG_PORT: ${{ inputs.port }}
+        PG_BIGM_VERSION: ${{ inputs.version }}
+      run: |
+        set -euo pipefail
+
+        container="$(docker ps --filter "publish=${PG_PORT}" --filter 'status=running' --format '{{.ID}} {{.Image}}' \
+                     | awk '$2 ~ /postgres/ { print $1; exit }')"
+        if [ -z "$container" ]; then
+          echo "::error::포트 ${PG_PORT}에서 Postgres 서비스 컨테이너를 찾지 못함"
+          docker ps
+          exit 1
+        fi
+        echo "==> 컨테이너 $container"
+
+        docker exec "$container" sh -eux -c "
+          apk add --no-cache build-base curl tar icu-dev libxml2-dev openssl-dev
+          mkdir -p /tmp/pg_bigm
+          curl -fsSL 'https://github.com/pgbigm/pg_bigm/archive/refs/tags/${PG_BIGM_VERSION}.tar.gz' \
+            | tar xz -C /tmp/pg_bigm --strip-components=1
+          cd /tmp/pg_bigm
+          make USE_PGXS=1 with_llvm=no
+          make USE_PGXS=1 with_llvm=no install
+        "
+
+        docker exec "$container" psql -U postgres -tAc \
+          "SELECT name FROM pg_available_extensions WHERE name = 'pg_bigm'" | grep -qx pg_bigm
+        echo "==> pg_bigm 설치 확인"
