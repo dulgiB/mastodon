@@ -18,17 +18,6 @@ services:
       - redis_data_test:/data
     networks: [internal]
 
-  search:
-    build: ./search
-    restart: always
-    environment:
-      discovery.type: single-node
-      xpack.security.enabled: 'false'
-      ES_JAVA_OPTS: '-Xms512m -Xmx512m'
-    volumes:
-      - search_data:/usr/share/elasticsearch/data
-    networks: [internal]
-
   web_test:
     build: .
     restart: always
@@ -37,7 +26,7 @@ services:
     user: '991:991'
     environment:
       PORT: '3001'
-    depends_on: [db_test, redis_test, search]
+    depends_on: [db_test, redis_test]
     networks: [internal, external]
     healthcheck:
       test:
@@ -65,7 +54,7 @@ services:
     env_file: .env.mastodon-test
     command: bundle exec sidekiq
     user: '991:991'
-    depends_on: [db_test, redis_test, search]
+    depends_on: [db_test, redis_test]
     networks: [internal, external]
     healthcheck:
       test: ['CMD-SHELL', "ps aux | grep '[s]idekiq\ 8' || false"]
@@ -96,6 +85,7 @@ services:
 volumes:
   postgres_data_test:
   redis_data_test:
+  # ES_ENABLED=false로 search 서비스를 제거했다. 되살릴 때를 위해 볼륨은 남겨 둔다.
   search_data:
 
 networks:
