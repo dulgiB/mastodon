@@ -117,7 +117,12 @@ class InitialStateSerializer < ActiveModel::Serializer
       profile_directory: Setting.profile_directory,
       registrations_open: Setting.registrations_mode != 'none' && !Rails.configuration.x.single_user_mode,
       repository: Mastodon::Version.repository,
-      search_enabled: Chewy.enabled?,
+      # Full-text status search works whether or not Elasticsearch is running:
+      # without it StatusesSearchService falls back to DatabaseStatusSearch.
+      # What differs is which operators the backend can serve, which is what
+      # search_operators carries.
+      search_enabled: true,
+      search_operators: SearchOperators.available,
       single_user_mode: Rails.configuration.x.single_user_mode,
       source_url: instance_presenter.source_url,
       sso_redirect: sso_redirect,
