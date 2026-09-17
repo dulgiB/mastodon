@@ -106,17 +106,19 @@ class DatabaseSearchQuery
     if prefix && SUPPORTED_PREFIXES.include?(prefix)
       add_filter(prefix, term_from(clause), negated)
       drop(clause)
-    elsif prefix && SearchQueryTransformer::SUPPORTED_PREFIXES.include?(prefix)
-      # Valid syntax this backend cannot serve, so it filters nothing.
-      drop(clause)
-    elsif negated
-      # Searching for the very text the user asked to exclude would be worse
-      # than ignoring the exclusion.
+    elsif droppable?(prefix, negated)
       drop(clause)
     elsif clause[:phrase].is_a?(Array)
       unquote(clause)
     end
     # Anything else is the user's own text, kept exactly as typed.
+  end
+
+  # Valid syntax this backend cannot serve filters nothing, and searching for
+  # the very text the user asked to exclude would be worse than ignoring the
+  # exclusion. Either way the clause comes out of the query.
+  def droppable?(prefix, negated)
+    negated || (prefix.present? && SearchQueryTransformer::SUPPORTED_PREFIXES.include?(prefix))
   end
 
   def drop(clause)
@@ -130,7 +132,7 @@ class DatabaseSearchQuery
     span = span_of(clause)
     return if span.nil?
 
-    @removals << (span.begin...span.begin + 1) if @query[span.begin] == '"'
+    @removals << (span.begin...(span.begin + 1)) if @query[span.begin] == '"'
     @removals << ((span.end - 1)...span.end) if @query[span.end - 1] == '"'
   end
 
