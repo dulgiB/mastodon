@@ -42,12 +42,13 @@ class StatusesSearchService < BaseService
     []
   end
 
-  # Elasticsearch is understood to be unavailable rather than merely
-  # disabled by choice here (Chewy.enabled? covers both), so this stands
-  # in with a plain substring search over the database. It only supports
-  # a literal query and the from:/min_id/max_id options above — none of
-  # SearchQueryTransformer's other operators (is:, has:, before:, quoted
-  # phrases, ...) apply.
+  # Reached when Elasticsearch is switched off (ES_ENABLED), where this
+  # stands in with a substring search over the database. DatabaseSearchQuery
+  # applies the operators a `statuses` column can serve (from:, before:,
+  # after:, during:, language:, is:reply, is:sensitive, has:poll) and drops
+  # the rest (has:media, has:embed, in:...); the text itself is matched
+  # literally, so multiple terms are one substring rather than an AND and
+  # quoted phrases add nothing.
   def database_search_results
     return [] if @query.blank?
 
