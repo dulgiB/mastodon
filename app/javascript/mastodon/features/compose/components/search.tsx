@@ -147,10 +147,7 @@ export const Search: React.FC<{
           label: (
             <>
               <mark>has:</mark>{' '}
-              <FormattedList
-                type='disjunction'
-                value={operatorValues('has')}
-              />
+              <FormattedList type='disjunction' value={operatorValues('has')} />
             </>
           ),
           action: (e) => {
@@ -163,10 +160,7 @@ export const Search: React.FC<{
           label: (
             <>
               <mark>is:</mark>{' '}
-              <FormattedList
-                type='disjunction'
-                value={operatorValues('is')}
-              />
+              <FormattedList type='disjunction' value={operatorValues('is')} />
             </>
           ),
           action: (e) => {
@@ -256,10 +250,7 @@ export const Search: React.FC<{
           label: (
             <>
               <mark>in:</mark>{' '}
-              <FormattedList
-                type='disjunction'
-                value={operatorValues('in')}
-              />
+              <FormattedList type='disjunction' value={operatorValues('in')} />
             </>
           ),
           action: (e) => {

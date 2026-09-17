@@ -40,6 +40,22 @@ RSpec.describe DatabaseSearchQuery do
       end
     end
 
+    context 'with an operator in front of text holding its own colons' do
+      let(:query) { 'before:2024-01-01 a:b:c' }
+
+      it 'cuts out the operator without disturbing the rest' do
+        expect(subject.text).to eq('a:b:c')
+      end
+    end
+
+    context 'with an emoji shortcode' do
+      let(:query) { 'look :blobcat: here' }
+
+      it 'keeps the shortcode whole' do
+        expect(subject.text).to eq('look :blobcat: here')
+      end
+    end
+
     context 'with a quoted phrase' do
       let(:query) { '"zebras everywhere"' }
 

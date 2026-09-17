@@ -45,7 +45,7 @@ class DatabaseSearchQuery
   def initialize(query, current_account)
     @query = query.to_s
     @current_account = current_account
-    @text_parts = []
+    @removals = []
     @filters = []
     @impossible = false
 
@@ -75,9 +75,16 @@ class DatabaseSearchQuery
 
   attr_reader :current_account
 
+  # The text is what is left of the query once the operator spans are cut out,
+  # rather than something rebuilt from the parsed terms. Rebuilding loses what
+  # the user actually typed: joining clauses with a space turns a search for
+  # "time:12:30" into one for "time:12 :30", which matches nothing.
   def parse!
     clauses.each { |clause| consume(clause) }
-    @text = @text_parts.join(' ')
+
+    text = @query.dup
+    @removals.sort_by(&:begin).reverse_each { |span| text[span] = ' ' }
+    @text = text.squish
   end
 
   def clauses
@@ -89,24 +96,65 @@ class DatabaseSearchQuery
   rescue Parslet::ParseFailed
     # Unparseable input is matched as typed, the way the whole query was before
     # any operator was understood here.
-    @text_parts << @query
     []
   end
 
   def consume(clause)
     negated = clause[:operator].to_s == '-'
     prefix  = clause[:prefix][:term].to_s.downcase if clause[:prefix].is_a?(Hash)
-    term    = term_from(clause)
 
-    if prefix.nil?
-      # A negated term is dropped rather than folded into the substring, which
-      # would search for the very text the user asked to exclude.
-      @text_parts << term if !negated && term.present?
-    elsif SUPPORTED_PREFIXES.include?(prefix)
-      add_filter(prefix, term, negated)
-    elsif SearchQueryTransformer::SUPPORTED_PREFIXES.exclude?(prefix)
-      # Not search syntax at all, so it is the user's literal text.
-      @text_parts << "#{prefix}:#{term}"
+    if prefix && SUPPORTED_PREFIXES.include?(prefix)
+      add_filter(prefix, term_from(clause), negated)
+      drop(clause)
+    elsif prefix && SearchQueryTransformer::SUPPORTED_PREFIXES.include?(prefix)
+      # Valid syntax this backend cannot serve, so it filters nothing.
+      drop(clause)
+    elsif negated
+      # Searching for the very text the user asked to exclude would be worse
+      # than ignoring the exclusion.
+      drop(clause)
+    elsif clause[:phrase].is_a?(Array)
+      unquote(clause)
+    end
+    # Anything else is the user's own text, kept exactly as typed.
+  end
+
+  def drop(clause)
+    span = span_of(clause)
+    @removals << span if span
+  end
+
+  # A phrase is matched as a substring either way, so the quotes are the only
+  # part that has to go -- left in, they are matched as body text.
+  def unquote(clause)
+    span = span_of(clause)
+    return if span.nil?
+
+    @removals << (span.begin...span.begin + 1) if @query[span.begin] == '"'
+    @removals << ((span.end - 1)...span.end) if @query[span.end - 1] == '"'
+  end
+
+  # Parslet records an offset on every slice but not the punctuation between
+  # them, so widen the span over the quotes and colons sitting at its edges.
+  def span_of(clause)
+    found = slices_in(clause)
+    return if found.empty?
+
+    start  = found.map(&:offset).min
+    finish = found.map { |slice| slice.offset + slice.to_s.length }.max
+
+    start -= 1 if start.positive? && ['"', ':'].include?(@query[start - 1])
+    finish += 1 if ['"', ':'].include?(@query[finish])
+
+    start...finish
+  end
+
+  def slices_in(node)
+    case node
+    when Parslet::Slice then [node]
+    when Hash then node.values.flat_map { |value| slices_in(value) }
+    when Array then node.flat_map { |value| slices_in(value) }
+    else []
     end
   end
 
@@ -114,7 +162,8 @@ class DatabaseSearchQuery
     if clause[:phrase].is_a?(Array)
       clause[:phrase].map { |part| part[:term].to_s }.join(' ')
     elsif clause[:shortcode].is_a?(Hash)
-      ":#{clause[:shortcode][:term]}:"
+      span = span_of(clause)
+      span ? @query[span].to_s : ''
     else
       clause[:term].to_s
     end
@@ -208,7 +257,7 @@ class DatabaseSearchQuery
     end
 
     Date.iso8601(term).in_time_zone(time_zone).all_day
-  rescue Date::Error, ArgumentError, TypeError
+  rescue ArgumentError, TypeError # Date::Error is an ArgumentError
     nil
   end
 
