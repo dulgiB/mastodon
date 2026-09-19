@@ -37,6 +37,36 @@ import { FOCUS_TARGET } from './navigation_focus_target';
 
 const domParser = new DOMParser();
 
+// The whole post card takes the hover highlight, so a click anywhere on it
+// should open the post -- except on the parts that already answer a click
+// themselves. Media opens the lightbox, .status__content and .status__info
+// carry their own handlers, and links, buttons and form controls do whatever
+// they do. A media-only post is what makes this matter: its .status__content
+// is empty, so without this only the header strip reacted.
+const NON_OPENING_SELECTOR = [
+  'a',
+  'button',
+  'label',
+  'input',
+  'select',
+  'textarea',
+  '[role="button"]',
+  '[role="link"]',
+  '.status__content',
+  '.media-gallery',
+  '.video-player',
+  '.audio-player',
+  '.picture-in-picture-placeholder',
+  '.attachment-list',
+  '.poll',
+  '.content-warning',
+  '.filter-warning',
+].join(', ');
+
+// Distance in px a pointer may travel between press and release before the
+// gesture counts as a drag (a text selection) instead of a click.
+const CLICK_SLOP = 5;
+
 const messages = defineMessages({
   edited: { id: 'status.edited', defaultMessage: 'Edited {date}' },
   quote_noun: { id: 'status.quote_noun', defaultMessage: 'Quote', description: 'Quote as a noun' },
@@ -180,6 +210,47 @@ class Status extends ImmutablePureComponent {
   handleHeaderClick = e => {
     // Only handle clicks on the empty space above the content
     if (e.target !== e.currentTarget && e.detail >= 1) {
+      return;
+    }
+
+    this.handleClick(e);
+  };
+
+  handleStatusMouseDown = e => {
+    this.statusStartXY = [e.clientX, e.clientY];
+  };
+
+  handleStatusMouseUp = e => {
+    const startXY = this.statusStartXY;
+    this.statusStartXY = null;
+
+    if (!startXY || e.detail < 1 || !(e.button === 0 || e.button === 1)) {
+      return;
+    }
+
+    const [startX, startY] = startXY;
+
+    if (Math.abs(e.clientX - startX) + Math.abs(e.clientY - startY) >= CLICK_SLOP) {
+      return;
+    }
+
+    const target = e.target;
+
+    if (target.closest(NON_OPENING_SELECTOR)) {
+      return;
+    }
+
+    // .status__info runs handleHeaderClick for exactly this spot; leave it to
+    // it rather than opening the post twice.
+    if (target.matches('.status__info')) {
+      return;
+    }
+
+    // A quoted post renders its own .status inside a .status__quote box in
+    // this one. Only act on clicks that belong to this card: the innermost
+    // .status opens the post it belongs to, and the quote box's own frame
+    // opens neither, rather than sending the reader to the wrong post.
+    if (target.closest('.status, .status__quote') !== e.currentTarget) {
       return;
     }
 
@@ -608,9 +679,12 @@ class Status extends ImmutablePureComponent {
                 'status--is-quote': isQuotedPost,
                 'status--has-quote': !!status.get('quote'),
                 'status--highlighted-entry': this.props.shouldHighlightOnMount,
+                'status--with-action': !!this.props.onClick || !!this.props.history,
               })
             }
             data-id={status.get('id')}
+            onMouseDown={this.handleStatusMouseDown}
+            onMouseUp={this.handleStatusMouseUp}
           >
             {(connectReply || connectUp || connectToRoot) && <div className={classNames('status__line', { 'status__line--full': connectReply, 'status__line--first': !status.get('in_reply_to_id') && !connectToRoot })} />}
 
