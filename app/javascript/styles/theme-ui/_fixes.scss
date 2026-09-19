@@ -1,11 +1,13 @@
 // theme-ui -- local fixes upstream Bird UI does not cover
 
-// Two kinds of thing live here, and nothing else:
+// Three kinds of thing live here, and nothing else:
 //   1. markup this fork adds that upstream cannot know about (_feat_* CSS
-//      module classes), and
-//   2. elements upstream's status indentation rules miss.
-// Anything that is really an upstream bug belongs in a PR to
-// https://github.com/rollecode/mastodon-bird-ui instead of this file.
+//      module classes),
+//   2. elements upstream's status indentation rules miss, and
+//   3. an upstream rule that misfires here, held as a one-rule override until
+//      the fix lands upstream -- each one says what it is working around.
+// Anything that is really an upstream bug also belongs in a PR to
+// https://github.com/rollecode/mastodon-bird-ui, not only in this file.
 
 .layout-single-column,
 .layout-multiple-columns {
@@ -80,5 +82,25 @@
 .layout-multiple-columns {
   .column-link .icon-archive path {
     display: revert;
+  }
+}
+
+// The "Follows you" pill in account list items (follower/following lists and
+// collections) ends up with no padding at all. bird-ui/components/profile/
+// _profile-badges.scss gives it `padding: 4px 6px`, then a later rule of equal
+// specificity zeroes the padding of *every* badge inside
+// ._comp_account_list_item__badge so the verified-link badge sits flush with
+// the row. That badge is transparent, but this one paints --color-dark, so its
+// background ends up hugging the glyphs -- 11px text in a 12px-tall box.
+// Put the padding back for the filled variant only. The negative block margin
+// keeps the inline box the same height it is today, so the handle line below
+// does not move; the pill grows symmetrically around its text, so upstream's
+// translate(-1px, -5px) nudge still lands where it did.
+.layout-single-column,
+.layout-multiple-columns {
+  [class*='_comp_account_list_item__badge'] > [class*='_comp_badge__default'] {
+    margin-block: -4px;
+    padding: 4px 6px;
+    padding-inline-end: 6px;
   }
 }
