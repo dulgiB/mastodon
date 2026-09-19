@@ -1563,6 +1563,34 @@ body > [data-popper-placement] {
   opacity: 1;
   animation: fade 150ms linear;
 
+  // Pairs with the mouseup handler on .status (components/status.jsx): a click
+  // anywhere on the card opens the post, so the whole card -- padding, the
+  // gutter beside the media, the gaps above and below it -- shows the pointer
+  // the content already had. Declared here, after `cursor: auto` above, since
+  // both selectors weigh the same.
+  &--with-action {
+    cursor: pointer;
+  }
+
+  // The parts that answer a click themselves are not openings into the post,
+  // so they must not inherit that pointer. Only containers are listed: links,
+  // buttons and media thumbnails match their own cursor rules, which beat an
+  // inherited value, so they keep the cursor they always had.
+  &--with-action
+    :is(
+      .media-gallery,
+      .video-player,
+      .audio-player,
+      .picture-in-picture-placeholder,
+      .attachment-list,
+      .poll,
+      .content-warning,
+      .filter-warning,
+      .status__quote
+    ) {
+    cursor: default;
+  }
+
   @keyframes fade {
     0% {
       opacity: 0;

@@ -679,6 +679,7 @@ class Status extends ImmutablePureComponent {
                 'status--is-quote': isQuotedPost,
                 'status--has-quote': !!status.get('quote'),
                 'status--highlighted-entry': this.props.shouldHighlightOnMount,
+                'status--with-action': !!this.props.onClick || !!this.props.history,
               })
             }
             data-id={status.get('id')}
