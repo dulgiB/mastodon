@@ -9,9 +9,30 @@
 # the sessions settings page like any other login.
 module MultiSession
   COOKIE_NAME = '_session_ids'
+  ACTIVE_ACCOUNT_COOKIE = '_active_account_id'
   LIMIT = 10
 
   module_function
+
+  # Readable by scripts on purpose: a tab renders for one account and has no
+  # other way to notice that the browser has since switched to another, since
+  # its API calls carry the token it was rendered with and keep working. It is
+  # an identifier, never a credential, and is never trusted server-side.
+  def mark_active(cookies, account_id)
+    value = account_id.to_s
+    return if cookies[ACTIVE_ACCOUNT_COOKIE] == value
+
+    cookies[ACTIVE_ACCOUNT_COOKIE] = {
+      value: value,
+      expires: 1.year.from_now,
+      httponly: false,
+      same_site: :lax,
+    }
+  end
+
+  def clear_active(cookies)
+    cookies.delete(ACTIVE_ACCOUNT_COOKIE)
+  end
 
   def session_ids(cookies)
     value = cookies.signed[COOKIE_NAME]

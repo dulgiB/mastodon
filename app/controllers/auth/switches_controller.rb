@@ -31,5 +31,7 @@ class Auth::SwitchesController < ApplicationController
       httponly: true,
       same_site: :lax,
     }
+
+    MultiSession.mark_active(cookies, activation.user.account_id)
   end
 end

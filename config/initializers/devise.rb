@@ -7,6 +7,7 @@ Warden::Manager.after_set_user except: :fetch do |user, warden|
   session_id = user.activate_session(warden.request) unless user.session_activations.active?(session_id)
 
   MultiSession.remember(warden.cookies, session_id)
+  MultiSession.mark_active(warden.cookies, user.account_id)
 
   warden.cookies.signed['_session_id'] = {
     value: session_id,
@@ -25,6 +26,7 @@ Warden::Manager.after_fetch do |user, warden|
     # Sessions established before this browser had a switcher list, and the one
     # promoted by a switch, are picked up here.
     MultiSession.remember(warden.cookies, session_id)
+    MultiSession.mark_active(warden.cookies, user.account_id)
 
     warden.cookies.signed['_session_id'] = {
       value: session_id,
@@ -43,6 +45,7 @@ Warden::Manager.before_logout do |_, warden|
 
   SessionActivation.deactivate session_id
   MultiSession.forget(warden.cookies, session_id)
+  MultiSession.clear_active(warden.cookies)
   warden.cookies.delete('_session_id')
 end
 

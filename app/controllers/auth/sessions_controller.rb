@@ -110,6 +110,8 @@ class Auth::SessionsController < Devise::SessionsController
       same_site: :lax,
     }
 
+    MultiSession.mark_active(cookies, activation.user.account_id)
+
     true
   end
 

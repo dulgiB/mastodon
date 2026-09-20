@@ -9,6 +9,7 @@ import Mastodon from 'mastodon/containers/mastodon';
 import { me, reduceMotion } from 'mastodon/initial_state';
 import ready from 'mastodon/ready';
 import { store } from 'mastodon/store';
+import { watchAccountSession } from 'mastodon/utils/account_session_watcher';
 
 import { isDevelopment, isProduction } from './utils/environment';
 
@@ -40,6 +41,7 @@ function main() {
       </StrictMode>,
     );
     store.dispatch(setupBrowserNotifications());
+    watchAccountSession();
 
     if (
       me &&

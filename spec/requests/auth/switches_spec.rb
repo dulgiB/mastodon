@@ -49,6 +49,16 @@ RSpec.describe 'Auth Switches' do
         expect(response.parsed_body[:redirect_to])
           .to eq root_path
       end
+
+      it 'publishes the active account so other tabs notice the switch' do
+        expect(cookies[MultiSession::ACTIVE_ACCOUNT_COOKIE])
+          .to eq bob.account_id.to_s
+
+        post '/auth/switch', params: { account_id: alice.account_id }
+
+        expect(cookies[MultiSession::ACTIVE_ACCOUNT_COOKIE])
+          .to eq alice.account_id.to_s
+      end
     end
   end
 end
