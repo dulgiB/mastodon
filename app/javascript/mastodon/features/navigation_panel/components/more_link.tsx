@@ -81,6 +81,10 @@ export const MoreLink: React.FC = () => {
 
     switcher.push({
       href: '/auth/sign_in?add_account=1',
+      // Signing in takes over this tab, the way switching between accounts
+      // already does. The menu's other links open a tab to come back from;
+      // this one is the account the browser is moving to.
+      target: '_self',
       text: intl.formatMessage(messages.addAccount),
     });
 
