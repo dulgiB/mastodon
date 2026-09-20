@@ -7,6 +7,8 @@ class Auth::SessionsController < Devise::SessionsController
 
   layout 'auth'
 
+  helper_method :adding_account?
+
   skip_before_action :check_self_destruct!
   skip_before_action :require_no_authentication, only: [:create]
   skip_before_action :require_functional!
