@@ -20,14 +20,26 @@ export function watchAccountSession() {
 
   let reloading = false;
 
+  // A cookie that was never there says nothing: it may not be stored at all.
+  // Taking that for a sign-out would reload the tab, find it still missing on
+  // the next pageshow, and reload again. Only a cookie seen going away is
+  // evidence that the browser left this account.
+  let seen = Boolean(activeAccountId());
+
   const check = () => {
     if (reloading || document.visibilityState !== 'visible') {
       return;
     }
 
-    // A missing cookie means the browser was signed out elsewhere, which this
-    // tab needs to pick up too.
-    if (activeAccountId() === me) {
+    const active = activeAccountId();
+
+    if (active) {
+      seen = true;
+
+      if (active === me) {
+        return;
+      }
+    } else if (!seen) {
       return;
     }
 
