@@ -37,6 +37,8 @@ import {
 import type { MenuItem } from 'mastodon/models/dropdown_menu';
 import { useAppDispatch, useAppSelector } from 'mastodon/store';
 
+import { Avatar } from './avatar';
+import { DisplayName } from './display_name';
 import { Icon } from './icon';
 import type { IconProp } from './icon';
 import { IconButton } from './icon_button';
@@ -64,6 +66,24 @@ interface DropdownMenuProps<Item = MenuItem> {
   onItemClick?: ItemClickFn<Item>;
 }
 
+const DropdownMenuItemAccount: React.FC<{ id: string; fallback: string }> = ({
+  id,
+  fallback,
+}) => {
+  const account = useAppSelector((state) => state.accounts.get(id));
+
+  if (!account) {
+    return <span className='dropdown-menu__item-content'>{fallback}</span>;
+  }
+
+  return (
+    <div className='dropdown-menu__item-account'>
+      <Avatar account={account} size={46} />
+      <DisplayName account={account} />
+    </div>
+  );
+};
+
 export const DropdownMenuItemContent: React.FC<{ item: MenuItem }> = ({
   item,
 }) => {
@@ -71,7 +91,12 @@ export const DropdownMenuItemContent: React.FC<{ item: MenuItem }> = ({
     return null;
   }
 
-  const { text, description, icon, iconId } = item;
+  const { text, description, icon, iconId, accountId } = item;
+
+  if (accountId) {
+    return <DropdownMenuItemAccount id={accountId} fallback={text} />;
+  }
+
   return (
     <>
       {icon && (

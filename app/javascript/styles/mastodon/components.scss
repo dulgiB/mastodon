@@ -3020,6 +3020,28 @@ a.account__display-name {
     font-weight: 400;
   }
 
+  // Accounts are shown the way the navigation bar shows the one signed in,
+  // rather than as another line of menu text.
+  &-account {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    overflow: hidden;
+    color: var(--color-text-secondary);
+    font-size: 14px;
+    font-weight: 400;
+
+    .display-name {
+      min-width: 0;
+    }
+
+    .display-name strong {
+      display: block;
+      font-size: 14px;
+      color: var(--color-text-primary);
+    }
+  }
+
   a,
   button {
     font: inherit;

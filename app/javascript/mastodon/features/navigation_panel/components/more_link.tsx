@@ -58,26 +58,29 @@ export const MoreLink: React.FC = () => {
   const menu = useMemo(() => {
     const switcher: MenuItem[] = [];
 
-    if (sessionAccountIds.length > 1) {
-      sessionAccountIds.forEach((accountId) => {
-        const account = accounts.get(accountId);
+    sessionAccountIds.forEach((accountId) => {
+      // The account already open is what the menu was opened from.
+      if (accountId === me) {
+        return;
+      }
 
-        if (!account) {
-          return;
-        }
+      const account = accounts.get(accountId);
 
-        switcher.push({
-          text: account.display_name,
-          description: `@${account.acct}`,
-          highlighted: accountId === me,
-          action: () => {
-            if (accountId !== me) {
-              void switchAccount(accountId);
-            }
-          },
-        });
+      if (!account) {
+        return;
+      }
+
+      switcher.push({
+        accountId,
+        // The item shows the account itself; this names it for the rare
+        // render where the store no longer holds it, and an account that never
+        // set a display name has an empty one.
+        text: account.display_name.trim() || account.username,
+        action: () => {
+          void switchAccount(accountId);
+        },
       });
-    }
+    });
 
     switcher.push({
       href: '/auth/sign_in?add_account=1',
