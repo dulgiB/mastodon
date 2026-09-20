@@ -76,6 +76,10 @@ class Auth::SessionsController < Devise::SessionsController
   end
 
   def require_no_authentication
+    # Adding another account to the switcher means reaching the sign-in form
+    # while a session is already established.
+    return if adding_account?
+
     super
 
     # Delete flash message that isn't entirely useful and may be confusing in
@@ -84,6 +88,28 @@ class Auth::SessionsController < Devise::SessionsController
   end
 
   private
+
+  def adding_account?
+    truthy_param?(:add_account)
+  end
+
+  # Signing out of one account leaves this browser's other sessions untouched,
+  # so fall back to the most recent of them rather than dropping the user out
+  # of the app entirely.
+  def switch_to_remaining_session!
+    activation = MultiSession.activations(cookies).first
+
+    return false if activation.nil?
+
+    cookies.signed['_session_id'] = {
+      value: activation.session_id,
+      expires: 1.year.from_now,
+      httponly: true,
+      same_site: :lax,
+    }
+
+    true
+  end
 
   def preserve_stored_location
     original_stored_location = stored_location_for(:user)
@@ -187,13 +213,21 @@ class Auth::SessionsController < Devise::SessionsController
   end
 
   def respond_to_on_destroy(**)
+    switched = switch_to_remaining_session!
+
     respond_to do |format|
       format.json do
         render json: {
-          redirect_to: after_sign_out_path_for(resource_name),
+          redirect_to: switched ? root_path : after_sign_out_path_for(resource_name),
         }, status: 200
       end
-      format.all { super(**) }
+      format.all do
+        if switched
+          redirect_to root_path
+        else
+          super(**)
+        end
+      end
     end
   end
 end

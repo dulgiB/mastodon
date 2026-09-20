@@ -6,6 +6,8 @@ Warden::Manager.after_set_user except: :fetch do |user, warden|
   session_id = warden.cookies.signed['_session_id'] || warden.raw_session['auth_id']
   session_id = user.activate_session(warden.request) unless user.session_activations.active?(session_id)
 
+  MultiSession.remember(warden.cookies, session_id)
+
   warden.cookies.signed['_session_id'] = {
     value: session_id,
     expires: 1.year.from_now,
@@ -20,6 +22,10 @@ Warden::Manager.after_fetch do |user, warden|
   if session_id && (session = user.session_activations.find_by(session_id: session_id))
     session.update(ip: warden.request.remote_ip) if session.ip != warden.request.remote_ip
 
+    # Sessions established before this browser had a switcher list, and the one
+    # promoted by a switch, are picked up here.
+    MultiSession.remember(warden.cookies, session_id)
+
     warden.cookies.signed['_session_id'] = {
       value: session_id,
       expires: 1.year.from_now,
@@ -33,7 +39,10 @@ Warden::Manager.after_fetch do |user, warden|
 end
 
 Warden::Manager.before_logout do |_, warden|
-  SessionActivation.deactivate warden.cookies.signed['_session_id']
+  session_id = warden.cookies.signed['_session_id']
+
+  SessionActivation.deactivate session_id
+  MultiSession.forget(warden.cookies, session_id)
   warden.cookies.delete('_session_id')
 end
 
