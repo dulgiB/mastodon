@@ -16,6 +16,8 @@ class Auth::SessionsController < Devise::SessionsController
 
   around_action :preserve_stored_location, only: :destroy, if: :continue_after?
 
+  before_action :step_out_of_current_account!, only: [:create], if: :adding_account?
+
   prepend_before_action :check_suspicious!, only: [:create]
 
   include Auth::TwoFactorAuthenticationConcern
@@ -93,6 +95,18 @@ class Auth::SessionsController < Devise::SessionsController
 
   def adding_account?
     truthy_param?(:add_account)
+  end
+
+  # Warden returns the account already held in the session instead of running
+  # the sign-in strategies, so a sign-in meant to add an account would confirm
+  # the current one without ever looking at the credentials submitted. Leaving
+  # the session lets the strategies run; the session activation behind it stays
+  # alive, so a failed attempt signs the account back in on the next request
+  # and a successful one leaves it switchable.
+  def step_out_of_current_account!
+    MultiSession.adding_account!(request)
+
+    warden.logout(:user) if user_signed_in?
   end
 
   # Signing out of one account leaves this browser's other sessions untouched,

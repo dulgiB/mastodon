@@ -4,8 +4,10 @@
 - content_for :header_tags do
   = render partial: 'shared/og'
 
+- session_url = adding_account? ? session_path(resource_name, add_account: 1) : session_path(resource_name)
+
 - unless omniauth_only?
-  = simple_form_for(resource, as: resource_name, url: session_path(resource_name)) do |f|
+  = simple_form_for(resource, as: resource_name, url: session_url) do |f|
     - if adding_account?
       %h1.title= t('auth.add_account.title')
       %p.lead= t('auth.add_account.preamble')

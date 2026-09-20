@@ -41,6 +41,10 @@ Warden::Manager.after_fetch do |user, warden|
 end
 
 Warden::Manager.before_logout do |_, warden|
+  # Stepping out of an account in order to add another one to this browser
+  # leaves its session alive, so that account stays listed and switchable.
+  next if MultiSession.adding_account?(warden.request)
+
   session_id = warden.cookies.signed['_session_id']
 
   SessionActivation.deactivate session_id
@@ -80,6 +84,11 @@ module Devise
     class SessionActivationRememberable < Authenticatable
       def valid?
         @session_cookie = nil
+
+        # The cookie still points at the account being added to, and signing it
+        # back in here would pre-empt the credentials actually being submitted.
+        return false if MultiSession.adding_account?(request)
+
         session_cookie.present?
       end
 

@@ -12,7 +12,21 @@ module MultiSession
   ACTIVE_ACCOUNT_COOKIE = '_active_account_id'
   LIMIT = 10
 
+  # Marks a request as a sign-in that adds another account to this browser.
+  # Warden hands back the account already in the session without ever running
+  # the sign-in strategies, and the session activation strategy would sign that
+  # same account straight back in, so both have to be told to step aside.
+  ADDING_ACCOUNT = 'multi_session.adding_account'
+
   module_function
+
+  def adding_account!(request)
+    request.env[ADDING_ACCOUNT] = true
+  end
+
+  def adding_account?(request)
+    request.env[ADDING_ACCOUNT].present?
+  end
 
   # Readable by scripts on purpose: a tab renders for one account and has no
   # other way to notice that the browser has since switched to another, since
