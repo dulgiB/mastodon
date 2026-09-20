@@ -45,6 +45,8 @@ class InitialStateSerializer < ActiveModel::Serializer
 
     store[:owner] = object.owner&.id&.to_s if Rails.configuration.x.single_user_mode
 
+    store[:session_accounts] = session_accounts.map { |account| account.id.to_s }
+
     store
   end
 
@@ -68,7 +70,7 @@ class InitialStateSerializer < ActiveModel::Serializer
     store = {}
 
     ActiveRecord::Associations::Preloader.new(
-      records: [object.current_account, object.admin, object.owner, object.disabled_account, object.moved_to_account].compact,
+      records: ([object.current_account, object.admin, object.owner, object.disabled_account, object.moved_to_account] + session_accounts).compact,
       associations: [:account_stat, { user: :role, moved_to_account: [:account_stat, { user: :role }] }]
     ).call
 
@@ -77,6 +79,8 @@ class InitialStateSerializer < ActiveModel::Serializer
     store[object.owner.id.to_s]            = serialized_account(object.owner) if object.owner
     store[object.disabled_account.id.to_s] = serialized_account(object.disabled_account) if object.disabled_account
     store[object.moved_to_account.id.to_s] = serialized_account(object.moved_to_account) if object.moved_to_account
+
+    session_accounts.each { |account| store[account.id.to_s] ||= serialized_account(account) }
 
     store
   end
@@ -94,6 +98,10 @@ class InitialStateSerializer < ActiveModel::Serializer
   end
 
   private
+
+  def session_accounts
+    @session_accounts ||= Array(object.session_accounts)
+  end
 
   def wrapstodon
     current_campaign = AnnualReport.current_campaign

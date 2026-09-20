@@ -7,9 +7,11 @@ import { openModal } from 'mastodon/actions/modal';
 import { Dropdown } from 'mastodon/components/dropdown_menu';
 import { Icon } from 'mastodon/components/icon';
 import { useIdentity } from 'mastodon/identity_context';
+import { me, sessionAccountIds } from 'mastodon/initial_state';
 import type { MenuItem } from 'mastodon/models/dropdown_menu';
 import { canManageReports, canViewAdminDashboard } from 'mastodon/permissions';
-import { useAppDispatch } from 'mastodon/store';
+import { useAppDispatch, useAppSelector } from 'mastodon/store';
+import { switchAccount } from 'mastodon/utils/switch_account';
 
 const messages = defineMessages({
   blocks: { id: 'navigation_bar.blocks', defaultMessage: 'Blocked users' },
@@ -41,15 +43,50 @@ const messages = defineMessages({
     id: 'navigation_bar.privacy_and_reach',
     defaultMessage: 'Privacy and reach',
   },
+  addAccount: {
+    id: 'navigation_bar.add_account',
+    defaultMessage: 'Add another account',
+  },
 });
 
 export const MoreLink: React.FC = () => {
   const intl = useIntl();
   const { permissions } = useIdentity();
   const dispatch = useAppDispatch();
+  const accounts = useAppSelector((state) => state.accounts);
 
   const menu = useMemo(() => {
+    const switcher: MenuItem[] = [];
+
+    if (sessionAccountIds.length > 1) {
+      sessionAccountIds.forEach((accountId) => {
+        const account = accounts.get(accountId);
+
+        if (!account) {
+          return;
+        }
+
+        switcher.push({
+          text: account.display_name,
+          description: `@${account.acct}`,
+          highlighted: accountId === me,
+          action: () => {
+            if (accountId !== me) {
+              void switchAccount(accountId);
+            }
+          },
+        });
+      });
+    }
+
+    switcher.push({
+      href: '/auth/sign_in?add_account=1',
+      text: intl.formatMessage(messages.addAccount),
+    });
+
     const arr: MenuItem[] = [
+      ...switcher,
+      null,
       {
         href: '/filters',
         text: intl.formatMessage(messages.filters),
@@ -109,7 +146,7 @@ export const MoreLink: React.FC = () => {
     });
 
     return arr;
-  }, [intl, dispatch, permissions]);
+  }, [intl, dispatch, permissions, accounts]);
 
   return (
     <Dropdown items={menu} placement='bottom-start'>
