@@ -104,3 +104,40 @@
     padding-inline-end: 6px;
   }
 }
+
+.layout-single-column,
+.layout-multiple-columns {
+  // Upstream swaps the status action icons for SVG data URIs with the fill
+  // baked into the string (bird-ui/variables/_variables-base.scss), so they
+  // cannot follow a palette. On hover that lights the reply icon in its own
+  // blue and the bookmark in its own pink, neither of which belongs to either
+  // of this instance's bundles -- and both sit right next to a counter that
+  // is already painted from the tokens. Draw the same shapes through a mask
+  // instead: upstream still decides which icon a state gets, and the color
+  // comes from --color-text-brand, which each bundle resolves to its own.
+  .status .icon-button:hover .icon-reply,
+  .status .icon-button:hover .icon-mail-reply,
+  .status .icon-button:hover .icon-reply-all,
+  .detailed-status__action-bar .icon-button:hover .icon-reply {
+    background-color: var(--color-text-brand);
+    background-image: none;
+    mask: var(--icon-reply-status-hover) center / contain no-repeat;
+  }
+
+  .status button.icon-button:hover .icon-bookmark,
+  .detailed-status__action-bar .icon-button:hover .icon-bookmark {
+    background-color: var(--color-text-brand);
+    background-image: none;
+    mask: var(--icon-bookmark-status-hover) center / contain no-repeat;
+  }
+
+  // The filled shape a saved post keeps.
+  .status .icon-button:hover:focus .icon-bookmark,
+  .status .icon-button:focus .icon-bookmark,
+  .status .icon-button.active .icon-bookmark,
+  .detailed-status__action-bar .icon-button.active .icon-bookmark {
+    background-color: var(--color-text-brand);
+    background-image: none;
+    mask: var(--icon-bookmark-active) center / contain no-repeat;
+  }
+}
