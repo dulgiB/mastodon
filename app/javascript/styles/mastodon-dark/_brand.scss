@@ -85,5 +85,5 @@ body.admin {
 // primary sitting behind it is darker either way (photo hero or flat),
 // so this reliably dims rather than lightens.
 .compose-form__highlightable {
-  background: rgb(26 26 122 / 44%);
+  background: rgb(from var(--color-bg-secondary) r g b / 44%);
 }
