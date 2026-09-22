@@ -1,6 +1,8 @@
 import PropTypes from 'prop-types';
 import { PureComponent } from 'react';
 
+import { reloadForStaleBundle } from 'mastodon/utils/stale_bundle';
+
 const emptyComponent = () => null;
 
 class Bundle extends PureComponent {
@@ -11,12 +13,14 @@ class Bundle extends PureComponent {
     error: PropTypes.func,
     children: PropTypes.func.isRequired,
     renderDelay: PropTypes.number,
+    reloadIfStale: PropTypes.bool,
   };
 
   static defaultProps = {
     loading: emptyComponent,
     error: emptyComponent,
     renderDelay: 0,
+    reloadIfStale: false,
   };
 
   static cache = new Map;
@@ -43,7 +47,7 @@ class Bundle extends PureComponent {
   }
 
   load = (props) => {
-    const { fetchComponent, renderDelay } = props || this.props;
+    const { fetchComponent, renderDelay, reloadIfStale } = props || this.props;
     const cachedMod = Bundle.cache.get(fetchComponent);
 
     if (fetchComponent === undefined) {
@@ -70,8 +74,24 @@ class Bundle extends PureComponent {
       })
       .catch((error) => {
         console.error('Bundle fetching error:', error);
+
+        // A chunk left behind by a deploy is recovered by reloading, which
+        // unmounts this component — leave the loading state in place rather
+        // than flashing an error the reload is about to discard.
+        if (reloadIfStale && reloadForStaleBundle(error)) {
+          return;
+        }
+
         this.setState({ mod: null });
       });
+  };
+
+  // The error column wires its button straight to the handler it is given, so
+  // without a wrapper the click event would arrive in place of the props and
+  // stand in for them — leaving the retry to look up a component that isn't
+  // there and re-render the very error it was meant to clear.
+  handleRetry = () => {
+    this.load();
   };
 
   render() {
@@ -84,7 +104,7 @@ class Bundle extends PureComponent {
     }
 
     if (mod === null) {
-      return <Error onRetry={this.load} />;
+      return <Error onRetry={this.handleRetry} />;
     }
 
     return children(mod);
