@@ -15,23 +15,6 @@ html:not([data-color-scheme]) {
   // covers both bundles.
   --logo: url('../../images/theme/m_logo.png');
 
-  // The compose box. Until the Bird UI 4.0.0 sync these two tokens reached
-  // nothing: upstream only painted .compose-form__autosuggest-wrapper and
-  // .compose-form__buttons-wrapper, class names Mastodon dropped before 4.6,
-  // so the box was whatever .compose-form__highlightable got in
-  // mastodon-{light,dark}/_brand.scss -- --color-bg-secondary at 44%, in both
-  // bundles, resting and focused alike. 4.0.0 moved the tint onto
-  // .compose-form__highlightable itself at (0,3,0), which outranks that
-  // brand rule at (0,1,0), so the box silently switched to upstream's fixed
-  // slate rgb(39 44 64 / 40%) -- darker than the palette it sits in, and not
-  // a brand colour at all.
-
-  // Resolve both tokens through the same surface the brand rule uses, so the
-  // box follows whichever palette the bundle loads instead of Bird UI's own.
-  // Focus keeps the 44% the box has always had; resting sits one step under
-  // it, which is what gives 4.0.0's focus transition something to travel.
-  --color-bg-compose-form: rgb(from var(--color-bg-secondary) r g b / 36%);
-  --color-bg-compose-form-focus: rgb(
-    from var(--color-bg-secondary) r g b / 44%
-  );
+  // The compose box tokens are per bundle, in mastodon-{light,dark}/_brand
+  // .scss: this layer cannot name a brand color that differs between them.
 }
