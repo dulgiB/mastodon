@@ -86,6 +86,14 @@ class Bundle extends PureComponent {
       });
   };
 
+  // The error column wires its button straight to the handler it is given, so
+  // without a wrapper the click event would arrive in place of the props and
+  // stand in for them — leaving the retry to look up a component that isn't
+  // there and re-render the very error it was meant to clear.
+  handleRetry = () => {
+    this.load();
+  };
+
   render() {
     const { loading: Loading, error: Error, children, renderDelay } = this.props;
     const { mod, forceRender } = this.state;
@@ -96,7 +104,7 @@ class Bundle extends PureComponent {
     }
 
     if (mod === null) {
-      return <Error onRetry={this.load} />;
+      return <Error onRetry={this.handleRetry} />;
     }
 
     return children(mod);
