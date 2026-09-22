@@ -14,4 +14,7 @@ html:not([data-color-scheme]) {
   // this instance's mark reads correctly on either background, so one asset
   // covers both bundles.
   --logo: url('../../images/theme/m_logo.png');
+
+  // The compose box tokens are per bundle, in mastodon-{light,dark}/_brand
+  // .scss: this layer cannot name a brand color that differs between them.
 }

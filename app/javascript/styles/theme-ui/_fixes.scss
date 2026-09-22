@@ -104,3 +104,53 @@
     padding-inline-end: 6px;
   }
 }
+
+.layout-single-column,
+.layout-multiple-columns {
+  // Upstream's icons are data URIs with the fill baked into the string
+  // (bird-ui/variables/_variables-base.scss), so they cannot take a token.
+  // Masking keeps its shape for the state and takes the color from here.
+  .status .icon-button:hover .icon-reply,
+  .status .icon-button:hover .icon-mail-reply,
+  .status .icon-button:hover .icon-reply-all,
+  .detailed-status__action-bar .icon-button:hover .icon-reply {
+    background-color: var(--color-text-brand);
+    background-image: none;
+    mask: var(--icon-reply-status-hover) center / contain no-repeat;
+  }
+
+  .status button.icon-button:hover .icon-bookmark,
+  .detailed-status__action-bar .icon-button:hover .icon-bookmark {
+    background-color: var(--color-text-brand);
+    background-image: none;
+    mask: var(--icon-bookmark-status-hover) center / contain no-repeat;
+  }
+
+  .status .icon-button:hover:focus .icon-bookmark,
+  .status .icon-button:focus .icon-bookmark,
+  .status .icon-button.active .icon-bookmark,
+  .detailed-status__action-bar .icon-button.active .icon-bookmark {
+    background-color: var(--color-text-brand);
+    background-image: none;
+    mask: var(--icon-bookmark-active) center / contain no-repeat;
+  }
+}
+
+.layout-single-column,
+.layout-multiple-columns {
+  // Upstream's greys land after core's rules, and it names the icon element
+  // as well as the button, so both have to be said here.
+  .media-modal__close,
+  .media-modal__buttons {
+    .icon-button,
+    .icon-button:hover,
+    .icon-button:active,
+    .icon-button:focus-visible {
+      color: var(--color-text-on-media);
+    }
+
+    .icon-button .icon {
+      color: var(--color-text-on-media);
+    }
+  }
+}
