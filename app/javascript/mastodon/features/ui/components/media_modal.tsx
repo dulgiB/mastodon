@@ -4,6 +4,7 @@ import type { RefCallback, FC } from 'react';
 import { defineMessages, useIntl } from 'react-intl';
 
 import classNames from 'classnames';
+import { useHistory } from 'react-router-dom';
 
 import type { List as ImmutableList } from 'immutable';
 
@@ -14,29 +15,36 @@ import type { MediaAttachment } from '@/mastodon/models/status';
 import ChevronLeftIcon from '@/material-icons/400-24px/chevron_left.svg?react';
 import ChevronRightIcon from '@/material-icons/400-24px/chevron_right.svg?react';
 import CloseIcon from '@/material-icons/400-24px/close.svg?react';
-import FitScreenIcon from '@/material-icons/400-24px/fit_screen.svg?react';
-import ActualSizeIcon from '@/svg-icons/actual_size.svg?react';
+import MoreHorizIcon from '@/material-icons/400-24px/more_horiz.svg?react';
 import type { RGB } from 'mastodon/blurhash';
 import { getAverageFromBlurhash } from 'mastodon/blurhash';
+import { Dropdown } from 'mastodon/components/dropdown_menu';
 import { GIFV } from 'mastodon/components/gifv';
 import { Icon } from 'mastodon/components/icon';
 import { IconButton } from 'mastodon/components/icon_button';
 import { Footer } from 'mastodon/features/picture_in_picture/components/footer';
 import { Video } from 'mastodon/features/video';
+import type { MenuItem } from 'mastodon/models/dropdown_menu';
+import { useAppSelector } from 'mastodon/store';
 
+import { MediaModalStatus } from './media_modal_status';
 import { ZoomableImage } from './zoomable_image';
 
 const messages = defineMessages({
   close: { id: 'lightbox.close', defaultMessage: 'Close' },
   previous: { id: 'lightbox.previous', defaultMessage: 'Previous' },
   next: { id: 'lightbox.next', defaultMessage: 'Next' },
-  zoomIn: { id: 'lightbox.zoom_in', defaultMessage: 'Zoom to actual size' },
-  zoomOut: { id: 'lightbox.zoom_out', defaultMessage: 'Zoom to fit' },
+  collapsePost: { id: 'lightbox.collapse_post', defaultMessage: 'Hide post' },
+  expandPost: { id: 'lightbox.expand_post', defaultMessage: 'Show post' },
+  more: { id: 'status.more', defaultMessage: 'More' },
+  viewPost: { id: 'lightbox.view_post', defaultMessage: 'View post' },
 });
 
 interface MediaModalProps {
   media: ImmutableList<MediaAttachment>;
   statusId?: string;
+  // Set by the openers that leave the post out of view, i.e. a gallery.
+  withSourceStatus?: boolean;
   lang?: string;
   index: number;
   onClose: () => void;
@@ -60,12 +68,14 @@ export const MediaModal = forwardRef<HTMLDivElement, MediaModalProps>(
       autoPlay,
       volume,
       statusId,
+      withSourceStatus,
       onChangeBackgroundColor,
     },
     _ref,
   ) => {
     const [index, setIndex] = useState(startIndex);
     const [zoomedIn, setZoomedIn] = useState(false);
+    const [statusCollapsed, setStatusCollapsed] = useState(false);
     const currentMedia = media.get(index);
 
     const sign = isLtrDir ? '-' : '';
@@ -117,9 +127,17 @@ export const MediaModal = forwardRef<HTMLDivElement, MediaModalProps>(
     );
 
     const bind = useDrag(
-      ({ active, movement: [mx], direction: [xDir], cancel }) => {
+      ({ active, movement: [mx], direction: [xDir], cancel, event }) => {
         // Disable swipe when zoomed in.
         if (zoomedIn) {
+          return;
+        }
+
+        // The panel scrolls; a drag that starts there is not a swipe.
+        if (
+          event.target instanceof Element &&
+          event.target.closest('.media-modal__status')
+        ) {
           return;
         }
 
@@ -162,10 +180,6 @@ export const MediaModal = forwardRef<HTMLDivElement, MediaModalProps>(
       };
     }, [currentMedia, onChangeBackgroundColor]);
 
-    const [viewportDimensions, setViewportDimensions] = useState<{
-      width: number;
-      height: number;
-    }>({ width: 0, height: 0 });
     const handleRef: RefCallback<HTMLDivElement> = useCallback(
       (ele) => {
         if (typeof _ref === 'function') {
@@ -173,23 +187,10 @@ export const MediaModal = forwardRef<HTMLDivElement, MediaModalProps>(
         } else if (_ref) {
           _ref.current = ele;
         }
-
-        if (ele?.clientWidth && ele.clientHeight) {
-          setViewportDimensions({
-            width: ele.clientWidth,
-            height: ele.clientHeight,
-          });
-        }
       },
       [_ref],
     );
 
-    const zoomable =
-      currentMedia?.get('type') === 'image' &&
-      ((currentMedia.getIn(['meta', 'original', 'width']) as number) >
-        viewportDimensions.width ||
-        (currentMedia.getIn(['meta', 'original', 'height']) as number) >
-          viewportDimensions.height);
     const handleZoomClick = useCallback(() => {
       setZoomedIn((prev) => !prev);
     }, []);
@@ -282,6 +283,41 @@ export const MediaModal = forwardRef<HTMLDivElement, MediaModalProps>(
 
     const intl = useIntl();
 
+    const sourceStatusId = withSourceStatus ? statusId : undefined;
+
+    const handleToggleStatus = useCallback(() => {
+      setStatusCollapsed((value) => !value);
+    }, []);
+
+    const history = useHistory();
+    const sourceAcct = useAppSelector((state) => {
+      if (!sourceStatusId) {
+        return undefined;
+      }
+
+      const accountId = state.statuses.getIn([sourceStatusId, 'account']) as
+        | string
+        | undefined;
+
+      return accountId ? state.accounts.get(accountId)?.acct : undefined;
+    });
+
+    const statusMenu: MenuItem[] = useMemo(
+      () => [
+        {
+          text: intl.formatMessage(messages.viewPost),
+          action: () => {
+            onClose();
+
+            if (sourceAcct && sourceStatusId) {
+              history.push(`/@${sourceAcct}/${sourceStatusId}`);
+            }
+          },
+        },
+      ],
+      [intl, history, onClose, sourceAcct, sourceStatusId],
+    );
+
     const prevNav = media.size > 1 && (
       <button
         className='media-modal__nav media-modal__nav--prev'
@@ -306,7 +342,10 @@ export const MediaModal = forwardRef<HTMLDivElement, MediaModalProps>(
     return (
       <div
         {...bind()}
-        className='modal-root__modal media-modal'
+        className={classNames('modal-root__modal media-modal', {
+          'media-modal--with-source-status': !!sourceStatusId,
+          'media-modal--source-status-collapsed': statusCollapsed,
+        })}
         ref={handleRef}
       >
         <animated.div
@@ -323,23 +362,42 @@ export const MediaModal = forwardRef<HTMLDivElement, MediaModalProps>(
             'media-modal__navigation--hidden': navigationHidden,
           })}
         >
-          <div className='media-modal__buttons'>
-            {zoomable && (
-              <IconButton
-                title={intl.formatMessage(
-                  zoomedIn ? messages.zoomOut : messages.zoomIn,
-                )}
-                icon=''
-                iconComponent={zoomedIn ? FitScreenIcon : ActualSizeIcon}
-                onClick={handleZoomClick}
-              />
-            )}
+          <div className='media-modal__close'>
             <IconButton
               title={intl.formatMessage(messages.close)}
               icon='times'
               iconComponent={CloseIcon}
               onClick={onClose}
             />
+          </div>
+
+          <div className='media-modal__buttons'>
+            {sourceStatusId && (
+              <>
+                <IconButton
+                  className='media-modal__status-toggle'
+                  title={intl.formatMessage(
+                    statusCollapsed
+                      ? messages.expandPost
+                      : messages.collapsePost,
+                  )}
+                  icon=''
+                  iconComponent={
+                    statusCollapsed ? ChevronLeftIcon : ChevronRightIcon
+                  }
+                  onClick={handleToggleStatus}
+                />
+
+                <Dropdown
+                  iconClassName='media-modal__status-menu'
+                  items={statusMenu}
+                  icon='ellipsis-h'
+                  iconComponent={MoreHorizIcon}
+                  title={intl.formatMessage(messages.more)}
+                  placement='bottom-end'
+                />
+              </>
+            )}
           </div>
 
           {prevNav}
@@ -356,6 +414,10 @@ export const MediaModal = forwardRef<HTMLDivElement, MediaModalProps>(
             )}
           </div>
         </div>
+
+        {sourceStatusId && (
+          <MediaModalStatus statusId={sourceStatusId} onClose={onClose} />
+        )}
       </div>
     );
   },
