@@ -1318,6 +1318,9 @@ ko:
     warning: 이 데이터를 조심히 다뤄 주세요. 다른 사람들과 절대로 공유하지 마세요!
     your_token: 액세스 토큰
   auth:
+    add_account:
+      preamble: 현재 계정은 로그인된 상태로 유지되며, 언제든지 계정을 전환할 수 있습니다.
+      title: 다른 계정 추가
     apply_for_account: 가입 요청하기
     captcha_confirmation:
       help_html: 만약 CAPTCHA를 푸는데 문제가 생겼다면 %{email}을 통해 연락을 주시면 도와드릴 수 있습니다.

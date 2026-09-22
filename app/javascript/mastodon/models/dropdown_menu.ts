@@ -7,6 +7,9 @@ interface BaseMenuItem {
   description?: string;
   icon?: IconProp;
   iconId?: string;
+  // An item that stands for an account rather than for an action, shown the
+  // way accounts are shown elsewhere instead of as a line of text.
+  accountId?: string;
   highlighted?: boolean;
   disabled?: boolean;
   dangerous?: boolean;
