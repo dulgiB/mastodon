@@ -107,14 +107,9 @@
 
 .layout-single-column,
 .layout-multiple-columns {
-  // Upstream swaps the status action icons for SVG data URIs with the fill
-  // baked into the string (bird-ui/variables/_variables-base.scss), so they
-  // cannot follow a palette. On hover that lights the reply icon in its own
-  // blue and the bookmark in its own pink, neither of which belongs to either
-  // of this instance's bundles -- and both sit right next to a counter that
-  // is already painted from the tokens. Draw the same shapes through a mask
-  // instead: upstream still decides which icon a state gets, and the color
-  // comes from --color-text-brand, which each bundle resolves to its own.
+  // Upstream's icons are data URIs with the fill baked into the string
+  // (bird-ui/variables/_variables-base.scss), so they cannot take a token.
+  // Masking keeps its shape for the state and takes the color from here.
   .status .icon-button:hover .icon-reply,
   .status .icon-button:hover .icon-mail-reply,
   .status .icon-button:hover .icon-reply-all,
@@ -131,7 +126,6 @@
     mask: var(--icon-bookmark-status-hover) center / contain no-repeat;
   }
 
-  // The filled shape a saved post keeps.
   .status .icon-button:hover:focus .icon-bookmark,
   .status .icon-button:focus .icon-bookmark,
   .status .icon-button.active .icon-bookmark,
@@ -139,5 +133,24 @@
     background-color: var(--color-text-brand);
     background-image: none;
     mask: var(--icon-bookmark-active) center / contain no-repeat;
+  }
+}
+
+.layout-single-column,
+.layout-multiple-columns {
+  // Upstream's greys land after core's rules, and it names the icon element
+  // as well as the button, so both have to be said here.
+  .media-modal__close,
+  .media-modal__buttons {
+    .icon-button,
+    .icon-button:hover,
+    .icon-button:active,
+    .icon-button:focus-visible {
+      color: var(--color-text-on-media);
+    }
+
+    .icon-button .icon {
+      color: var(--color-text-on-media);
+    }
   }
 }
