@@ -165,6 +165,33 @@ jobs:
           docker image prune -f --filter 'until=168h' >/dev/null || true
           REMOTE
 
+      # 빌드마다 자산 해시가 바뀌므로 엣지에 남은 이전 HTML은 없는 파일을
+      # 가리킨다. 호스트·접두사 단위 퍼지는 Enterprise 전용이라 전체를 비운다.
+      - name: Cloudflare 캐시 퍼지
+        env:
+          CF_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CF_ZONE_ID: ${{ secrets.CLOUDFLARE_ZONE_ID }}
+        run: |
+          set -euo pipefail
+
+          if [ -z "${CF_API_TOKEN:-}" ] || [ -z "${CF_ZONE_ID:-}" ]; then
+            echo '==> Cloudflare 시크릿이 없어 퍼지를 건너뛴다'
+            exit 0
+          fi
+
+          response="$(curl -sS -X POST \
+            "https://api.cloudflare.com/client/v4/zones/${CF_ZONE_ID}/purge_cache" \
+            -H "Authorization: Bearer ${CF_API_TOKEN}" \
+            -H 'Content-Type: application/json' \
+            --data '{"purge_everything":true}')"
+
+          if ! echo "$response" | jq -e '.success' >/dev/null; then
+            echo "$response"
+            exit 1
+          fi
+
+          echo '==> 캐시 퍼지 완료'
+
       - name: SSH 키 정리
         if: always()
         run: rm -f ~/.ssh/deploy_key
