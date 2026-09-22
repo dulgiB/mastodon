@@ -63,13 +63,9 @@ html:not([data-color-scheme]) {
   // --theme-wordmark so an instance swapping in its own can override both.
   --theme-wordmark-aspect-ratio: 350 / 170;
 
-  // Cap on how wide that box is allowed to grow. Until Bird UI 4.0.0 this
-  // theme pinned the navigation panel to its own 260px and inset it by 20px,
-  // so `width: 100%` drew the mark 220px across. 4.0.0 dropped the width
-  // override (core's panel is 285px) and halved the inset to 10px, which left
-  // the same rule painting a 265px mark -- a fifth wider, for no deliberate
-  // reason. Cap it back at the width it had, rather than re-pinning the
-  // panel, which would move the whole column layout with it.
+  // Cap on how wide that box grows: the width it had before Bird UI 4.0.0
+  // dropped this theme's panel-width override and halved the inset. Capping
+  // the mark rather than re-pinning the panel leaves the column layout alone.
   --theme-wordmark-width: 220px;
   --theme-wallpaper: url('../../images/theme/bg_dark.png');
 
