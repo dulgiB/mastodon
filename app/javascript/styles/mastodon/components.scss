@@ -2925,6 +2925,11 @@ a.account__display-name {
   box-shadow: var(--dropdown-shadow);
   z-index: 9999;
 
+  &__container {
+    max-height: calc(100dvh - 16px);
+    overflow-y: auto;
+  }
+
   &__text-button {
     display: inline-flex;
     align-items: center;
@@ -6266,30 +6271,40 @@ a.status-card {
   position: relative;
   touch-action: pan-y;
 
+  &__close {
+    position: absolute;
+    inset-inline-start: 8px;
+    top: 8px;
+    z-index: 100;
+  }
+
   &__buttons {
     position: absolute;
     inset-inline-end: 8px;
     top: 8px;
     z-index: 100;
+  }
+
+  &__close,
+  &__buttons {
     display: flex;
     gap: 8px;
     align-items: center;
 
     .icon-button {
+      // A picture can be any color under these, so they carry their own
+      // ground rather than a shadow on the glyph.
       --default-icon-color: var(--color-text-on-media);
-      --default-bg-color: transparent;
+      --default-bg-color: var(--color-bg-media);
       --hover-icon-color: var(--color-text-on-media);
-      --hover-bg-color: rgb(
-        from var(--color-text-on-media) r g b /
-          var(--overlay-strength-secondary)
-      );
+      --hover-bg-color: rgb(from var(--color-bg-media-base) r g b / 85%);
 
       padding: 8px;
+      border-radius: 999px;
 
       .icon {
         width: 24px;
         height: 24px;
-        filter: var(--overlay-icon-shadow);
       }
     }
   }
@@ -6310,6 +6325,127 @@ a.status-card {
     align-items: center;
     justify-content: center;
     width: 100%;
+  }
+}
+
+.media-modal--with-source-status {
+  // Declared before the query that swaps them, or they would win over it.
+  .media-modal__status-toggle {
+    display: none;
+  }
+
+  .media-modal__status-menu {
+    display: inline-flex;
+  }
+
+  @media screen and (width >= 1024px) {
+    // Declared on the modal, not on the panel: the picture area reads it too,
+    // and a sibling's custom property is out of its reach.
+    --media-modal-status-width: 360px;
+
+    .media-modal__closer,
+    .media-modal__navigation {
+      inset-inline-end: var(--media-modal-status-width);
+    }
+
+    .media-modal__status {
+      display: flex;
+    }
+
+    .media-modal__overlay .picture-in-picture__footer {
+      display: none;
+    }
+
+    .media-modal__status-toggle {
+      display: inline-flex;
+
+      .icon {
+        width: 32px;
+        height: 32px;
+      }
+    }
+
+    .media-modal__status-menu {
+      display: none;
+    }
+  }
+
+  &.media-modal--source-status-collapsed {
+    @media screen and (width >= 1024px) {
+      --media-modal-status-width: 0px;
+
+      .media-modal__status {
+        display: none;
+      }
+
+      .media-modal__overlay .picture-in-picture__footer {
+        display: flex;
+      }
+    }
+  }
+}
+
+.media-modal__status {
+  position: absolute;
+  inset-block: 0;
+  inset-inline-end: 0;
+  width: var(--media-modal-status-width, 360px);
+  z-index: 100;
+  display: none;
+  flex-direction: column;
+  background: var(--color-bg-primary);
+  border-inline-start: 1px solid var(--color-border-primary);
+
+  &__scroller {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    min-height: 0;
+    overflow-y: auto;
+    padding: 16px;
+  }
+
+  &__author {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    color: inherit;
+    text-decoration: none;
+
+    &:hover .display-name strong {
+      text-decoration: underline;
+    }
+  }
+
+  &__timestamp {
+    color: var(--color-text-secondary);
+    font-size: 14px;
+    text-decoration: none;
+
+    &:hover {
+      text-decoration: underline;
+    }
+  }
+
+  &__actions .picture-in-picture__footer {
+    padding: 0;
+    border: 0;
+    background: transparent;
+    backdrop-filter: none;
+  }
+
+  &__replies {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding-top: 16px;
+    border-top: 1px solid var(--color-border-primary);
+
+    &__heading {
+      color: var(--color-text-secondary);
+      font-size: 13px;
+      font-weight: 600;
+    }
   }
 }
 
