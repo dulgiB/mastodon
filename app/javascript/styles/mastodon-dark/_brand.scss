@@ -56,6 +56,12 @@ html:not([data-color-scheme]) {
   // No --color-text-on-brand-base override needed here (unlike the light
   // bundle): white stays legible against --color-bg-primary at this
   // lightness, and against --color-text-brand's indigo.
+
+  // The compose box -- see mastodon-light/_brand.scss for why it is per
+  // bundle. --color-indigo-950 is the deep end of this bundle's own scale,
+  // where full-strength --color-bg-secondary glares on a surface this large.
+  --color-bg-compose-form: rgb(from var(--color-indigo-950) r g b / 25%);
+  --color-bg-compose-form-focus: rgb(from var(--color-indigo-950) r g b / 50%);
 }
 
 // See mastodon-light/_brand.scss for why: body.admin renders at full-page
@@ -80,10 +86,8 @@ body.admin {
 // components.scss backs the compose box in plain --color-bg-secondary,
 // same as ~24 other surfaces -- fine for small cards, but at this box's
 // size the full-strength saturated indigo is eye-straining and it's one
-// of the first things visible on every page. Let some black show through
-// via alpha instead of inventing an unrelated solid color; --color-bg-
-// primary sitting behind it is darker either way (photo hero or flat),
-// so this reliably dims rather than lightens.
+// of the first things visible on every page. Point the bundles that don't
+// load Bird UI at the same token Bird UI uses, so both paths agree.
 .compose-form__highlightable {
-  background: rgb(26 26 122 / 44%);
+  background: var(--color-bg-compose-form);
 }
