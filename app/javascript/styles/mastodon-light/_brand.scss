@@ -69,6 +69,13 @@ html:not([data-color-scheme]) {
   // system's default white --color-text-on-brand-base fails contrast on it;
   // use the (dark) primary text color instead of lightening the brand.
   --color-text-on-brand-base: var(--color-text-primary);
+
+  // The compose box, per bundle rather than in the shared xetead layer
+  // because each bundle's brand is a different color. --color-indigo-100 is
+  // the lightest tint still carrying the amber; a tint this close to white
+  // barely moves when its alpha does, hence the distance between the two.
+  --color-bg-compose-form: rgb(from var(--color-indigo-100) r g b / 25%);
+  --color-bg-compose-form-focus: rgb(from var(--color-indigo-100) r g b / 50%);
 }
 
 // The settings/admin pages (body.admin) render at full-page scale with dense
@@ -89,10 +96,10 @@ body.admin {
   background: var(--color-bg-secondary);
 }
 
-// Same alpha treatment as the dark bundle's compose box (see
-// mastodon-dark/_brand.scss) for the same reason and for consistency
-// between the two bundles, even though light's --color-bg-secondary
-// isn't especially saturated to begin with.
+// Bird UI paints the box from --color-bg-compose-form; the bundles that
+// don't load it (plain mastodon-light) fall back to components.scss, which
+// paints plain --color-bg-secondary. Point that path at the same token so
+// the two cannot drift apart.
 .compose-form__highlightable {
-  background: rgb(from var(--color-bg-secondary) r g b / 44%);
+  background: var(--color-bg-compose-form);
 }
