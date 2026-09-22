@@ -15,4 +15,26 @@ RSpec.describe 'Auth Sessions' do
         .to have_http_status(400)
     end
   end
+
+  describe 'GET /auth/sign_in' do
+    context 'when already signed in' do
+      before { sign_in Fabricate(:user) }
+
+      it 'redirects away' do
+        get new_user_session_path
+
+        expect(response)
+          .to have_http_status(302)
+      end
+
+      it 'serves the form when adding another account' do
+        get new_user_session_path(add_account: '1')
+
+        expect(response)
+          .to have_http_status(200)
+        expect(response.body)
+          .to include(I18n.t('auth.add_account.title'))
+      end
+    end
+  end
 end

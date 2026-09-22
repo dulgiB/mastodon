@@ -42,13 +42,9 @@ class StatusesSearchService < BaseService
     []
   end
 
-  # Reached when Elasticsearch is switched off (ES_ENABLED), where this
-  # stands in with a substring search over the database. DatabaseSearchQuery
-  # applies the operators a `statuses` column can serve (from:, before:,
-  # after:, during:, language:, is:reply, is:sensitive, has:poll) and drops
-  # the rest (has:media, has:embed, in:...); the text itself is matched
-  # literally, so multiple terms are one substring rather than an AND and
-  # quoted phrases add nothing.
+  # Reached when Elasticsearch is switched off (ES_ENABLED): a substring
+  # search over the database, with the operators DatabaseSearchQuery can
+  # serve. See that class for which ones, and how the text differs.
   def database_search_results
     return [] if @query.blank?
 

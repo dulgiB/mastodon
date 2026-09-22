@@ -2,9 +2,8 @@
 
 # pg_trgm cannot index a pattern shorter than three characters, so the one- and
 # two-character queries that are ordinary in Korean fell back to a sequential
-# scan. pg_bigm indexes 2-grams and serves them: on this instance's own corpus
-# a two-character query goes from ~55ms sequential to ~7ms indexed, and the
-# index is 37% smaller besides (see db-image/README.md).
+# scan. pg_bigm indexes 2-grams and serves them; db-image/README.md has the
+# measurements.
 #
 # pg_bigm accelerates LIKE only and its index is case-sensitive, unlike pg_trgm
 # which serves ILIKE directly, so the index is built over lower(...) and
