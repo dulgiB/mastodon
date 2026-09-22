@@ -64,9 +64,7 @@ body.layout-multiple-columns {
 }
 
 // On mobile the wordmark does not fit at all; fall back to the square mark,
-// which is what upstream's box was sized for. Drop the centring with it: a
-// 50px square adrift in the middle of the slide-out panel reads as misplaced
-// next to the left-aligned nav links, where the full-width mark did not.
+// which is what upstream's box was sized for, and drop the centring with it.
 @media screen and (width <= 889px) {
   .layout-single-column,
   .layout-multiple-columns {
@@ -125,9 +123,8 @@ body.layout-multiple-columns {
     background-color: var(--color-column-link-hover);
   }
 
-  // Upstream's 16px top/bottom reads as excess whitespace next to denser
-  // timelines (Twitter/X sits at ~12px); tighten vertically only, so avatar
-  // and content indentation are unaffected.
+  // Tighten upstream's 16px vertically only, so avatar and content
+  // indentation are unaffected.
   .status {
     padding-bottom: 12px;
     padding-top: 12px;
@@ -190,15 +187,10 @@ body.embed .detailed-status__display-avatar > img {
   }
 }
 
-// Navigation panel alignment. The panel's blocks each carried their own
-// inset: the search field and the profile card at core's 16px, the compose
-// button at core's `margin: 12px`, and the nav links at Bird UI's
-// --gap-column-link (12px) -- so nothing lined up down the left edge.
-
-// Settle on a single axis for the link icons, the profile card and the
-// compose button's pill. The search field keeps core's 16px on purpose: it is
-// a full-width field rather than an item in that column, and widening its
-// inset only makes it look cramped.
+// Navigation panel alignment. One axis for the link icons, the profile card
+// and the compose button's pill, each of which came with its own inset. The
+// search field keeps core's 16px: it is a full-width field rather than an
+// item in that column.
 .layout-single-column,
 .layout-multiple-columns {
   .navigation-panel__menu .column-link:not(.navigation-panel__compose-button) {
@@ -212,17 +204,11 @@ body.embed .detailed-status__display-avatar > img {
     padding-right: var(--theme-nav-inset);
   }
 
-  // The compose button is not an item in that column at all -- like the search
-  // field above it, it is a full-width control. Bird UI shrinks it to its
-  // content (`display: inline-flex` plus `align-self: center` in
-  // components/_mobile-navigation.scss); let it fill the panel instead, inset
-  // by the same amount on both sides.
+  // A full-width control rather than an item in that column, so undo Bird
+  // UI's shrink-to-content (components/_mobile-navigation.scss).
   .navigation-panel__compose-button {
     align-self: stretch;
     display: flex;
-
-    // Core left-aligns the button's contents, which reads fine while the
-    // button hugs them but leaves the label adrift once it spans the panel.
     justify-content: center;
     margin-inline: var(--theme-nav-inset);
   }

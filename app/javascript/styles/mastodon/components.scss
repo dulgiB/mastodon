@@ -376,11 +376,8 @@
   }
 }
 
-// Renders as a bare native <button> (see text_icon_button.jsx) with none of
-// .icon-button's reset, so it fell back to the browser's default button
-// chrome -- an always-visible border/focus ring that doesn't clear on
-// click or blur, and a native pressed effect that doesn't match its
-// siblings. Give it the same reset and hover/focus/active treatment.
+// A bare native <button> (see text_icon_button.jsx) with none of
+// .icon-button's reset, so it needs the same treatment here.
 .text-icon-button {
   --default-icon-color: var(--color-text-secondary);
   --hover-icon-color: var(--color-text-primary);
@@ -1563,19 +1560,15 @@ body > [data-popper-placement] {
   opacity: 1;
   animation: fade 150ms linear;
 
-  // Pairs with the mouseup handler on .status (components/status.jsx): a click
-  // anywhere on the card opens the post, so the whole card -- padding, the
-  // gutter beside the media, the gaps above and below it -- shows the pointer
-  // the content already had. Declared here, after `cursor: auto` above, since
-  // both selectors weigh the same.
+  // Pairs with the mouseup handler on .status (components/status.jsx).
+  // Declared after `cursor: auto` above, since both selectors weigh the same.
   &--with-action {
     cursor: pointer;
   }
 
-  // The parts that answer a click themselves are not openings into the post,
-  // so they must not inherit that pointer. Only containers are listed: links,
-  // buttons and media thumbnails match their own cursor rules, which beat an
-  // inherited value, so they keep the cursor they always had.
+  // The parts that answer a click themselves must not inherit that pointer.
+  // Only containers are listed: links, buttons and media thumbnails have
+  // cursor rules of their own, which beat an inherited value.
   &--with-action
     :is(
       .media-gallery,
@@ -3169,13 +3162,9 @@ a.account__display-name {
   border-top: 1px solid var(--color-border-primary);
   box-sizing: border-box;
 
-  // No backdrop-filter: background above is already fully opaque, so
-  // there's nothing for it to blur — it was a no-op on correctly
-  // rendering browsers, but seen to corrupt compositing (icons vanishing,
-  // ghosted/overlapping text in sibling fixed/sticky bars) combined with
-  // position: fixed on some mobile engines (Samsung Internet reported;
-  // same class of bug as the sticky+backdrop-filter issue on mobile
-  // Safari noted below on .tabs-bar__wrapper).
+  // No backdrop-filter: the background above is opaque, so it blurs nothing,
+  // and with position: fixed it corrupted compositing on some mobile engines
+  // -- same class of bug as the one noted below on .tabs-bar__wrapper.
 
   // No `.layout-multiple-columns & { display: none; }` override here:
   // that used to hide this bar unconditionally in multi-column mode,
@@ -3268,12 +3257,10 @@ a.account__display-name {
 
 // The column header (tabs, back button, etc.) for whichever single-column
 // page is active gets portaled in here (see TabsBarPortal in
-// columns_area.tsx). This target div has no CSS of its own anywhere in the
-// codebase, so as a flex item of .tabs-bar__wrapper with no sizing hint it
-// was sized by content — which, once that content's own children use
-// percentage widths (e.g. .account__section-headline's tab buttons), don't
-// count toward that auto-sizing and collapse the whole chain to 0, stacking
-// every tab at the same position instead of laying them out in a row.
+// columns_area.tsx). The div has no CSS of its own, so as a flex item it is
+// sized by content -- and content using percentage widths (e.g.
+// .account__section-headline's tabs) does not count toward that, collapsing
+// the chain to 0.
 #tabs-bar__portal {
   flex: 1 1 auto;
   min-width: 0;
@@ -6633,14 +6620,10 @@ a.status-card {
   width: 600px;
   flex-direction: column;
 
-  // backdrop-filter (and the border-radius/border/background it composites
-  // with) lives on this single container rather than on __top/__bottom
-  // individually -- two adjacent elements each applying their own
-  // backdrop-filter get promoted to independent GPU compositing layers,
-  // and at fractional device pixel ratios their shared edge doesn't
-  // rasterize to quite the same pixel, leaking a hairline of whatever's
-  // behind (the dimmed page backdrop) through the seam between them. Same
-  // single-container approach .interaction-modal already uses below.
+  // backdrop-filter lives on this container rather than on __top/__bottom:
+  // two adjacent elements each filtering get their own compositing layer,
+  // and at fractional pixel ratios the seam between them leaks a hairline.
+  // .interaction-modal below takes the same single-container approach.
   border-radius: 16px;
   background: var(--color-bg-primary);
   backdrop-filter: $backdrop-blur-filter;
@@ -11353,11 +11336,9 @@ noscript {
   background: var(--color-bg-primary);
 
   // Below $mobile-menu-breakpoint the page scrolls rather than a bounded
-  // column (bindToDocument), so on short content `sticky` never activates
-  // and this sits in flow with a gap down to the fixed nav bar instead of
-  // pinning to the viewport. `position: fixed` (the same strategy
-  // .ui__navigation-bar itself already uses one breakpoint down) pins it
-  // unconditionally instead of depending on scroll state.
+  // column (bindToDocument), so `sticky` never activates on short content.
+  // Fixed pins it without depending on scroll state, as .ui__navigation-bar
+  // itself does one breakpoint down.
   @media screen and (max-width: #{$mobile-menu-breakpoint - 1}) {
     position: fixed;
     width: 100%;
@@ -11367,10 +11348,8 @@ noscript {
 
 @media screen and (max-width: #{$mobile-menu-breakpoint - 1}) {
   .scrollable:has(> .column-footer) {
-    // Compensate for .column-footer switching to `fixed` above: it's no
-    // longer in flow, so nothing else reserves room for it below the
-    // last list item. ~80px covers its rendered height (padding + one
-    // button row).
+    // .column-footer is fixed above, so nothing reserves room for it below
+    // the last list item. 80px covers its height.
     padding-bottom: 80px;
   }
 }

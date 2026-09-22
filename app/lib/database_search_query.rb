@@ -13,9 +13,7 @@
 # substring for Status.matching_text, rather than an AND over stemmed tokens.
 #
 # Operators this cannot serve (has:media, has:embed, in:...) are dropped rather
-# than matched as body text. Dropping widens the result set, while letting
-# "from:@someone" through to the substring match silently returns nothing --
-# which reads to the searcher as "no such post".
+# than matched as body text, which would silently return nothing.
 class DatabaseSearchQuery
   EPOCH_RE = /\A\d+\z/
 
@@ -94,8 +92,7 @@ class DatabaseSearchQuery
 
     nodes.filter_map { |node| node[:clause] if node.is_a?(Hash) && node[:clause].is_a?(Hash) }
   rescue Parslet::ParseFailed
-    # Unparseable input is matched as typed, the way the whole query was before
-    # any operator was understood here.
+    # Unparseable input is matched as typed.
     []
   end
 
@@ -111,12 +108,10 @@ class DatabaseSearchQuery
     elsif clause[:phrase].is_a?(Array)
       unquote(clause)
     end
-    # Anything else is the user's own text, kept exactly as typed.
   end
 
-  # Valid syntax this backend cannot serve filters nothing, and searching for
-  # the very text the user asked to exclude would be worse than ignoring the
-  # exclusion. Either way the clause comes out of the query.
+  # Valid syntax this backend cannot serve filters nothing, and matching the
+  # text of an exclusion would be worse than ignoring it.
   def droppable?(prefix, negated)
     negated || (prefix.present? && SearchQueryTransformer::SUPPORTED_PREFIXES.include?(prefix))
   end

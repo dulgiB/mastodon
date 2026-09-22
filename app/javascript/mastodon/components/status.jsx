@@ -37,12 +37,9 @@ import { FOCUS_TARGET } from './navigation_focus_target';
 
 const domParser = new DOMParser();
 
-// The whole post card takes the hover highlight, so a click anywhere on it
-// should open the post -- except on the parts that already answer a click
-// themselves. Media opens the lightbox, .status__content and .status__info
-// carry their own handlers, and links, buttons and form controls do whatever
-// they do. A media-only post is what makes this matter: its .status__content
-// is empty, so without this only the header strip reacted.
+// A click anywhere on the card opens the post, except on the parts that
+// answer a click themselves -- media, .status__content, .status__info,
+// links, buttons and form controls.
 const NON_OPENING_SELECTOR = [
   'a',
   'button',
@@ -246,10 +243,8 @@ class Status extends ImmutablePureComponent {
       return;
     }
 
-    // A quoted post renders its own .status inside a .status__quote box in
-    // this one. Only act on clicks that belong to this card: the innermost
-    // .status opens the post it belongs to, and the quote box's own frame
-    // opens neither, rather than sending the reader to the wrong post.
+    // A quoted post renders its own .status inside this one, so only act on
+    // clicks that belong to this card and not to the quote.
     if (target.closest('.status, .status__quote') !== e.currentTarget) {
       return;
     }

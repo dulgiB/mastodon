@@ -85,17 +85,12 @@
   }
 }
 
-// The "Follows you" pill in account list items (follower/following lists and
-// collections) ends up with no padding at all. bird-ui/components/profile/
-// _profile-badges.scss gives it `padding: 4px 6px`, then a later rule of equal
-// specificity zeroes the padding of *every* badge inside
-// ._comp_account_list_item__badge so the verified-link badge sits flush with
-// the row. That badge is transparent, but this one paints --color-dark, so its
-// background ends up hugging the glyphs -- 11px text in a 12px-tall box.
-// Put the padding back for the filled variant only. The negative block margin
-// keeps the inline box the same height it is today, so the handle line below
-// does not move; the pill grows symmetrically around its text, so upstream's
-// translate(-1px, -5px) nudge still lands where it did.
+// bird-ui/components/profile/_profile-badges.scss gives this pill padding,
+// then a later rule of equal specificity zeroes it for every badge inside
+// ._comp_account_list_item__badge -- fine for the transparent verified-link
+// badge, not for this filled one. Put it back for the filled variant only;
+// the negative block margin keeps the inline box its current height, so the
+// line below does not move and upstream's translate still lands where it did.
 .layout-single-column,
 .layout-multiple-columns {
   [class*='_comp_account_list_item__badge'] > [class*='_comp_badge__default'] {
