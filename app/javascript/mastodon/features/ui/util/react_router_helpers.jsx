@@ -80,7 +80,7 @@ export class WrappedRoute extends Component {
     }
 
     return (
-      <Bundle fetchComponent={component} loading={this.renderLoading} error={this.renderError}>
+      <Bundle fetchComponent={component} loading={this.renderLoading} error={this.renderError} reloadIfStale>
         {Component => <Component params={match.params} multiColumn={multiColumn} {...componentParams}>{content}</Component>}
       </Bundle>
     );
