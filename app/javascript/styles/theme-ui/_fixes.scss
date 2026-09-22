@@ -105,16 +105,25 @@
   // Upstream's icons are data URIs with the fill baked into the string
   // (bird-ui/variables/_variables-base.scss), so they cannot take a token.
   // Masking keeps its shape for the state and takes the color from here.
-  .status .icon-button:hover .icon-reply,
-  .status .icon-button:hover .icon-mail-reply,
-  .status .icon-button:hover .icon-reply-all,
-  .detailed-status__action-bar .icon-button:hover .icon-reply {
+  // The status selectors name `button` because upstream's do: a shape of its
+  // own loses the specificity contest, leaving upstream's image painted under
+  // the mask, which looks exactly like nothing happened.
+  .status button.icon-button:hover .icon-reply,
+  .status button.icon-button:hover .icon-mail-reply,
+  .status button.icon-button:hover .icon-reply-all,
+  .detailed-status__action-bar .icon-button:hover .icon-reply,
+  .detailed-status__action-bar .icon-button:hover .icon-mail-reply,
+  .detailed-status__action-bar .icon-button:hover .icon-reply-all,
+  .conversation .icon-button:hover .icon-reply {
     background-color: var(--color-text-brand);
     background-image: none;
     mask: var(--icon-reply-status-hover) center / contain no-repeat;
   }
 
+  // :not(.active) included for the same reason: upstream repeats this rule at
+  // that weight for hover-capable devices (bird-ui/layouts/_mobile.scss).
   .status button.icon-button:hover .icon-bookmark,
+  .status button.icon-button:not(.active):hover .icon-bookmark,
   .detailed-status__action-bar .icon-button:hover .icon-bookmark {
     background-color: var(--color-text-brand);
     background-image: none;
