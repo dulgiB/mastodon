@@ -7,12 +7,16 @@ class Auth::SessionsController < Devise::SessionsController
 
   layout 'auth'
 
+  helper_method :adding_account?
+
   skip_before_action :check_self_destruct!
   skip_before_action :require_no_authentication, only: [:create]
   skip_before_action :require_functional!
   skip_before_action :update_user_sign_in
 
   around_action :preserve_stored_location, only: :destroy, if: :continue_after?
+
+  before_action :step_out_of_current_account!, only: [:create], if: :adding_account?
 
   prepend_before_action :check_suspicious!, only: [:create]
 
@@ -76,6 +80,10 @@ class Auth::SessionsController < Devise::SessionsController
   end
 
   def require_no_authentication
+    # Adding another account to the switcher means reaching the sign-in form
+    # while a session is already established.
+    return if adding_account?
+
     super
 
     # Delete flash message that isn't entirely useful and may be confusing in
@@ -84,6 +92,42 @@ class Auth::SessionsController < Devise::SessionsController
   end
 
   private
+
+  def adding_account?
+    truthy_param?(:add_account)
+  end
+
+  # Warden returns the account already held in the session instead of running
+  # the sign-in strategies, so a sign-in meant to add an account would confirm
+  # the current one without ever looking at the credentials submitted. Leaving
+  # the session lets the strategies run; the session activation behind it stays
+  # alive, so a failed attempt signs the account back in on the next request
+  # and a successful one leaves it switchable.
+  def step_out_of_current_account!
+    MultiSession.adding_account!(request)
+
+    warden.logout(:user) if user_signed_in?
+  end
+
+  # Signing out of one account leaves this browser's other sessions untouched,
+  # so fall back to the most recent of them rather than dropping the user out
+  # of the app entirely.
+  def switch_to_remaining_session!
+    activation = MultiSession.activations(cookies).first
+
+    return false if activation.nil?
+
+    cookies.signed['_session_id'] = {
+      value: activation.session_id,
+      expires: 1.year.from_now,
+      httponly: true,
+      same_site: :lax,
+    }
+
+    MultiSession.mark_active(cookies, activation.user.account_id)
+
+    true
+  end
 
   def preserve_stored_location
     original_stored_location = stored_location_for(:user)
@@ -187,13 +231,21 @@ class Auth::SessionsController < Devise::SessionsController
   end
 
   def respond_to_on_destroy(**)
+    switched = switch_to_remaining_session!
+
     respond_to do |format|
       format.json do
         render json: {
-          redirect_to: after_sign_out_path_for(resource_name),
+          redirect_to: switched ? root_path : after_sign_out_path_for(resource_name),
         }, status: 200
       end
-      format.all { super(**) }
+      format.all do
+        if switched
+          redirect_to root_path
+        else
+          super(**)
+        end
+      end
     end
   end
 end

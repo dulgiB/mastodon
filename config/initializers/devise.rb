@@ -6,6 +6,9 @@ Warden::Manager.after_set_user except: :fetch do |user, warden|
   session_id = warden.cookies.signed['_session_id'] || warden.raw_session['auth_id']
   session_id = user.activate_session(warden.request) unless user.session_activations.active?(session_id)
 
+  MultiSession.remember(warden.cookies, session_id)
+  MultiSession.mark_active(warden.cookies, user.account_id)
+
   warden.cookies.signed['_session_id'] = {
     value: session_id,
     expires: 1.year.from_now,
@@ -20,6 +23,11 @@ Warden::Manager.after_fetch do |user, warden|
   if session_id && (session = user.session_activations.find_by(session_id: session_id))
     session.update(ip: warden.request.remote_ip) if session.ip != warden.request.remote_ip
 
+    # Sessions established before this browser had a switcher list, and the one
+    # promoted by a switch, are picked up here.
+    MultiSession.remember(warden.cookies, session_id)
+    MultiSession.mark_active(warden.cookies, user.account_id)
+
     warden.cookies.signed['_session_id'] = {
       value: session_id,
       expires: 1.year.from_now,
@@ -33,7 +41,15 @@ Warden::Manager.after_fetch do |user, warden|
 end
 
 Warden::Manager.before_logout do |_, warden|
-  SessionActivation.deactivate warden.cookies.signed['_session_id']
+  # Stepping out of an account in order to add another one to this browser
+  # leaves its session alive, so that account stays listed and switchable.
+  next if MultiSession.adding_account?(warden.request)
+
+  session_id = warden.cookies.signed['_session_id']
+
+  SessionActivation.deactivate session_id
+  MultiSession.forget(warden.cookies, session_id)
+  MultiSession.clear_active(warden.cookies)
   warden.cookies.delete('_session_id')
 end
 
@@ -68,6 +84,11 @@ module Devise
     class SessionActivationRememberable < Authenticatable
       def valid?
         @session_cookie = nil
+
+        # The cookie still points at the account being added to, and signing it
+        # back in here would pre-empt the credentials actually being submitted.
+        return false if MultiSession.adding_account?(request)
+
         session_cookie.present?
       end
 

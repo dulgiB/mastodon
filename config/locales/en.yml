@@ -1351,6 +1351,9 @@ en:
     warning: Be very careful with this data. Never share it with anyone!
     your_token: Your access token
   auth:
+    add_account:
+      preamble: Your current account stays logged in, and you can switch between them at any time.
+      title: Add another account
     apply_for_account: Request an account
     captcha_confirmation:
       help_html: If you have issues solving the CAPTCHA, you can get in touch with us through %{email} and we can assist you.
