@@ -163,7 +163,13 @@ export const AccountGallery: React.FC<{
         dispatch(
           openModal({
             modalType: 'MEDIA',
-            modalProps: { media, index, statusId, lang },
+            modalProps: {
+              media,
+              index,
+              statusId,
+              lang,
+              withSourceStatus: true,
+            },
           }),
         );
       }
