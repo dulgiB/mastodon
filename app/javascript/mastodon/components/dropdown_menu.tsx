@@ -321,7 +321,17 @@ interface DropdownProps<Item extends object | null = MenuItem> {
   onItemClick?: ItemClickFn<Item>;
 }
 
-const popperConfig = { strategy: 'fixed' } as UsePopperOptions;
+// Flip has nowhere to go when the menu fits neither above nor below its
+// button, so let it slide off the button instead of off the screen.
+const popperConfig = {
+  strategy: 'fixed',
+  modifiers: [
+    {
+      name: 'preventOverflow',
+      options: { altAxis: true, tether: false, padding: 8 },
+    },
+  ],
+} as UsePopperOptions;
 
 export const Dropdown = <Item extends object | null = MenuItem>({
   children,

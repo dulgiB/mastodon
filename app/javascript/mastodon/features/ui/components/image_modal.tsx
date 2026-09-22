@@ -1,8 +1,4 @@
-import { useCallback, useState } from 'react';
-
 import { defineMessages, useIntl } from 'react-intl';
-
-import classNames from 'classnames';
 
 import CloseIcon from '@/material-icons/400-24px/close.svg?react';
 import { IconButton } from 'mastodon/components/icon_button';
@@ -19,15 +15,6 @@ export const ImageModal: React.FC<{
   onClose: () => void;
 }> = ({ src, alt, onClose }) => {
   const intl = useIntl();
-  const [navigationHidden, setNavigationHidden] = useState(false);
-
-  const toggleNavigation = useCallback(() => {
-    setNavigationHidden((prevState) => !prevState);
-  }, [setNavigationHidden]);
-
-  const navigationClassName = classNames('media-modal__navigation', {
-    'media-modal__navigation--hidden': navigationHidden,
-  });
 
   return (
     <div className='modal-root__modal media-modal'>
@@ -36,19 +23,12 @@ export const ImageModal: React.FC<{
         role='presentation'
         onClick={onClose}
       >
-        <ZoomableImage
-          src={src}
-          width={400}
-          height={400}
-          alt={alt}
-          onClick={toggleNavigation}
-        />
+        <ZoomableImage src={src} width={400} height={400} alt={alt} />
       </div>
 
-      <div className={navigationClassName}>
-        <div className='media-modal__buttons'>
+      <div className='media-modal__navigation'>
+        <div className='media-modal__close'>
           <IconButton
-            className='media-modal__close'
             title={intl.formatMessage(messages.close)}
             icon='times'
             iconComponent={CloseIcon}
