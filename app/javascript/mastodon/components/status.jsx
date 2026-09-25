@@ -233,8 +233,12 @@ class Status extends ImmutablePureComponent {
     }
 
     const target = e.target;
+    const answeredElsewhere = target.closest(NON_OPENING_SELECTOR);
 
-    if (target.closest(NON_OPENING_SELECTOR)) {
+    // Only what is inside the card can claim the click. A container around it
+    // does not: a notification row is a [role="button"] holding the card, and
+    // matching that would leave the whole card answering nothing again.
+    if (answeredElsewhere && e.currentTarget.contains(answeredElsewhere)) {
       return;
     }
 
