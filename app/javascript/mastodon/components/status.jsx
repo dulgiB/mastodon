@@ -37,9 +37,10 @@ import { FOCUS_TARGET } from './navigation_focus_target';
 
 const domParser = new DOMParser();
 
-// A click anywhere on the card opens the post, except on the parts that
-// answer a click themselves -- media, .status__content, .status__info,
-// links, buttons and form controls.
+// A click anywhere on the card -- .status__wrapper, which is the whole of what
+// the hover highlight covers, prepend label included -- opens the post, except
+// on the parts that answer a click themselves: media, .status__content,
+// .status__info, links, buttons and form controls.
 const NON_OPENING_SELECTOR = [
   'a',
   'button',
@@ -243,9 +244,9 @@ class Status extends ImmutablePureComponent {
       return;
     }
 
-    // A quoted post renders its own .status inside this one, so only act on
-    // clicks that belong to this card and not to the quote.
-    if (target.closest('.status, .status__quote') !== e.currentTarget) {
+    // A quoted post renders its own .status__wrapper inside this one, so only
+    // act on clicks that belong to this card and not to the quote.
+    if (target.closest('.status__wrapper, .status__quote') !== e.currentTarget) {
       return;
     }
 
@@ -661,7 +662,7 @@ class Status extends ImmutablePureComponent {
 
     return (
       <Hotkeys handlers={handlers} focusable={!unfocusable}>
-        <div className={classNames('status__wrapper', `status__wrapper-${status.get('visibility')}`, { 'status__wrapper-reply': !!status.get('in_reply_to_id'), 'status__wrapper--in-thread': !!rootId, unread, focusable: !this.props.muted })} tabIndex={this.props.muted || unfocusable ? null : 0} data-featured={featured ? 'true' : null} aria-label={textForScreenReader({intl, status, rebloggedByText, isQuote: isQuotedPost})} ref={this.handleRef} data-nosnippet={status.getIn(['account', 'noindex'], true) || undefined}>
+        <div className={classNames('status__wrapper', `status__wrapper-${status.get('visibility')}`, { 'status__wrapper-reply': !!status.get('in_reply_to_id'), 'status__wrapper--in-thread': !!rootId, 'status__wrapper--with-action': !!this.props.onClick || !!this.props.history, unread, focusable: !this.props.muted })} tabIndex={this.props.muted || unfocusable ? null : 0} data-featured={featured ? 'true' : null} aria-label={textForScreenReader({intl, status, rebloggedByText, isQuote: isQuotedPost})} ref={this.handleRef} data-nosnippet={status.getIn(['account', 'noindex'], true) || undefined} onMouseDown={this.handleStatusMouseDown} onMouseUp={this.handleStatusMouseUp}>
           {!skipPrepend && prepend}
 
           <div
@@ -674,12 +675,9 @@ class Status extends ImmutablePureComponent {
                 'status--is-quote': isQuotedPost,
                 'status--has-quote': !!status.get('quote'),
                 'status--highlighted-entry': this.props.shouldHighlightOnMount,
-                'status--with-action': !!this.props.onClick || !!this.props.history,
               })
             }
             data-id={status.get('id')}
-            onMouseDown={this.handleStatusMouseDown}
-            onMouseUp={this.handleStatusMouseUp}
           >
             {(connectReply || connectUp || connectToRoot) && <div className={classNames('status__line', { 'status__line--full': connectReply, 'status__line--first': !status.get('in_reply_to_id') && !connectToRoot })} />}
 

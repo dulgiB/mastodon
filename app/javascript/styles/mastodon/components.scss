@@ -1552,6 +1552,13 @@ body > [data-popper-placement] {
   }
 }
 
+// The card a click opens the post from is this whole wrapper, prepend label
+// included -- the same region the hover highlight covers. See the mouseup
+// handler in components/status.jsx, and .status below for the card itself.
+.status__wrapper--with-action {
+  cursor: pointer;
+}
+
 .status {
   padding: 16px;
   min-height: 54px;
@@ -1560,16 +1567,18 @@ body > [data-popper-placement] {
   opacity: 1;
   animation: fade 150ms linear;
 
-  // Pairs with the mouseup handler on .status (components/status.jsx).
-  // Declared after `cursor: auto` above, since both selectors weigh the same.
-  &--with-action {
+  // Pairs with the mouseup handler on .status__wrapper (components/status.jsx).
+  // The wrapper carries the pointer, but `cursor: auto` above would take it
+  // back over the card itself, and this outweighs that.
+  .status__wrapper--with-action & {
     cursor: pointer;
   }
 
   // The parts that answer a click themselves must not inherit that pointer.
   // Only containers are listed: links, buttons and media thumbnails have
   // cursor rules of their own, which beat an inherited value.
-  &--with-action
+  .status__wrapper--with-action
+    &
     :is(
       .media-gallery,
       .video-player,
