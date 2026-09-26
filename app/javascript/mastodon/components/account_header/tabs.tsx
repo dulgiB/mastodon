@@ -23,8 +23,11 @@ export const AccountTabs: FC = () => {
     return <hr className={classes.noTabs} />;
   }
 
-  const { acct, show_featured, show_media } = account;
-  if (!show_featured && !show_media) {
+  const { acct, show_media } = account;
+
+  // This instance does not carry a 'Featured' tab, so 'Media' is the only
+  // thing the list can hold besides the activity it opens on.
+  if (!show_media) {
     return <hr className={classes.noTabs} />;
   }
 
@@ -33,16 +36,9 @@ export const AccountTabs: FC = () => {
       <TabLink isActive={isActive} to={`/@${acct}`}>
         <FormattedMessage id='account.activity' defaultMessage='Activity' />
       </TabLink>
-      {show_media && (
-        <TabLink exact to={`/@${acct}/media`}>
-          <FormattedMessage id='account.media' defaultMessage='Media' />
-        </TabLink>
-      )}
-      {show_featured && (
-        <TabLink exact to={`/@${acct}/featured`}>
-          <FormattedMessage id='account.featured' defaultMessage='Featured' />
-        </TabLink>
-      )}
+      <TabLink exact to={`/@${acct}/media`}>
+        <FormattedMessage id='account.media' defaultMessage='Media' />
+      </TabLink>
     </TabList>
   );
 };
