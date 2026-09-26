@@ -141,6 +141,9 @@ class Status extends ImmutablePureComponent {
     intl: PropTypes.object.isRequired,
     askReplyConfirmation: PropTypes.bool,
     multiColumn: PropTypes.bool,
+    // Renders the thread on its own, without the column chrome around it, for
+    // a caller that already has a place to put it -- the media viewer's panel.
+    embedded: PropTypes.bool,
     domain: PropTypes.string.isRequired,
     pictureInPicture: ImmutablePropTypes.contains({
       inUse: PropTypes.bool,
@@ -530,21 +533,24 @@ class Status extends ImmutablePureComponent {
 
   render () {
     let ancestors, descendants, remoteHint;
-    const { isLoading, status, ancestorsIds, descendantsIds, refresh, intl, domain, multiColumn, pictureInPicture } = this.props;
+    const { isLoading, status, ancestorsIds, descendantsIds, refresh, intl, domain, multiColumn, embedded, pictureInPicture } = this.props;
     const { fullscreen } = this.state;
     const { signedIn } = this.props.identity;
 
 
     if (isLoading) {
-      return (
+      return embedded ? <LoadingIndicator /> : (
         <Column>
           <LoadingIndicator />
         </Column>
       );
     }
 
-    if (status === null || !signedIn ) {
-      return (
+    // The route turns a signed-out visitor away because the server renders
+    // this post for them instead; a panel inside a modal has nowhere to send
+    // them, so it draws the thread and lets the action bar ask them to sign in.
+    if (status === null || (!signedIn && !embedded)) {
+      return embedded ? null : (
         <BundleColumnError multiColumn={multiColumn} errorType='routing' />
       );
     }
@@ -573,6 +579,76 @@ class Status extends ImmutablePureComponent {
       onTranslate: this.handleHotkeyTranslate,
     };
 
+    const thread = (
+      <div className={classNames('item-list scrollable scrollable--flex', { fullscreen })} ref={this.setContainerRef}>
+        {ancestors}
+
+        <Hotkeys handlers={handlers}>
+          <NavigationFocusTarget
+            as='div'
+            focusTargetName={FOCUS_TARGET.POST}
+            className={classNames('focusable', 'detailed-status__wrapper', `detailed-status__wrapper-${status.get('visibility')}`)}
+            tabIndex={0}
+            aria-label={textForScreenReader({intl, status})} ref={this.setStatusRef}
+          >
+            <DetailedStatus
+              key={`details-${status.get('id')}`}
+              status={status}
+              onOpenVideo={this.handleOpenVideo}
+              onOpenMedia={this.handleOpenMedia}
+              onToggleHidden={this.handleToggleHidden}
+              onTranslate={this.handleTranslate}
+              domain={domain}
+              showMedia={this.state.showMedia}
+              onToggleMediaVisibility={this.handleToggleMediaVisibility}
+              pictureInPicture={pictureInPicture}
+              ancestors={this.props.ancestorsIds.length}
+              multiColumn={multiColumn}
+            />
+
+            <ActionBar
+              key={`action-bar-${status.get('id')}`}
+              status={status}
+              onReply={this.handleReplyClick}
+              onFavourite={this.handleFavouriteClick}
+              onReblog={this.handleReblogClick}
+              onBookmark={this.handleBookmarkClick}
+              onDelete={this.handleDeleteClick}
+              onRevokeQuote={this.handleRevokeQuoteClick}
+              onQuotePolicyChange={this.handleQuotePolicyChange}
+              onQuote={this.handleQuote}
+              onEdit={this.handleEditClick}
+              onDirect={this.handleDirectClick}
+              onMention={this.handleMentionClick}
+              onMute={this.handleMuteClick}
+              onUnmute={this.handleUnmuteClick}
+              onMuteConversation={this.handleConversationMuteClick}
+              onBlock={this.handleBlockClick}
+              onUnblock={this.handleUnblockClick}
+              onBlockDomain={this.handleBlockDomainClick}
+              onUnblockDomain={this.handleUnblockDomainClick}
+              onReport={this.handleReport}
+              onPin={this.handlePin}
+              onEmbed={this.handleEmbed}
+            />
+          </NavigationFocusTarget>
+        </Hotkeys>
+
+        {descendants}
+
+        <RefreshController
+          isLocal={isLocal}
+          statusId={status.get('id')}
+          statusCreatedAt={status.get('created_at')}
+        />
+      </div>
+    );
+
+    // The caller owns the chrome, the scroll position and the page title.
+    if (embedded) {
+      return thread;
+    }
+
     return (
       <Column bindToDocument={!multiColumn} label={intl.formatMessage(messages.detailedStatus)}>
         <ColumnHeader
@@ -584,68 +660,7 @@ class Status extends ImmutablePureComponent {
         />
 
         <ScrollContainer scrollKey='thread' shouldUpdateScroll={this.shouldUpdateScroll} childRef={this.setContainerRef}>
-          <div className={classNames('item-list scrollable scrollable--flex', { fullscreen })} ref={this.setContainerRef}>
-            {ancestors}
-
-            <Hotkeys handlers={handlers}>
-              <NavigationFocusTarget
-                as='div'
-                focusTargetName={FOCUS_TARGET.POST}
-                className={classNames('focusable', 'detailed-status__wrapper', `detailed-status__wrapper-${status.get('visibility')}`)}
-                tabIndex={0}
-                aria-label={textForScreenReader({intl, status})} ref={this.setStatusRef}
-              >
-                <DetailedStatus
-                  key={`details-${status.get('id')}`}
-                  status={status}
-                  onOpenVideo={this.handleOpenVideo}
-                  onOpenMedia={this.handleOpenMedia}
-                  onToggleHidden={this.handleToggleHidden}
-                  onTranslate={this.handleTranslate}
-                  domain={domain}
-                  showMedia={this.state.showMedia}
-                  onToggleMediaVisibility={this.handleToggleMediaVisibility}
-                  pictureInPicture={pictureInPicture}
-                  ancestors={this.props.ancestorsIds.length}
-                  multiColumn={multiColumn}
-                />
-
-                <ActionBar
-                  key={`action-bar-${status.get('id')}`}
-                  status={status}
-                  onReply={this.handleReplyClick}
-                  onFavourite={this.handleFavouriteClick}
-                  onReblog={this.handleReblogClick}
-                  onBookmark={this.handleBookmarkClick}
-                  onDelete={this.handleDeleteClick}
-                  onRevokeQuote={this.handleRevokeQuoteClick}
-                  onQuotePolicyChange={this.handleQuotePolicyChange}
-                  onQuote={this.handleQuote}
-                  onEdit={this.handleEditClick}
-                  onDirect={this.handleDirectClick}
-                  onMention={this.handleMentionClick}
-                  onMute={this.handleMuteClick}
-                  onUnmute={this.handleUnmuteClick}
-                  onMuteConversation={this.handleConversationMuteClick}
-                  onBlock={this.handleBlockClick}
-                  onUnblock={this.handleUnblockClick}
-                  onBlockDomain={this.handleBlockDomainClick}
-                  onUnblockDomain={this.handleUnblockDomainClick}
-                  onReport={this.handleReport}
-                  onPin={this.handlePin}
-                  onEmbed={this.handleEmbed}
-                />
-              </NavigationFocusTarget>
-            </Hotkeys>
-
-            {descendants}
-
-            <RefreshController
-              isLocal={isLocal}
-              statusId={status.get('id')}
-              statusCreatedAt={status.get('created_at')}
-            />
-          </div>
+          {thread}
         </ScrollContainer>
 
         <Helmet>

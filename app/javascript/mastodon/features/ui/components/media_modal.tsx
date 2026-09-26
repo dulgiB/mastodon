@@ -395,6 +395,10 @@ export const MediaModal = forwardRef<HTMLDivElement, MediaModalProps>(
                   iconComponent={MoreHorizIcon}
                   title={intl.formatMessage(messages.more)}
                   placement='bottom-end'
+                  // A touch device would otherwise get the menu as a modal of
+                  // its own, and only the top of the modal stack is rendered:
+                  // the picture this menu is about would leave the screen.
+                  forceDropdown
                 />
               </>
             )}
