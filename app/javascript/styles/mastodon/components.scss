@@ -6407,9 +6407,13 @@ a.status-card {
 
   // The panel holds the post page's own thread, so it only has to give it the
   // room to scroll in; everything inside is styled as it is on that page.
+  // A column keeps its scrollbar at all times so its content does not shift
+  // when one appears, but a short thread beside a picture is just a bar with
+  // nothing to scroll: show it only when there is somewhere to go.
   .scrollable {
     flex: 1 1 auto;
     min-height: 0;
+    overflow-y: auto;
   }
 
   .loading-indicator {
