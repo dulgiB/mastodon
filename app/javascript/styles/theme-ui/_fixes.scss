@@ -59,6 +59,24 @@
   }
 }
 
+// bird-ui/components/_icon-replacements.scss paints the boost glyph as a
+// background image on `button.icon-button .icon-retweet`, anywhere, and then
+// hides the SVG it covers -- but only for the action bars it lists. The
+// picture-in-picture footer, which the media viewer borrows, is not one of
+// them, so it draws both glyphs on top of each other.
+.layout-single-column,
+.layout-multiple-columns {
+  .picture-in-picture__footer .icon-retweet path {
+    display: none;
+  }
+
+  .picture-in-picture__footer .icon-retweet {
+    background-size: var(--size-icon) var(--size-icon);
+    width: var(--size-icon);
+    height: var(--size-icon);
+  }
+}
+
 // SymbolLogo (components/logo.tsx) renders an empty <span> that this fork uses
 // in place of the stock Mastodon "M" in column headers -- it has no content of
 // its own, so without a background it draws nothing at all. Use the same
