@@ -193,16 +193,15 @@ class ComposeForm extends ImmutablePureComponent {
 
   _updateFocusAndSelection = (prevProps) => {
     // This statement does several things:
-    // - If we're beginning a reply, and,
-    //     - Replying to zero or one users, places the cursor at the end of the textbox.
-    //     - Replying to more than one user, selects any usernames past the first;
-    //       this provides a convenient shortcut to drop everyone else from the conversation.
+    // - If we're beginning a reply, selects whatever follows the leading
+    //   mentions, so every handle in the thread stays in the reply. With
+    //   nothing after them, this just places the cursor at the end.
     if (this.props.focusDate && this.props.focusDate !== prevProps.focusDate) {
       let selectionEnd, selectionStart;
 
       if (this.props.preselectDate !== prevProps.preselectDate && this.props.isInReply) {
         selectionEnd   = this.props.text.length;
-        selectionStart = this.props.text.search(/\s/) + 1;
+        selectionStart = this.props.text.match(/^(?:@\S+\s+)*/)[0].length;
       } else if (typeof this.props.caretPosition === 'number') {
         selectionStart = this.props.caretPosition;
         selectionEnd   = this.props.caretPosition;
