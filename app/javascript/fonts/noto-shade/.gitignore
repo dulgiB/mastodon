@@ -1,0 +1,3 @@
+# build.py download cache -- never committed
+_upstream-*.ttf
+__pycache__/

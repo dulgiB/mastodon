@@ -27,6 +27,8 @@ $no-columns-breakpoint: 600px;
 // Noto Sans KR / Pretendard / Roboto mix. The generic `sans-serif` appended
 // at each call site lets the browser fall through to a system font for
 // scripts Asta Sans doesn't have (Arabic, Thai, Devanagari, etc.).
-$font-sans-serif: 'Asta Sans Xetead' !default;
+// 'Noto Shade Xetead' sits in front but only covers U+2592 (▒) -- Noto Sans
+// KR's seamless shade block in place of Asta's; see fonts/noto-shade.scss.
+$font-sans-serif: 'Noto Shade Xetead', 'Asta Sans Xetead' !default;
 $font-display: 'mastodon-font-display' !default;
 $font-monospace: 'mastodon-font-monospace' !default;
