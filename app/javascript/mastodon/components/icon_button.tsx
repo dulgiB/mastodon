@@ -111,7 +111,7 @@ export const IconButton = forwardRef<HTMLButtonElement, Props>(
         <Icon id={icon} icon={iconComponent} aria-hidden='true' />{' '}
         {typeof counter !== 'undefined' && (
           <span className='icon-button__counter'>
-            <AnimatedNumber value={counter} />
+            <AnimatedNumber value={counter} hideZero />
           </span>
         )}
       </>
