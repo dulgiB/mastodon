@@ -13,10 +13,12 @@
 .layout-multiple-columns {
   // Upstream indents .status__content, .attachment-list, .status__action-bar
   // and .collection-preview past the avatar column (bird-ui/components/_status-layout
-  // .scss) but not these four, which this fork renders in the same place.
+  // .scss) but not these two, which this fork renders in the same place.
+  // .status__quote is not one of them: core already shifts the quote box with
+  // margin-inline-start: var(--status-gutter-width), which Bird UI sets to
+  // the same width, so padding it as well left an empty gutter inside the box.
   .status:not(.status--in-thread) .picture-in-picture-placeholder,
-  .status:not(.status--in-thread) .more-from-author,
-  .status:not(.status--in-thread) .status__quote {
+  .status:not(.status--in-thread) .more-from-author {
     font-size: var(--font-size);
     padding-left: calc(var(--size-avatar) + var(--gap-default));
     padding-top: 0;
@@ -32,8 +34,7 @@
   }
 
   [dir='rtl'] .status .picture-in-picture-placeholder,
-  [dir='rtl'] .status .more-from-author,
-  [dir='rtl'] .status .status__quote {
+  [dir='rtl'] .status .more-from-author {
     padding-left: 0;
     padding-right: calc(var(--size-avatar) + var(--gap-default));
   }
