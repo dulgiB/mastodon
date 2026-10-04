@@ -30,6 +30,7 @@ import {
   STATUS_FETCH_FAIL,
 } from '../actions/statuses';
 import { setStatusQuotePolicy } from '../actions/statuses_typed';
+import { statusCountsRefreshed } from '../actions/status_counts';
 
 const importStatus = (state, status) => state.set(status.id, fromJS(status));
 
@@ -65,6 +66,34 @@ const statusTranslateUndo = (state, id) => {
   });
 };
 
+const COUNT_KEYS = ['replies_count', 'reblogs_count', 'favourites_count', 'quotes_count'];
+
+const refreshCounts = (state, counts) => {
+  return state.withMutations(map => {
+    counts.forEach(item => {
+      if (!map.has(item.id)) return;
+
+      COUNT_KEYS.forEach(key => {
+        if (typeof item[key] === 'number') map.setIn([item.id, key], item[key]);
+      });
+    });
+  });
+};
+
+// Flips an interaction and moves its counter in the same render, so the
+// number rolls with the icon instead of waiting for the server's answer
+const toggleInteraction = (state, id, flag, countKey, value) => {
+  const status = state.get(id);
+
+  if (status === undefined || Boolean(status.get(flag)) === value) {
+    return state.setIn([id, flag], value);
+  }
+
+  const count = Math.max((status.get(countKey) ?? 0) + (value ? 1 : -1), 0);
+
+  return state.update(id, s => s.set(flag, value).set(countKey, count));
+};
+
 const removeStatusStub = (state, id) => {
   return state.getIn([id, 'id']) ? state.deleteIn([id, 'isLoading']) : state.delete(id);
 }
@@ -89,6 +118,8 @@ export default function statuses(state = initialState, action) {
     }
   } else if (setStatusQuotePolicy.rejected.match(action)) {
     return state.deleteIn([action.meta.arg.statusId, 'isSavingQuotePolicy']);
+  } else if (statusCountsRefreshed.match(action)) {
+    return refreshCounts(state, action.payload);
   }
 
   switch(action.type) {
@@ -107,13 +138,13 @@ export default function statuses(state = initialState, action) {
   case STATUSES_IMPORT:
     return importStatuses(state, action.statuses);
   case FAVOURITE_REQUEST:
-    return state.setIn([action.status.get('id'), 'favourited'], true);
+    return toggleInteraction(state, action.status.get('id'), 'favourited', 'favourites_count', true);
   case FAVOURITE_FAIL:
-    return state.get(action.status.get('id')) === undefined ? state : state.setIn([action.status.get('id'), 'favourited'], false);
+    return state.get(action.status.get('id')) === undefined ? state : toggleInteraction(state, action.status.get('id'), 'favourited', 'favourites_count', false);
   case UNFAVOURITE_REQUEST:
-    return state.setIn([action.status.get('id'), 'favourited'], false);
+    return toggleInteraction(state, action.status.get('id'), 'favourited', 'favourites_count', false);
   case UNFAVOURITE_FAIL:
-    return state.get(action.status.get('id')) === undefined ? state : state.setIn([action.status.get('id'), 'favourited'], true);
+    return state.get(action.status.get('id')) === undefined ? state : toggleInteraction(state, action.status.get('id'), 'favourited', 'favourites_count', true);
   case BOOKMARK_REQUEST:
     return state.get(action.status.get('id')) === undefined ? state : state.setIn([action.status.get('id'), 'bookmarked'], true);
   case BOOKMARK_FAIL:
@@ -152,13 +183,13 @@ export default function statuses(state = initialState, action) {
     return statusTranslateUndo(state, action.id);
   default:
     if(reblog.pending.match(action))
-      return state.setIn([action.meta.arg.statusId, 'reblogged'], true);
+      return toggleInteraction(state, action.meta.arg.statusId, 'reblogged', 'reblogs_count', true);
     else if(reblog.rejected.match(action))
-      return state.get(action.meta.arg.statusId) === undefined ? state : state.setIn([action.meta.arg.statusId, 'reblogged'], false);
+      return state.get(action.meta.arg.statusId) === undefined ? state : toggleInteraction(state, action.meta.arg.statusId, 'reblogged', 'reblogs_count', false);
     else if(unreblog.pending.match(action))
-      return state.setIn([action.meta.arg.statusId, 'reblogged'], false);
+      return toggleInteraction(state, action.meta.arg.statusId, 'reblogged', 'reblogs_count', false);
     else if(unreblog.rejected.match(action))
-      return state.get(action.meta.arg.statusId) === undefined ? state : state.setIn([action.meta.arg.statusId, 'reblogged'], true);
+      return state.get(action.meta.arg.statusId) === undefined ? state : toggleInteraction(state, action.meta.arg.statusId, 'reblogged', 'reblogs_count', true);
     else
       return state;
   }

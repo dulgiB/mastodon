@@ -1,4 +1,8 @@
-import api, { apiRequestPut, getAsyncRefreshHeader } from 'mastodon/api';
+import api, {
+  apiRequestGet,
+  apiRequestPut,
+  getAsyncRefreshHeader,
+} from 'mastodon/api';
 import type {
   ApiContextJSON,
   ApiStatusJSON,
@@ -29,3 +33,6 @@ export const apiSetQuotePolicy = async (
     },
   );
 };
+
+export const apiGetStatuses = (ids: string[]) =>
+  apiRequestGet<ApiStatusJSON[]>('v1/statuses', { id: ids });
