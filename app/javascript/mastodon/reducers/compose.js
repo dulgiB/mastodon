@@ -441,17 +441,10 @@ export const composeReducer = (state = initialState, action) => {
         map.set('language', state.get('default_language'));
       }
 
-      if (action.status.get('spoiler_text').length > 0) {
-        map.set('spoiler', true);
-        map.set('spoiler_text', action.status.get('spoiler_text'));
-
-        if (map.get('media_attachments').size >= 1) {
-          map.set('sensitive', true);
-        }
-      } else {
-        map.set('spoiler', false);
-        map.set('spoiler_text', '');
-      }
+      // Replies start without a content warning: on this instance CWs are
+      // mostly used to fold bot calculations, so inheriting them is noise.
+      map.set('spoiler', false);
+      map.set('spoiler_text', '');
     });
   case COMPOSE_SUBMIT_REQUEST:
     return state.set('is_submitting', true);
