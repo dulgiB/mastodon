@@ -60,7 +60,6 @@ RSpec.describe 'Auth Switches' do
           .to eq alice.account_id.to_s
       end
     end
-
   end
 
   describe 'GET /auth/switch/unread_counts', :inline_jobs do

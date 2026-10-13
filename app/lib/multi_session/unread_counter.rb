@@ -23,9 +23,9 @@ class MultiSession::UnreadCounter
   # "exactly 40" apart from "more than 40".
   def count
     @user.account.notifications.without_suspended
-         .browserable(exclude_types: excluded_types)
-         .paginate_groups_by_min_id(LIMIT + 1, min_id: last_read_id, grouped_types: grouped_types)
-         .count
+      .browserable(exclude_types: excluded_types)
+      .paginate_groups_by_min_id(LIMIT + 1, min_id: last_read_id, grouped_types: grouped_types)
+      .count
   end
 
   private
