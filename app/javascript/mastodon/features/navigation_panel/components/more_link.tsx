@@ -5,7 +5,11 @@ import { defineMessages, useIntl, FormattedMessage } from 'react-intl';
 import MoreHorizIcon from '@/material-icons/400-24px/more_horiz.svg?react';
 import { openModal } from 'mastodon/actions/modal';
 import { Dropdown } from 'mastodon/components/dropdown_menu';
-import { Icon } from 'mastodon/components/icon';
+import { IconWithBadge } from 'mastodon/components/icon_with_badge';
+import {
+  hasUnreadInOtherSessions,
+  useSessionUnreadCounts,
+} from 'mastodon/hooks/useSessionUnreadCounts';
 import { useIdentity } from 'mastodon/identity_context';
 import { me, sessionAccountIds } from 'mastodon/initial_state';
 import type { MenuItem } from 'mastodon/models/dropdown_menu';
@@ -54,6 +58,8 @@ export const MoreLink: React.FC = () => {
   const { permissions } = useIdentity();
   const dispatch = useAppDispatch();
   const accounts = useAppSelector((state) => state.accounts);
+  const [unreadCounts, refreshUnreadCounts] = useSessionUnreadCounts();
+  const hasUnreadElsewhere = hasUnreadInOtherSessions(unreadCounts);
 
   const menu = useMemo(() => {
     const switcher: MenuItem[] = [];
@@ -76,6 +82,7 @@ export const MoreLink: React.FC = () => {
         // render where the store no longer holds it, and an account that never
         // set a display name has an empty one.
         text: account.display_name.trim() || account.username,
+        unreadCount: unreadCounts[accountId],
         action: () => {
           void switchAccount(accountId);
         },
@@ -153,12 +160,22 @@ export const MoreLink: React.FC = () => {
     });
 
     return arr;
-  }, [intl, dispatch, permissions, accounts]);
+  }, [intl, dispatch, permissions, accounts, unreadCounts]);
 
   return (
-    <Dropdown items={menu} placement='bottom-start'>
+    <Dropdown
+      items={menu}
+      placement='bottom-start'
+      onOpen={refreshUnreadCounts}
+    >
       <button className='column-link column-link--transparent' type='button'>
-        <Icon id='' icon={MoreHorizIcon} className='column-link__icon' />
+        <IconWithBadge
+          id=''
+          icon={MoreHorizIcon}
+          count={0}
+          dotBadge={hasUnreadElsewhere}
+          className='column-link__icon'
+        />
 
         <FormattedMessage id='navigation_bar.more' defaultMessage='More' />
       </button>

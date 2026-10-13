@@ -3022,6 +3022,8 @@ a.account__display-name {
   // rather than as another line of menu text.
   &-account {
     display: flex;
+    flex: 1 1 auto;
+    min-width: 0;
     align-items: center;
     gap: 10px;
     overflow: hidden;
@@ -3037,6 +3039,23 @@ a.account__display-name {
       display: block;
       font-size: 14px;
       color: var(--color-text-primary);
+    }
+
+    // Unread notifications waiting on that account, pushed to the end of
+    // the row the way the navigation badge sits next to its icon.
+    &__badge {
+      flex: 0 0 auto;
+      margin-inline-start: auto;
+      min-width: 20px;
+      padding: 0 6px;
+      box-sizing: border-box;
+      border-radius: 10px;
+      background: var(--color-bg-brand-base);
+      color: var(--color-text-on-brand-base);
+      font-size: 11px;
+      font-weight: 500;
+      line-height: 20px;
+      text-align: center;
     }
   }
 
@@ -3746,6 +3765,19 @@ a.account__display-name {
     border-radius: 50%;
     width: 0.625rem;
     height: 0.625rem;
+  }
+
+  &__dot-badge {
+    position: absolute;
+    inset-inline-end: -2px;
+    top: -2px;
+    display: block;
+    box-sizing: content-box;
+    background: var(--color-bg-brand-base);
+    border: 2px solid var(--color-bg-primary);
+    border-radius: 50%;
+    width: 0.5rem;
+    height: 0.5rem;
   }
 }
 

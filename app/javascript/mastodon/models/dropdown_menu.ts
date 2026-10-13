@@ -10,6 +10,8 @@ interface BaseMenuItem {
   // An item that stands for an account rather than for an action, shown the
   // way accounts are shown elsewhere instead of as a line of text.
   accountId?: string;
+  // Unread notifications waiting on that account, shown next to it.
+  unreadCount?: number;
   highlighted?: boolean;
   disabled?: boolean;
   dangerous?: boolean;
