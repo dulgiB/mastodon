@@ -18,6 +18,10 @@ import { fetchServer } from 'mastodon/actions/server';
 import { Icon } from 'mastodon/components/icon';
 import { IconWithBadge } from 'mastodon/components/icon_with_badge';
 import type { MastodonLocationDescriptor } from 'mastodon/components/router';
+import {
+  hasUnreadInOtherSessions,
+  useSessionUnreadCounts,
+} from 'mastodon/hooks/useSessionUnreadCounts';
 import { useIdentity } from 'mastodon/identity_context';
 import { registrationsOpen, sso_redirect } from 'mastodon/initial_state';
 import { selectUnreadNotificationGroupsCount } from 'mastodon/selectors/notifications';
@@ -163,6 +167,8 @@ export const NavigationBar: React.FC = () => {
   const dispatch = useAppDispatch();
   const open = useAppSelector((state) => state.navigation.open);
   const intl = useIntl();
+  const [unreadCounts] = useSessionUnreadCounts();
+  const hasUnreadElsewhere = hasUnreadInOtherSessions(unreadCounts);
 
   const handleClick = useCallback(() => {
     dispatch(toggleNavigation());
@@ -205,7 +211,13 @@ export const NavigationBar: React.FC = () => {
           aria-label={intl.formatMessage(messages.menu)}
           type='button'
         >
-          <Icon id='' icon={MenuIcon} />
+          <IconWithBadge
+            id=''
+            icon={MenuIcon}
+            count={0}
+            dotBadge={signedIn && hasUnreadElsewhere}
+            className=''
+          />
         </button>
       </div>
     </div>

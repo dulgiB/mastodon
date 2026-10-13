@@ -42,6 +42,7 @@ import { DisplayName } from './display_name';
 import { Icon } from './icon';
 import type { IconProp } from './icon';
 import { IconButton } from './icon_button';
+import { formatUnreadCount } from './icon_with_badge';
 
 let id = 0;
 
@@ -66,10 +67,11 @@ interface DropdownMenuProps<Item = MenuItem> {
   onItemClick?: ItemClickFn<Item>;
 }
 
-const DropdownMenuItemAccount: React.FC<{ id: string; fallback: string }> = ({
-  id,
-  fallback,
-}) => {
+const DropdownMenuItemAccount: React.FC<{
+  id: string;
+  fallback: string;
+  unreadCount?: number;
+}> = ({ id, fallback, unreadCount }) => {
   const account = useAppSelector((state) => state.accounts.get(id));
 
   if (!account) {
@@ -80,6 +82,11 @@ const DropdownMenuItemAccount: React.FC<{ id: string; fallback: string }> = ({
     <div className='dropdown-menu__item-account'>
       <Avatar account={account} size={46} />
       <DisplayName account={account} />
+      {unreadCount !== undefined && unreadCount > 0 && (
+        <span className='dropdown-menu__item-account__badge'>
+          {formatUnreadCount(unreadCount)}
+        </span>
+      )}
     </div>
   );
 };
@@ -91,10 +98,16 @@ export const DropdownMenuItemContent: React.FC<{ item: MenuItem }> = ({
     return null;
   }
 
-  const { text, description, icon, iconId, accountId } = item;
+  const { text, description, icon, iconId, accountId, unreadCount } = item;
 
   if (accountId) {
-    return <DropdownMenuItemAccount id={accountId} fallback={text} />;
+    return (
+      <DropdownMenuItemAccount
+        id={accountId}
+        fallback={text}
+        unreadCount={unreadCount}
+      />
+    );
   }
 
   return (
