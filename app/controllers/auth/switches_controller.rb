@@ -17,6 +17,19 @@ class Auth::SwitchesController < ApplicationController
     render json: { redirect_to: root_path }
   end
 
+  # Unread notification counts for the browser's other accounts, keyed by
+  # account id. The account currently signed in is left out: the web UI already
+  # counts its notifications itself.
+  def unread_counts
+    counts = MultiSession.activations(cookies).each_with_object({}) do |activation, result|
+      next if activation.user_id == current_user.id
+
+      result[activation.user.account_id.to_s] = MultiSession::UnreadCounter.new(activation.user).count
+    end
+
+    render json: counts
+  end
+
   private
 
   def switch_to!(activation)
