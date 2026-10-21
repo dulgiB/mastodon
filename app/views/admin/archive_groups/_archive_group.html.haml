@@ -1,0 +1,15 @@
+.archive-group
+  .archive-group__header
+    %h4
+      = link_to archive_group.title, edit_admin_archive_group_path(archive_group)
+    .archive-group__meta
+      = t('admin.archive_groups.position_and_count', position: archive_group.position, count: archives.size)
+      - if can?(:destroy, archive_group)
+        = table_link_to 'delete', t('admin.archives.delete'), admin_archive_group_path(archive_group), method: :delete, data: { confirm: t('admin.archive_groups.delete_confirm') }
+
+  - if archives.empty?
+    .muted-hint
+      = t('admin.archive_groups.empty')
+  - else
+    .announcements-list
+      = render partial: 'admin/archives/archive', collection: archives

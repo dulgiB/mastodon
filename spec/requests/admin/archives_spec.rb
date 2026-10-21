@@ -11,6 +11,24 @@ RSpec.describe 'Admin Archives' do
 
       expect(response).to have_http_status(200)
     end
+
+    context 'with grouped and ungrouped archives' do
+      let(:archive_group) { Fabricate(:archive_group, title: 'Act 1') }
+
+      before do
+        Fabricate(:archive, title: 'Grouped episode', archive_group: archive_group)
+        Fabricate(:archive, title: 'Loose episode')
+      end
+
+      it 'lists both under their group headings' do
+        get admin_archives_path
+
+        expect(response.body)
+          .to include('Act 1')
+          .and include('Grouped episode')
+          .and include('Loose episode')
+      end
+    end
   end
 
   describe 'POST /admin/archives' do
@@ -39,6 +57,14 @@ RSpec.describe 'Admin Archives' do
 
       expect(response).to redirect_to(admin_archives_path)
       expect(archive.reload.title).to eq('Updated title')
+    end
+
+    it 'assigns the archive to a group' do
+      archive_group = Fabricate(:archive_group)
+
+      put admin_archive_path(archive), params: { archive: { archive_group_id: archive_group.id } }
+
+      expect(archive.reload.archive_group).to eq(archive_group)
     end
   end
 

@@ -3,6 +3,12 @@
                wrapper: :with_block_label
 
 .fields-group
+  = form.association :archive_group,
+                     collection: ArchiveGroup.ordered,
+                     include_blank: t('admin.archive_groups.none'),
+                     wrapper: :with_block_label
+
+.fields-group
   = form.input :start_status_id,
                as: :string,
                wrapper: :with_block_label

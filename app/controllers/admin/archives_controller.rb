@@ -7,7 +7,8 @@ module Admin
     def index
       authorize :archive, :index?
 
-      @archives = Archive.ordered
+      @archive_groups = ArchiveGroup.ordered
+      @archives = Archive.ordered.group_by(&:archive_group_id)
     end
 
     def new
@@ -56,7 +57,7 @@ module Admin
     end
 
     def resource_params
-      params.expect(archive: [:title, :start_status_id, :end_status_id])
+      params.expect(archive: [:title, :archive_group_id, :start_status_id, :end_status_id])
     end
   end
 end

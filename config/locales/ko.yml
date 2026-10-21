@@ -339,6 +339,15 @@ ko:
       unpublish: 게시 취소
       unpublished_msg: 공지가 성공적으로 발행 취소되었습니다!
       updated_msg: 공지가 성공적으로 업데이트되었습니다!
+    archive_groups:
+      add_new: 그룹 추가
+      delete_confirm: 이 그룹을 삭제하시겠습니까? 그룹에 속한 아카이브는 지워지지 않고 그룹 없음으로 남습니다.
+      description: 그룹은 아카이브를 묶어 에피소드 선택 화면에서 한 그룹의 에피소드만 보여 주는 단위입니다. 그룹은 순서 값이 작은 것부터 표시됩니다.
+      edit: 그룹 편집
+      empty: 이 그룹에는 아직 아카이브가 없습니다.
+      none: 그룹 없음
+      position_and_count: '순서 %{position} · 아카이브 %{count}개'
+      ungrouped: 그룹 없음
     archives:
       add_new: 아카이브 추가
       delete: 삭제
