@@ -1,5 +1,6 @@
 export const PEMRISSION_VIEW_FEEDS = 0x0000000000100000;
 export const PERMISSION_INVITE_USERS = 0x0000000000010000;
+export const PERMISSION_MANAGE_RULES = 0x0000000000001000;
 export const PERMISSION_MANAGE_USERS = 0x0000000000000400;
 export const PERMISSION_MANAGE_TAXONOMIES = 0x0000000000000100;
 export const PERMISSION_MANAGE_FEDERATION = 0x0000000000000020;
@@ -22,6 +23,12 @@ export function canManageReports(permissions: number) {
   return (
     (permissions & PERMISSION_MANAGE_REPORTS) === PERMISSION_MANAGE_REPORTS
   );
+}
+
+// Archives are managed under the same permission as server rules (see
+// ArchivePolicy).
+export function canManageArchives(permissions: number) {
+  return (permissions & PERMISSION_MANAGE_RULES) === PERMISSION_MANAGE_RULES;
 }
 
 export const canViewFeed = (
