@@ -18,6 +18,16 @@ RSpec.describe 'API V1 Archives' do
       expect(response.parsed_body.pluck(:id)).to eq([first_episode.id.to_s, second_episode.id.to_s])
     end
 
+    it 'embeds each archive\'s group, or null when ungrouped' do
+      archive_group = Fabricate(:archive_group, title: 'Act 1', position: 3)
+      first_episode.update!(archive_group: archive_group)
+
+      get '/api/v1/archives', headers: headers
+
+      expect(response.parsed_body.pluck(:group))
+        .to eq([{ 'id' => archive_group.id.to_s, 'title' => 'Act 1', 'position' => 3 }, nil])
+    end
+
     context 'without a user context' do
       let(:token) { Fabricate(:accessible_access_token, resource_owner_id: nil, scopes: 'read:statuses') }
 
