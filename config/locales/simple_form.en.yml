@@ -214,8 +214,12 @@ en:
       appeal:
         text: Explain why this decision should be reversed
       archive:
+        archive_group: Group
         end_status_id: End post ID
         start_status_id: Start post ID
+        title: Title
+      archive_group:
+        position: Position
         title: Title
       defaults:
         autofollow: Invite to follow your account

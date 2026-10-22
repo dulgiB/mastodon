@@ -118,6 +118,7 @@ namespace :admin do
   end
 
   resources :archives, only: [:index, :new, :create, :edit, :update, :destroy]
+  resources :archive_groups, only: [:new, :create, :edit, :update, :destroy]
 
   resources :webhooks do
     member do
