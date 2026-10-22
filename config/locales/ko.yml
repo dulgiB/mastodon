@@ -346,7 +346,7 @@ ko:
       edit: 그룹 편집
       empty: 이 그룹에는 아직 아카이브가 없습니다.
       none: 그룹 없음
-      position_and_count: '순서 %{position} · 아카이브 %{count}개'
+      position_and_count: 순서 %{position} · 아카이브 %{count}개
       ungrouped: 그룹 없음
     archives:
       add_new: 아카이브 추가
