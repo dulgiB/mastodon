@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_09_17_060000) do
+ActiveRecord::Schema[8.1].define(version: 2026_10_22_000000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_bigm"
   enable_extension "pg_catalog.plpgsql"
@@ -295,12 +295,21 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_17_060000) do
     t.index ["rejected_by_account_id"], name: "index_appeals_on_rejected_by_account_id", where: "(rejected_by_account_id IS NOT NULL)"
   end
 
+  create_table "archive_groups", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.integer "position", default: 0, null: false
+    t.string "title", default: "", null: false
+    t.datetime "updated_at", null: false
+  end
+
   create_table "archives", force: :cascade do |t|
+    t.bigint "archive_group_id"
     t.datetime "created_at", null: false
     t.bigint "end_status_id", null: false
     t.bigint "start_status_id", null: false
     t.string "title", default: "", null: false
     t.datetime "updated_at", null: false
+    t.index ["archive_group_id"], name: "index_archives_on_archive_group_id"
   end
 
   create_table "backups", force: :cascade do |t|
@@ -1495,6 +1504,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_17_060000) do
   add_foreign_key "appeals", "accounts", column: "approved_by_account_id", on_delete: :nullify
   add_foreign_key "appeals", "accounts", column: "rejected_by_account_id", on_delete: :nullify
   add_foreign_key "appeals", "accounts", on_delete: :cascade
+  add_foreign_key "archives", "archive_groups", on_delete: :nullify
   add_foreign_key "backups", "users", on_delete: :nullify
   add_foreign_key "blocks", "accounts", column: "target_account_id", name: "fk_9571bfabc1", on_delete: :cascade
   add_foreign_key "blocks", "accounts", name: "fk_4269e03e65", on_delete: :cascade

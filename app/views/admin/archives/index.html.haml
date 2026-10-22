@@ -2,14 +2,21 @@
   = t('admin.archives.title')
 
 - content_for :heading_actions do
+  - if can? :create, :archive_group
+    = link_to t('admin.archive_groups.add_new'), new_admin_archive_group_path, class: 'button button-secondary'
   - if can? :create, :archive
     = link_to t('admin.archives.add_new'), new_admin_archive_path, class: 'button'
 
 %hr.spacer/
 
-- if @archives.empty?
+- if @archives.empty? && @archive_groups.empty?
   .muted-hint.center-text
     = t 'admin.archives.empty'
 - else
-  .announcements-list
-    = render partial: 'archive', collection: @archives
+  - @archive_groups.each do |archive_group|
+    = render partial: 'admin/archive_groups/archive_group', object: archive_group, locals: { archives: @archives.fetch(archive_group.id, []) }
+
+  - if @archives.key?(nil)
+    %h4= @archive_groups.empty? ? t('admin.archives.title') : t('admin.archive_groups.ungrouped')
+    .announcements-list
+      = render partial: 'archive', collection: @archives[nil]
