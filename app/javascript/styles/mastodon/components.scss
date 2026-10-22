@@ -11429,6 +11429,74 @@ noscript {
   }
 }
 
+.archive-timeline__groups {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  padding: 10px 15px 0;
+  border: 1px solid var(--color-border-primary);
+  border-top: 0;
+  border-bottom: 0;
+  background: var(--surface-background-color, transparent);
+
+  // The picker row right below supplies the bottom border; tuck its top
+  // padding up so the chips and dropdown read as one control.
+  & + .archive-timeline__picker {
+    padding-top: 8px;
+  }
+
+  &__chip {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    min-height: 32px;
+    padding: 4px 12px;
+    border: 1px solid var(--color-border-primary);
+    border-radius: 99px;
+    background: transparent;
+    color: var(--color-text-secondary);
+    font: inherit;
+    font-size: 13px;
+    line-height: 20px;
+    white-space: nowrap;
+    cursor: pointer;
+    transition:
+      background-color 0.15s ease,
+      border-color 0.15s ease,
+      color 0.15s ease;
+
+    &:hover {
+      border-color: var(--color-border-brand);
+      color: var(--color-text-primary);
+    }
+
+    &:focus-visible {
+      outline: 2px solid var(--color-text-brand);
+      outline-offset: 2px;
+    }
+
+    &[aria-pressed='true'] {
+      border-color: var(--color-bg-brand-base);
+      background: var(--color-bg-brand-base);
+      color: var(--color-text-on-brand-base);
+      font-weight: 500;
+    }
+
+    // Marks the group holding the open episode while browsing another one.
+    &__current {
+      width: 6px;
+      height: 6px;
+      margin-inline-start: 6px;
+      border-radius: 50%;
+      background: var(--color-text-brand);
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      transition: none;
+    }
+  }
+}
+
 .archive-timeline__picker {
   display: flex;
   align-items: center;
@@ -11449,6 +11517,18 @@ noscript {
     border: 1px solid var(--color-border-primary);
     border-radius: 4px;
     padding: 6px 8px;
+
+    // The open list is drawn by the browser on its own (light) surface but
+    // inherits the select's text color, which is near-white in dark themes.
+    // Paint the options from the theme so the list reads in either scheme.
+    option {
+      background-color: var(--color-bg-primary);
+      color: var(--color-text-primary);
+    }
+
+    option:disabled {
+      color: var(--color-text-tertiary);
+    }
   }
 
   &__arrow {
