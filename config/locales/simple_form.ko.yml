@@ -213,8 +213,12 @@ ko:
       appeal:
         text: 이 결정을 번복해야만 하는 이유가 무엇입니까
       archive:
+        archive_group: 그룹
         end_status_id: 끝 포스트 ID
         start_status_id: 시작 포스트 ID
+        title: 제목
+      archive_group:
+        position: 순서
         title: 제목
       defaults:
         autofollow: 초대를 통한 팔로우

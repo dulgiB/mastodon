@@ -5,7 +5,7 @@ class Api::V1::ArchivesController < Api::BaseController
   before_action :require_user!
 
   def index
-    render json: Archive.ordered, each_serializer: REST::ArchiveSerializer
+    render json: Archive.ordered.includes(:archive_group), each_serializer: REST::ArchiveSerializer
   end
 
   # Which episodes (besides the one currently open) contain a status matching
@@ -14,7 +14,7 @@ class Api::V1::ArchivesController < Api::BaseController
   def search
     query = params[:q].to_s.strip
 
-    matches = query.blank? ? [] : Archive.ordered.select { |archive| ArchiveFeed.new(archive, current_account).match?(query) }
+    matches = query.blank? ? [] : Archive.ordered.includes(:archive_group).select { |archive| ArchiveFeed.new(archive, current_account).match?(query) }
 
     render json: matches, each_serializer: REST::ArchiveSerializer
   end

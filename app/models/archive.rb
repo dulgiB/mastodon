@@ -4,14 +4,17 @@
 #
 # Table name: archives
 #
-#  id              :bigint(8)        not null, primary key
-#  title           :string           default(""), not null
-#  created_at      :datetime         not null
-#  updated_at      :datetime         not null
-#  end_status_id   :bigint(8)        not null
-#  start_status_id :bigint(8)        not null
+#  id               :bigint(8)        not null, primary key
+#  title            :string           default(""), not null
+#  created_at       :datetime         not null
+#  updated_at       :datetime         not null
+#  end_status_id    :bigint(8)        not null
+#  start_status_id  :bigint(8)        not null
+#  archive_group_id :bigint(8)
 #
 class Archive < ApplicationRecord
+  belongs_to :archive_group, optional: true
+
   validates :title, presence: true
   validates :start_status_id, :end_status_id, presence: true, numericality: { only_integer: true, greater_than: 0 }
   validate :end_status_id_not_before_start_status_id

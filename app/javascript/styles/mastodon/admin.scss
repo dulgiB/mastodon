@@ -1195,6 +1195,40 @@ a.name-tag,
   }
 }
 
+.archive-group {
+  margin-bottom: 30px;
+
+  &__header {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 10px;
+
+    h4 {
+      margin: 0;
+    }
+
+    h4 a {
+      color: var(--color-text-primary);
+      text-decoration: none;
+
+      &:hover,
+      &:focus-visible {
+        color: var(--color-text-brand);
+      }
+    }
+  }
+
+  &__meta {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    color: var(--color-text-tertiary);
+  }
+}
+
 .announcements-list,
 .filters-list {
   border: 1px solid var(--color-border-primary);
