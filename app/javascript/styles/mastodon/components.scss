@@ -11517,6 +11517,18 @@ noscript {
     border: 1px solid var(--color-border-primary);
     border-radius: 4px;
     padding: 6px 8px;
+
+    // The open list is drawn by the browser on its own (light) surface but
+    // inherits the select's text color, which is near-white in dark themes.
+    // Paint the options from the theme so the list reads in either scheme.
+    option {
+      background-color: var(--color-bg-primary);
+      color: var(--color-text-primary);
+    }
+
+    option:disabled {
+      color: var(--color-text-tertiary);
+    }
   }
 
   &__arrow {
