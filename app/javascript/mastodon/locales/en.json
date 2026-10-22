@@ -939,6 +939,7 @@
   "navigation_bar.live_feed_public": "Live feed (public)",
   "navigation_bar.logout": "Logout",
   "navigation_bar.main": "Main",
+  "navigation_bar.manage_archives": "Manage archives",
   "navigation_bar.moderation": "Moderation",
   "navigation_bar.more": "More",
   "navigation_bar.mutes": "Muted users",

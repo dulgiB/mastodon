@@ -13,7 +13,11 @@ import {
 import { useIdentity } from 'mastodon/identity_context';
 import { me, sessionAccountIds } from 'mastodon/initial_state';
 import type { MenuItem } from 'mastodon/models/dropdown_menu';
-import { canManageReports, canViewAdminDashboard } from 'mastodon/permissions';
+import {
+  canManageArchives,
+  canManageReports,
+  canViewAdminDashboard,
+} from 'mastodon/permissions';
 import { useAppDispatch, useAppSelector } from 'mastodon/store';
 import { switchAccount } from 'mastodon/utils/switch_account';
 
@@ -30,6 +34,10 @@ const messages = defineMessages({
     defaultMessage: 'Administration',
   },
   moderation: { id: 'navigation_bar.moderation', defaultMessage: 'Moderation' },
+  manageArchives: {
+    id: 'navigation_bar.manage_archives',
+    defaultMessage: 'Manage archives',
+  },
   logout: { id: 'navigation_bar.logout', defaultMessage: 'Logout' },
   automatedDeletion: {
     id: 'navigation_bar.automated_deletion',
@@ -147,6 +155,15 @@ export const MoreLink: React.FC = () => {
       arr.push({
         href: '/admin/dashboard',
         text: intl.formatMessage(messages.administration),
+      });
+    }
+
+    // Episodes get added often enough that going through the dashboard
+    // every time is a detour.
+    if (canManageArchives(permissions)) {
+      arr.push({
+        href: '/admin/archives',
+        text: intl.formatMessage(messages.manageArchives),
       });
     }
 
