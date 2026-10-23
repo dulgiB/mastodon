@@ -11446,7 +11446,6 @@ noscript {
   }
 
   &__chip {
-    position: relative;
     display: inline-flex;
     align-items: center;
     min-height: 32px;
@@ -11480,15 +11479,6 @@ noscript {
       background: var(--color-bg-brand-base);
       color: var(--color-text-on-brand-base);
       font-weight: 500;
-    }
-
-    // Marks the group holding the open episode while browsing another one.
-    &__current {
-      width: 6px;
-      height: 6px;
-      margin-inline-start: 6px;
-      border-radius: 50%;
-      background: var(--color-text-brand);
     }
 
     @media (prefers-reduced-motion: reduce) {
