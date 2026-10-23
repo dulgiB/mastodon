@@ -8,7 +8,7 @@
 # 그대로 둔다. 바꾼 결과가 글자 수 제한 등 검증에 걸리면 저장하지 않는다.
 class UpdateBioHpService < BaseService
   def call(account, current_hp:, max_hp:)
-    pattern = /(?<!\d)\d+(?=[[:blank:]]*\/[[:blank:]]*#{max_hp}(?!\d))/
+    pattern = %r{(?<!\d)\d+(?=[[:blank:]]*/[[:blank:]]*#{max_hp}(?!\d))}
     matches = account.note.to_enum(:scan, pattern).map { Regexp.last_match }
 
     return :not_found if matches.empty?
