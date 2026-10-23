@@ -293,6 +293,7 @@ namespace :api, format: false do
         end
 
         resource :action, only: [:create], controller: 'account_actions'
+        resource :bio_hp, only: [:update]
       end
 
       resources :reports, only: [:index, :update, :show] do

@@ -57,6 +57,10 @@ class AccountPolicy < ApplicationPolicy
     role.can?(:delete_user_data) && role.overrides?(record.user_role) && !record.instance_actor?
   end
 
+  def update_bio_hp?
+    role.can?(:manage_users) && role.overrides?(record.user_role)
+  end
+
   def unblock_email?
     role.can?(:manage_users)
   end
