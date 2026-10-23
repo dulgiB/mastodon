@@ -38,41 +38,83 @@ const groupArchives = archives => {
   return [...groups.values()].sort((a, b) => a.position - b.position);
 };
 
-// Groups show as a chip row above the dropdown, and the dropdown lists only
-// the chosen group's episodes, so a long run of episodes doesn't turn into one
-// endless list. Choosing a chip only browses: the open episode stays open
-// until one is picked from that group's dropdown.
+// Groups show as a row of toggle chips above the dropdown, and the dropdown
+// lists only the episodes of the selected groups, in time order, so a long
+// run of episodes doesn't turn into one endless list. Any number of groups
+// can be selected at once; with none selected (the default) every episode is
+// listed. The open episode is always among the listed ones: deselecting its
+// group (or selecting groups that leave it out) switches to the most recent
+// episode still listed.
 //
 // The prev/next arrows pass preserveSearch: true (an active search follows
 // you when stepping to an adjacent episode, same as it does jumping via
 // "find next"), but the dropdown doesn't — picking a specific episode by
 // name is a deliberate jump elsewhere, not a continuation of the search.
-// The arrows still walk every episode in time order, crossing groups, since
-// interludes sit between the main episodes chronologically.
+// The arrows walk the same episodes the dropdown lists.
 export const EpisodePicker = ({ intl, archives, currentId, order, onSelect, onToggleOrder }) => {
   const groups = useMemo(() => groupArchives(archives), [archives]);
   const current = archives.find(archive => archive.id === currentId);
-  const currentGroupKey = current ? groupKeyOf(current) : groups[0]?.id;
-  const [browsingGroupKey, setBrowsingGroupKey] = useState(currentGroupKey);
+  const currentGroupKey = current ? groupKeyOf(current) : null;
+  const [selectedKeys, setSelectedKeys] = useState(() => new Set());
 
-  // Follow the open episode, e.g. after the arrows step into another group.
+  // While some groups are selected, make sure the open episode's group is
+  // listed whenever the open episode changes, e.g. on landing on a search hit
+  // elsewhere. With none selected everything is listed already.
   useEffect(() => {
-    setBrowsingGroupKey(currentGroupKey);
+    if (currentGroupKey) {
+      setSelectedKeys(keys => keys.size === 0 || keys.has(currentGroupKey) ? keys : new Set([...keys, currentGroupKey]));
+    }
   }, [currentGroupKey]);
 
-  const browsingGroup = groups.find(group => group.id === browsingGroupKey) ?? groups.find(group => group.id === currentGroupKey);
-  const options = browsingGroup ? browsingGroup.archives : archives;
+  const toggleGroup = key => {
+    const nextKeys = new Set(selectedKeys);
+
+    if (nextKeys.has(key)) {
+      nextKeys.delete(key);
+    } else {
+      nextKeys.add(key);
+    }
+
+    setSelectedKeys(nextKeys);
+
+    if (nextKeys.size > 0 && currentGroupKey && !nextKeys.has(currentGroupKey)) {
+      const latest = archives.findLast(archive => nextKeys.has(groupKeyOf(archive)));
+
+      if (latest) {
+        onSelect(latest.id);
+      }
+    }
+  };
+
+  const isListed = archive => selectedKeys.size === 0 || selectedKeys.has(groupKeyOf(archive));
+  const options = archives.filter(isListed);
   const currentInOptions = options.some(archive => archive.id === currentId);
 
   const index = archives.findIndex(archive => archive.id === currentId);
+
   // Wrap around at either end, matching how the search box's own
   // prev/next-match arrows loop past the last match (see
   // ArchiveTimeline#jumpToAdjacentMatch) — stopping dead here while those
-  // looped read as inconsistent. With a single episode there's nowhere to
-  // go, so both stay disabled rather than re-selecting the open one.
-  const canStep = index >= 0 && archives.length > 1;
-  const previous = canStep ? archives[(index - 1 + archives.length) % archives.length] : null;
-  const next = canStep ? archives[(index + 1) % archives.length] : null;
+  // looped read as inconsistent. With nothing else listed there's nowhere to
+  // go, so the arrow stays disabled rather than re-selecting the open one.
+  const step = direction => {
+    if (index < 0) {
+      return null;
+    }
+
+    for (let offset = 1; offset <= archives.length; offset++) {
+      const archive = archives[(index + direction * offset + archives.length * offset) % archives.length];
+
+      if (archive.id !== currentId && isListed(archive)) {
+        return archive;
+      }
+    }
+
+    return null;
+  };
+
+  const previous = step(-1);
+  const next = step(1);
 
   const picker = (
     <div className='archive-timeline__picker'>
@@ -138,13 +180,10 @@ export const EpisodePicker = ({ intl, archives, currentId, order, onSelect, onTo
             key={group.id}
             type='button'
             className='archive-timeline__groups__chip'
-            aria-pressed={group.id === browsingGroup?.id}
-            onClick={() => setBrowsingGroupKey(group.id)}
+            aria-pressed={selectedKeys.has(group.id)}
+            onClick={() => toggleGroup(group.id)}
           >
             {group.title ?? intl.formatMessage({ id: 'archive_timeline.ungrouped', defaultMessage: 'Other' })}
-            {group.id === currentGroupKey && group.id !== browsingGroup?.id && (
-              <span className='archive-timeline__groups__chip__current' aria-hidden />
-            )}
           </button>
         ))}
       </div>
