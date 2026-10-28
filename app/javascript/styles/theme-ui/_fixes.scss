@@ -178,11 +178,17 @@
   }
 
   // The post's own actions along the bottom on narrow screens sit on the same
-  // dark scrim, so the light bundle's grey was all but invisible there too. A
-  // favourited or boosted post keeps its state colour.
+  // dark scrim, so the light bundle's grey was all but invisible there too.
+  // A favourite is white as well: neither bundle's favourite colour reads on
+  // the scrim, and the filled star already says the post is favourited. The
+  // active boost glyph is a background image, so it keeps its green.
   .media-modal__overlay .picture-in-picture__footer {
-    .icon-button:not(.active),
-    .icon-button:not(.active) .icon {
+    .icon-button,
+    .icon-button.active,
+    .icon-button .icon,
+    .icon-button.active .icon,
+    .icon-button .icon-button__counter,
+    .icon-button.active .icon-button__counter {
       color: var(--color-text-on-media);
     }
   }
