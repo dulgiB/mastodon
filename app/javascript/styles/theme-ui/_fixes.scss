@@ -176,4 +176,24 @@
       color: var(--color-text-on-media);
     }
   }
+
+  // The post's own actions along the bottom on narrow screens sit on the same
+  // dark scrim, so the light bundle's grey was all but invisible there too. A
+  // favourited or boosted post keeps its state colour.
+  .media-modal__overlay .picture-in-picture__footer {
+    .icon-button:not(.active),
+    .icon-button:not(.active) .icon {
+      color: var(--color-text-on-media);
+    }
+  }
+}
+
+// The media viewer covers the whole screen, but its scrim is translucent, so
+// on mobile the navigation bar's icons showed through between the viewer's
+// own buttons along the same bottom edge. Nothing under the scrim can be
+// tapped anyway; hide the bar while a viewer is open.
+@media screen and (width <= 759px) {
+  body:has(.media-modal__overlay) .ui__navigation-bar {
+    visibility: hidden;
+  }
 }
