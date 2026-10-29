@@ -176,4 +176,35 @@ RSpec.describe Rack::Attack, type: :request do
 
     it_behaves_like 'throttled endpoint'
   end
+
+  describe 'throttle excessive paging requests by account' do
+    let(:user) { Fabricate(:user) }
+    let(:token) { Fabricate(:accessible_access_token, resource_owner_id: user.id, scopes: 'read') }
+    let(:throttle) { 'throttle_authenticated_paging' }
+    let(:limit) { 300 }
+    let(:period) { 15.minutes }
+    let(:headers) { { 'Authorization' => "Bearer #{token.token}", 'REMOTE_ADDR' => remote_ip } }
+    let(:discriminator) { user.id }
+
+    context 'when paging a timeline' do
+      let(:request) { -> { get '/api/v1/timelines/home', params: { max_id: '1' }, headers: headers } }
+
+      it_behaves_like 'throttled endpoint'
+    end
+
+    context 'when paging an archive episode' do
+      let(:path) { "/api/v1/timelines/archive/#{Fabricate(:archive).id}" }
+
+      before do
+        travel_to Time.zone.at((Time.now.to_i / period.seconds).to_i * period.seconds)
+        (limit * 2).times { described_class.cache.count("#{throttle}:#{discriminator}", period) }
+      end
+
+      it 'is not held to the paging limit' do
+        get path, params: { min_id: '0' }, headers: headers
+
+        expect(response).to_not have_http_status(429)
+      end
+    end
+  end
 end
