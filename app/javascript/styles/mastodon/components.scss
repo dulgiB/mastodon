@@ -11347,9 +11347,9 @@ noscript {
 }
 
 .column-footer {
-  padding: 16px;
   position: sticky;
   bottom: 0;
+  padding: 16px;
   background: var(--color-bg-primary);
 
   // Below $mobile-menu-breakpoint the page scrolls rather than a bounded
