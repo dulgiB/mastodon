@@ -37,6 +37,7 @@ import type { CollectionAttachment } from 'mastodon/models/status';
 import { compareUrls } from 'mastodon/utils/compare_urls';
 
 import Card from './card';
+import { keepInView } from './keep_in_view';
 
 interface VideoModalOptions {
   startTime: number;
@@ -130,13 +131,9 @@ export const DetailedStatus: React.FC<{
     if (onTranslate) onTranslate(status);
   }, [onTranslate, status]);
 
-  // The component is managed and will change if the status changes
-  // Ancestors can increase when loading a thread, in which case we want to scroll,
-  // or decrease if a post is deleted, in which case we don't want to mess with it
-  const previousAncestors = useRef(-1);
-  useEffect(() => {
-    if (nodeRef.current && previousAncestors.current < ancestors) {
-      nodeRef.current.scrollIntoView(true);
+  const scrollToPost = useCallback(
+    (node: HTMLElement) => {
+      node.scrollIntoView(true);
 
       // In the single-column interface, `scrollIntoView` will put the post behind the header, so compensate for that.
       if (!multiColumn) {
@@ -149,10 +146,39 @@ export const DetailedStatus: React.FC<{
           scrollingElement.scrollBy(0, -offset);
         }
       }
-    }
+    },
+    [multiColumn],
+  );
+
+  // The component is managed and will change if the status changes
+  // Ancestors can increase when loading a thread, in which case we want to scroll,
+  // or decrease if a post is deleted, in which case we don't want to mess with it
+  const previousAncestors = useRef(-1);
+  useEffect(() => {
+    const node = nodeRef.current;
+    const shouldScroll = !!node && previousAncestors.current < ancestors;
 
     previousAncestors.current = ancestors;
-  }, [ancestors, multiColumn]);
+
+    if (!node || !shouldScroll) {
+      return;
+    }
+
+    scrollToPost(node);
+
+    // Posts above this one can still change height after the scroll above:
+    // quoted posts and media load in, long posts collapse, and the context
+    // request and the post request can land in either order. Nothing scrolls
+    // back when that happens, and a browser that does not correct for it on
+    // its own leaves the reader looking at the top of the thread instead of
+    // the post they opened. Keep the post where it was put until the thread
+    // settles or the reader takes over.
+    if (ancestors === 0) {
+      return;
+    }
+
+    return keepInView(node, scrollToPost);
+  }, [ancestors, scrollToPost]);
 
   if (!properStatus) {
     return null;
