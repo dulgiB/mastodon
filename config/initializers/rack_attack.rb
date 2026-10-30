@@ -61,6 +61,12 @@ class Rack::Attack
       params['page'].present? || params['min_id'].present? || params['max_id'].present? || params['since_id'].present?
     end
 
+    # Reading an archive episode pages through it 20 posts at a time from the
+    # start, so it is held to the overall API limit rather than the paging one
+    def archive_timeline_request?
+      path.start_with?('/api/v1/timelines/archive/')
+    end
+
     def normalized_email
       CanonicalEmailBlock.canonicalize_email(params.dig('user', 'email')) if params.dig('user', 'email').present?
     end
@@ -95,7 +101,7 @@ class Rack::Attack
   end
 
   throttle('throttle_authenticated_paging', limit: 300, period: 15.minutes) do |req|
-    req.authenticated_user_id if req.paging_request?
+    req.authenticated_user_id if req.paging_request? && !req.archive_timeline_request?
   end
 
   throttle('throttle_unauthenticated_paging', limit: 300, period: 15.minutes) do |req|

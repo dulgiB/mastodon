@@ -8,6 +8,7 @@ import {
 
 import { useLocation } from 'react-router-dom';
 
+import { useMergedRefs } from '@/mastodon/hooks/useMergedRefs';
 import { polymorphicForwardRef } from '@/types/polymorphic';
 
 import type { MastodonLocation } from '../router';
@@ -126,11 +127,12 @@ interface FocusTargetElementProps extends React.ComponentPropsWithoutRef<'h1'> {
 export const NavigationFocusTarget = polymorphicForwardRef<
   'h1',
   FocusTargetElementProps
->(({ as: Component = 'h1', focusTargetName, children, ...otherProps }) => {
+>(({ as: Component = 'h1', focusTargetName, children, ...otherProps }, ref) => {
   const focusOnNavigation = useFocusOnNavigation(focusTargetName);
+  const mergedRef = useMergedRefs(focusOnNavigation, ref);
 
   return (
-    <Component ref={focusOnNavigation} tabIndex={-1} {...otherProps}>
+    <Component ref={mergedRef} tabIndex={-1} {...otherProps}>
       {children}
     </Component>
   );
