@@ -170,6 +170,14 @@ body.embed .detailed-status__display-avatar > img {
   border-radius: var(--avatar-border-radius);
 }
 
+// Two places where core itself still draws a circle: the composite avatar of
+// a conversation in the private mentions column, which clips its tiles with
+// `overflow: hidden`, and the tiny inline avatar in a post's edit history.
+.account__avatar-composite,
+.inline-account .account__avatar {
+  border-radius: var(--avatar-border-radius);
+}
+
 // Bottom navigation: keep the magnifier. Core renders a SearchIcon for the
 // /explore item (navigation_bar.tsx) and Bird UI hides that path and paints a
 // hashtag over it, which reads as "tags" rather than "search". Put core's own
