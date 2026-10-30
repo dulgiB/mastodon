@@ -114,6 +114,16 @@ body.layout-multiple-columns {
   // translucent card surfaces -- it paints a flat block over the wallpaper.
   // --color-column-link-hover is the same soft translucent tint already used
   // for nav-link hover states, so it blends in either bundle.
+  // Private mentions get an opaque --color-bg-brand-softest from upstream
+  // (components.scss), a solid block over the wallpaper where every other
+  // notification is glass. The corner ribbon (bird-ui/_dm-indicators.scss)
+  // and the envelope in the header already mark them, so the fill goes.
+  // :where() keeps this at upstream's own weight, so the focus and unread
+  // tints still win on a DM as they do on any other notification.
+  :where(.notification-ungrouped--direct, .notification-group--direct) {
+    background: transparent;
+  }
+
   .notification-ungrouped--unread,
   .conversation--unread,
   .notification.unread:hover,
