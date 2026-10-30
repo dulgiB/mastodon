@@ -239,7 +239,11 @@ class ScrollableList extends PureComponent {
       this.getFirstChildKey(prevProps) !== this.getFirstChildKey(this.props);
     const pendingChanged = (prevProps.numPending > 0) !== (this.props.numPending > 0);
 
-    if (pendingChanged || someItemInserted && (this.getScrollTop() > 0 || this.mouseMovedRecently || this.props.preventScroll)) {
+    // A list that pages in at its top (onLoadMorePrev) keeps its place even
+    // at scrollTop 0, which a touch screen never leaves through mouse
+    // movement; otherwise the new page lands above a list still at the top,
+    // which asks for the next one, until the whole list is paged in.
+    if (pendingChanged || someItemInserted && (this.getScrollTop() > 0 || this.mouseMovedRecently || this.props.preventScroll || this.props.onLoadMorePrev)) {
       return this.getScrollHeight() - this.getScrollTop();
     } else {
       return null;

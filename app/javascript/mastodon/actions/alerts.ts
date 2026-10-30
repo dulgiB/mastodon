@@ -35,6 +35,10 @@ export const showAlert = createAction<Omit<Alert, 'key'>>('alerts/show');
 
 const ignoreAlert = createAction('alerts/ignore');
 
+// Requests that keep failing until the same reset (a list retrying its next
+// page on every scroll) say the same thing once
+let lastRateLimitReset: string | undefined;
+
 export const showAlertForError = (error: unknown, skipNotFound = false) => {
   if (error instanceof AxiosError && error.response) {
     const { status, statusText, headers } = error.response;
@@ -47,11 +51,19 @@ export const showAlertForError = (error: unknown, skipNotFound = false) => {
 
     // Rate limit errors
     if (status === 429 && headers['x-ratelimit-reset']) {
+      const reset = headers['x-ratelimit-reset'] as string;
+
+      if (reset === lastRateLimitReset) {
+        return ignoreAlert();
+      }
+
+      lastRateLimitReset = reset;
+
       return showAlert({
         title: messages.rateLimitedTitle,
         message: messages.rateLimitedMessage,
         values: {
-          retry_time: new Date(headers['x-ratelimit-reset'] as string),
+          retry_time: new Date(reset),
         },
       });
     }
