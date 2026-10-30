@@ -63,15 +63,17 @@
 // bird-ui/components/_icon-replacements.scss paints the boost glyph as a
 // background image on `button.icon-button .icon-retweet`, anywhere, and then
 // hides the SVG it covers -- but only for the action bars it lists. The
-// picture-in-picture footer, which the media viewer borrows, is not one of
-// them, so it draws both glyphs on top of each other.
+// picture-in-picture footer is not one of them, so it draws both glyphs on
+// top of each other. The media viewer borrows the same footer, but upstream
+// lays that copy out itself (bird-ui/components/_modals.scss) in an 18px box,
+// so this stays inside the floating player: the 20px glyph would be clipped.
 .layout-single-column,
 .layout-multiple-columns {
-  .picture-in-picture__footer .icon-retweet path {
+  .picture-in-picture .picture-in-picture__footer .icon-retweet path {
     display: none;
   }
 
-  .picture-in-picture__footer .icon-retweet {
+  .picture-in-picture .picture-in-picture__footer .icon-retweet {
     background-size: var(--size-icon) var(--size-icon);
     width: var(--size-icon);
     height: var(--size-icon);
@@ -175,5 +177,31 @@
     .icon-button .icon {
       color: var(--color-text-on-media);
     }
+  }
+
+  // The post's own actions along the bottom on narrow screens sit on the same
+  // dark scrim, so the light bundle's grey was all but invisible there too.
+  // A favourite is white as well: neither bundle's favourite colour reads on
+  // the scrim, and the filled star already says the post is favourited. The
+  // active boost glyph is a background image, so it keeps its green.
+  .media-modal__overlay .picture-in-picture__footer {
+    .icon-button,
+    .icon-button.active,
+    .icon-button .icon,
+    .icon-button.active .icon,
+    .icon-button .icon-button__counter,
+    .icon-button.active .icon-button__counter {
+      color: var(--color-text-on-media);
+    }
+  }
+}
+
+// The media viewer covers the whole screen, but its scrim is translucent, so
+// on mobile the navigation bar's icons showed through between the viewer's
+// own buttons along the same bottom edge. Nothing under the scrim can be
+// tapped anyway; hide the bar while a viewer is open.
+@media screen and (width <= 759px) {
+  body:has(.media-modal__overlay) .ui__navigation-bar {
+    visibility: hidden;
   }
 }
