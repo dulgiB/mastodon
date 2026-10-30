@@ -204,6 +204,19 @@ body.embed .detailed-status__display-avatar > img {
     padding-right: var(--theme-nav-inset);
   }
 
+  // The mobile drawer pads its links 16px on both sides
+  // (bird-ui/components/_mobile-navigation.scss), through a selector chain that
+  // outranks the two rules above. Keep its outer padding, but put the link
+  // icons back on the axis the profile card and the compose button still use.
+  @media screen and (width <= 759px) {
+    .columns-area__panels__pane--navigational
+      .columns-area__panels__pane__inner
+      .navigation-panel__menu
+      .column-link:not(.navigation-panel__compose-button) {
+      padding-inline-start: var(--theme-nav-inset);
+    }
+  }
+
   // A full-width control rather than an item in that column, so undo Bird
   // UI's shrink-to-content (components/_mobile-navigation.scss).
   .navigation-panel__compose-button {
