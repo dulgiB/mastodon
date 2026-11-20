@@ -8,8 +8,8 @@
 // for theme-ui (its own --color-accent/--color-bg/etc. never consulted the
 // generated tokens -- see the theme-ui layout files) and was reverted.
 
-@use '../mastodon/theme/light';
-@use '../mastodon/theme/utils';
+@use '../mastodon/tokens/theme/light';
+@use '../mastodon/tokens/theme/utils';
 
 [data-color-scheme='dark'],
 [data-color-scheme='light'],

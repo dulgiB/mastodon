@@ -8,9 +8,8 @@ class ActivityPub::ActorSerializer < ActivityPub::Serializer
 
   context_extensions :manually_approves_followers, :featured, :also_known_as,
                      :moved_to, :property_value, :discoverable, :suspended,
-                     :memorial, :indexable, :attribution_domains, :profile_settings
-
-  context_extensions :interaction_policies
+                     :memorial, :indexable, :attribution_domains, :profile_settings,
+                     :interaction_policies, :actor_featured_collections
 
   attributes :id, :webfinger, :type, :following, :followers,
              :inbox, :outbox, :featured, :featured_tags,
@@ -24,7 +23,7 @@ class ActivityPub::ActorSerializer < ActivityPub::Serializer
   attribute :interaction_policy
   attribute :featured_collections
 
-  has_one :public_key, serializer: ActivityPub::PublicKeySerializer
+  has_one :keypair, key: :public_key, serializer: ActivityPub::PublicKeySerializer
 
   has_many :virtual_tags, key: :tag
   has_many :virtual_attachments, key: :attachment

@@ -9,9 +9,7 @@ describe('NavigationFocusTarget', () => {
     const ref = createRef<HTMLDivElement>();
 
     render(
-      // The polymorphic ref type resolves to `never` for intrinsic elements
-      // under React 18's types, so the ref has to be cast to be passed at all.
-      <NavigationFocusTarget as='div' ref={ref as React.Ref<never>}>
+      <NavigationFocusTarget as='div' ref={ref}>
         post
       </NavigationFocusTarget>,
     );

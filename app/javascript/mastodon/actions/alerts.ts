@@ -7,6 +7,8 @@ import type { AxiosResponse } from 'axios';
 
 import type { Alert } from 'mastodon/models/alert';
 
+import { createAppThunk } from '../store/typed_functions';
+
 interface ApiErrorResponse {
   error?: string;
 }
@@ -86,3 +88,12 @@ export const showAlertForError = (error: unknown, skipNotFound = false) => {
     message: messages.unexpectedMessage,
   });
 };
+
+export const showGenericAlert = createAppThunk((_arg, { dispatch }) => {
+  dispatch(
+    showAlert({
+      title: messages.unexpectedTitle,
+      message: messages.unexpectedMessage,
+    }),
+  );
+});

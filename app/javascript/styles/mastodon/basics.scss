@@ -8,6 +8,12 @@ html {
     scrollbar-color: var(--color-text-secondary) var(--color-bg-secondary);
   }
 
+  // One self-hosted family for the whole UI, headings included: Asta Sans
+  // Xetead, with Noto Shade Xetead in front for U+2592 only. See
+  // fonts/asta-sans.scss and fonts/noto-shade.scss.
+  --font-body: 'Noto Shade Xetead', 'Asta Sans Xetead', sans-serif;
+  --font-heading: 'Noto Shade Xetead', 'Asta Sans Xetead', sans-serif;
+  --font-monospace: mastodon-font-monospace, monospace;
   --outline-focus-default: 2px solid var(--color-border-brand);
   --avatar-border-radius: 8px;
   --max-media-height-small: 460px;
@@ -45,7 +51,7 @@ html.has-modal {
 }
 
 body {
-  font-family: $font-sans-serif, sans-serif;
+  font-family: var(--font-body);
   background: var(--color-bg-primary);
   font-size: 13px;
   line-height: 18px;
@@ -85,7 +91,8 @@ body {
       'Fira Sans',
       'Droid Sans',
       'Helvetica Neue',
-      $font-sans-serif,
+      'Noto Shade Xetead',
+      'Asta Sans Xetead',
       sans-serif;
   }
 
@@ -179,6 +186,7 @@ body {
         font-size: 20px;
         line-height: 28px;
         font-weight: 400;
+        margin-bottom: var(--space-md);
       }
     }
   }

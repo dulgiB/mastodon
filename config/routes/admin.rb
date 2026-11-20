@@ -182,6 +182,7 @@ namespace :admin do
   resources :users, only: [] do
     scope module: :users do
       resource :two_factor_authentication, only: [:destroy]
+      resource :sign_in_token_authentication, only: [:create, :destroy]
       resource :role, only: [:show, :update]
     end
   end
@@ -208,6 +209,8 @@ namespace :admin do
   end
 
   namespace :disputes do
+    resources :strikes, only: [:show, :index]
+
     resources :appeals, only: [:index] do
       member do
         post :approve
