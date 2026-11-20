@@ -1255,7 +1255,7 @@ ko:
     webhooks:
       add_new: 엔드포인트 추가
       delete: 삭제
-      description_html: "<strong>웹훅</strong>은 선택한 이벤트에 대해 마스토돈이 <strong>실시간 알림</strong>을 각자의 응용프로그램에게 보냄으로서, 당신의 응용프로그램이 <strong>자동으로 반응</strong>을 할 수 있도록 만듧니다."
+      description_html: "<strong>웹훅</strong>은 선택한 이벤트에 대해 마스토돈이 <strong>실시간 알림</strong>을 각자의 응용프로그램에게 보냄으로서, 당신의 응용프로그램이 <strong>자동으로 반응</strong>을 할 수 있도록 만듭니다."
       disable: 비활성화
       disabled: 비활성화됨
       edit: 엔드포인트 수정

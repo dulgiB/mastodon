@@ -727,7 +727,7 @@
   "filter_modal.select_filter.expired": "만료됨",
   "filter_modal.select_filter.prompt_new": "새 카테고리: {name}",
   "filter_modal.select_filter.search": "검색 또는 생성",
-  "filter_modal.select_filter.subtitle": "기존의 카테고리를 사용하거나 새로 하나를 만듧니다",
+  "filter_modal.select_filter.subtitle": "기존의 카테고리를 사용하거나 새로 하나를 만듭니다",
   "filter_modal.select_filter.title": "이 게시물을 필터",
   "filter_modal.title.status": "게시물 필터",
   "filter_warning.matches_filter": "\"<span>{title}</span>\" 필터에 걸림",
