@@ -138,7 +138,8 @@ class SelectFilter extends PureComponent {
     switch(e.key) {
     case 'Tab':
     case 'ArrowDown':
-      element = this.listNode.firstChild;
+      // The list is left out while it would be empty
+      element = this.listNode?.firstChild;
 
       if (element) {
         element.focus();
@@ -187,10 +188,12 @@ class SelectFilter extends PureComponent {
           <button type='button' className='emoji-mart-search-icon' disabled={!isSearching} aria-label={intl.formatMessage(messages.clear)} onClick={this.handleClear}>{!isSearching ? loupeIcon : deleteIcon}</button>
         </div>
 
-        <div className='language-dropdown__dropdown__results emoji-mart-scroll' role='listbox' ref={this.setListRef}>
-          {results.map(this.renderItem)}
-          {isSearching && this.renderCreateNew(searchValue) }
-        </div>
+        {(results.length > 0 || isSearching) && (
+          <div className='language-dropdown__dropdown__results emoji-mart-scroll select-filter__results' role='listbox' ref={this.setListRef}>
+            {results.map(this.renderItem)}
+            {isSearching && this.renderCreateNew(searchValue) }
+          </div>
+        )}
 
       </>
     );

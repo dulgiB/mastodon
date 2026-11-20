@@ -9,8 +9,8 @@ ko:
         fields: 홈페이지, 호칭, 나이, 뭐든지 적고 싶은 것들.
         indexable: 내 공개 게시물이 마스토돈의 검색 결과에 나타날 수 있습니다. 내 게시물과 상호작용했던 사람들은 이 설정과 관계 없이 그 게시물을 검색할 수 있습니다.
         note: '남을 @mention 하거나 #hashtag 태그를 달 수 있습니다.'
-        show_collections: 사람들이 내 계정의 팔로우와 팔로워를 볼 수 있습니다. 내가 팔로우 하는 사람은 이 설정에 관계 없이 내가 팔로우 했다는 사실을 알 수 있습니다.
-        unlocked: 사람들이 승인 요청 없이 나를 팔로우 할 수 있습니다. 팔로우 요청을 심사하고 새 팔로워를 승인할지 거부할지 선택하고 싶다면 해제하세요.
+        show_collections: 사람들이 내 계정의 팔로우와 팔로워를 볼 수 있습니다. 내가 팔로우하는 사람은 이 설정에 관계 없이 내가 팔로우했다는 사실을 알 수 있습니다.
+        unlocked: 사람들이 승인 요청 없이 나를 팔로우할 수 있습니다. 팔로우 요청을 심사하고 새 팔로워를 승인할지 거부할지 선택하고 싶다면 해제하세요.
       account_alias:
         acct: 이동하고자 하는 계정의 사용자이름@도메인을 설정하세요
       account_migration:
@@ -27,11 +27,11 @@ ko:
           disable: 사용자가 계정을 사용하는 것을 막지만, 그의 게시물을 삭제하거나 숨기지는 않습니다.
           none: 이것을 사용해서 어떤 동작도 하지 않고, 사용자에게 경고를 보냅니다.
           sensitive: 이 사용자의 모든 미디어 첨부를 민감함으로 강제 설정합니다.
-          silence: 이 사용자가 공개 설정으로 게시물을 작성할 수 없도록 하고, 그를 팔로우 하지 않는 사람에게는 이 사용자의 게시물과 알림을 숨깁니다. 이 계정에 대한 모든 신고를 닫습니다.
+          silence: 이 사용자가 공개 설정으로 게시물을 작성할 수 없도록 하고, 그를 팔로우하지 않는 사람에게는 이 사용자의 게시물과 알림을 숨깁니다. 이 계정에 대한 모든 신고를 닫습니다.
           suspend: 이 계정과의 모든 상호작용을 막고 모든 내용을 삭제합니다. 30일 이내에 되돌리기가 가능합니다. 이 계정에 대한 모든 신고를 닫습니다.
-        warning_preset_id: 선택사항. 틀의 마지막에 임의의 텍스트를 추가 할 수 있습니다
+        warning_preset_id: 선택사항. 틀의 마지막에 임의의 텍스트를 추가할 수 있습니다
       announcement:
-        all_day: 체크 되었을 경우, 그 시간에 속한 날짜들에만 표시됩니다
+        all_day: 체크되었을 경우, 그 시간에 속한 날짜들에만 표시됩니다
         ends_at: 선택사항. 공지사항이 이 시간에 자동으로 발행 중지 됩니다
         scheduled_at: 공백으로 두면 공지사항이 곧바로 발행 됩니다
         starts_at: 선택사항. 공지사항이 특정한 시간에 종속 될 때를 위한 옵션입니다
@@ -42,17 +42,17 @@ ko:
         autofollow: 이 초대로 가입한 사람은 나를 팔로우하게 됩니다.
         avatar: WEBP, PNG, GIF 혹은 JPG. 최대 %{size}. %{dimensions}px로 축소됨
         bot: 이 계정이 대부분 자동으로 작업을 수행하고 잘 확인하지 않는다는 것을 알립니다.
-        context: 필터를 적용 할 한 개 이상의 컨텍스트
+        context: 필터를 적용할 한 개 이상의 컨텍스트
         current_password: 보안을 위해 현재 계정의 암호를 입력해주세요
         current_username: 확인을 위해, 현재 계정의 사용자명을 입력해주세요
         digest: 오랫동안 활동하지 않았을 때 받은 멘션들에 대한 요약 받기
         email: 확인용 이메일을 보내게 됩니다
         header: WEBP, PNG, GIF 혹은 JPG. 최대 %{size}. %{dimensions}px로 축소됨
-        inbox_url: 사용 할 릴레이 서버의 프론트페이지에서 URL을 복사합니다
+        inbox_url: 사용할 릴레이 서버의 프론트페이지에서 URL을 복사합니다
         irreversible: 필터링 된 게시물은 나중에 필터가 사라지더라도 돌아오지 않게 됩니다
         locale: 사용자 인터페이스, 이메일, 푸시 알림 언어
         password: 최소 8글자
-        phrase: 게시물 내용이나 열람주의 내용 안에서 대소문자 구분 없이 매칭 됩니다
+        phrase: 게시물 내용이나 열람주의 내용 안에서 대소문자 구분 없이 매칭됩니다
         scopes: 애플리케이션에 허용할 API들입니다. 최상위 스코프를 선택하면 개별적인 것은 선택하지 않아도 됩니다.
         setting_advanced_layout: 마스토돈을 멀티컬럼으로 보여주어 타임라인, 알림, 그리고 내가 원하는 컬럼을 한 번에 볼 수 있도록 합니다. 작은 화면에선 추천하지 않습니다.
         setting_aggregate_reblogs: 최근에 부스트 됐던 게시물은 새로 부스트 되어도 보여주지 않기 (새로 받은 부스트에만 적용됩니다)
@@ -69,9 +69,9 @@ ko:
         setting_use_blurhash: 그라디언트는 숨겨진 내용의 색상을 기반으로 하지만 상세 내용은 보이지 않게 합니다
         setting_use_pending_items: 타임라인의 새 게시물을 자동으로 보여 주는 대신, 클릭해서 나타내도록 합니다
         username: 문자, 숫자, 밑줄을 사용할 수 있습니다
-        whole_word: 키워드가 영문과 숫자로만 이루어 진 경우, 단어 전체에 매칭 되었을 때에만 작동하게 합니다
+        whole_word: 키워드가 영문과 숫자로만 이루어진 경우, 단어 전체에 매칭되었을 때에만 작동하게 합니다
       domain_allow:
-        domain: 이 도메인은 이 서버에서 데이터를 가져갈 수 있고 이 도메인에서 보내진 데이터는 처리되고 저장 됩니다
+        domain: 이 도메인은 이 서버에서 데이터를 가져갈 수 있고 이 도메인에서 보내진 데이터는 처리되고 저장됩니다
       email_domain_block:
         domain: 이메일에 표시되는 도메인 네임이거나 그것이 사용하는 MX 레코드일 수 있습니다. 가입시에 검증됩니다.
         with_dns_records: 입력한 도메인의 DNS를 조회를 시도하여 나온 값도 차단됩니다
@@ -107,7 +107,7 @@ ko:
         site_terms: 자신만의 개인정보처리방침을 사용하거나 비워두는 것으로 기본값을 사용할 수 있습니다. 마크다운 문법을 사용할 수 있습니다.
         site_title: 사람들이 이 서버를 도메인 네임 대신에 부를 이름.
         status_page_url: 이 서버가 중단된 동안 사람들이 서버의 상태를 볼 수 있는 페이지 URL
-        theme: 로그인 하지 않은 사용자나 새로운 사용자가 보게 될 테마.
+        theme: 로그인하지 않은 사용자나 새로운 사용자가 보게 될 테마.
         thumbnail: 대략 2:1 비율의 이미지가 서버 정보 옆에 표시됩니다.
         thumbnail_description: 이미지에 대한 설명은 시각에 문제가 있는 사람들이 내용을 이해하는데 도움이 됩니다.
         trendable_by_default: 유행하는 콘텐츠에 대한 수동 승인을 건너뜁니다. 이 설정이 적용된 이후에도 각각의 항목들을 삭제할 수 있습니다.
@@ -121,7 +121,7 @@ ko:
         text: 이 정보는 신청을 검토하는데 도움을 줄 수 있습니다.
       ip_block:
         comment: 선택사항. 왜 이 규칙을 추가했는지 기억하세요.
-        expires_in: IP 주소는 한정된 자원입니다, 이것들은 가끔 공유 되거나 자주 소유자가 바뀌기도 합니다. 이런 이유로 인해, IP 차단을 영구히 유지하는 것은 추천하지 않습니다.
+        expires_in: IP 주소는 한정된 자원입니다, 이것들은 가끔 공유되거나 자주 소유자가 바뀌기도 합니다. 이런 이유로 인해, IP 차단을 영구히 유지하는 것은 추천하지 않습니다.
         ip: IPv4 또는 IPv6 주소를 입력하세요. CIDR 문법을 사용해서 모든 범위를 차단할 수도 있습니다. 자기 자신을 잠가버리지 않도록 주의하세요!
         severities:
           no_access: 모든 자원에 대한 접근 차단
@@ -309,12 +309,12 @@ ko:
         mascot: 사용자 정의 마스코트 (legacy)
         media_cache_retention_period: 미디어 캐시 유지 기한
         min_age: 최소 연령 제한
-        peers_api_enabled: API에 발견 된 서버들의 목록 발행
+        peers_api_enabled: API에 발견된 서버들의 목록 발행
         profile_directory: 프로필 책자 활성화
         registrations_mode: 누가 가입할 수 있는지
         remote_live_feed_access: 리모트 게시물에 대한 실시간 피드 접근
         remote_topic_feed_access: 리모트 게시물에 대한 해시태그와 링크 피드 접근
-        require_invite_text: 가입 하는 이유를 필수로 입력하게 하기
+        require_invite_text: 가입하는 이유를 필수로 입력하게 하기
         show_domain_blocks: 도메인 차단 보여주기
         show_domain_blocks_rationale: 왜 도메인이 차단되었는지 보여주기
         site_contact_email: 연락처 이메일
@@ -332,11 +332,11 @@ ko:
         wrapstodon: 랩스토돈 활성화
       form_email_subscriptions_confirmation:
         agreement_email_volume: 이 기능을 활성화하면 발송되는 이메일의 양이 크게 증가할 수 있으며 이에 대한 책임은 전적으로 본인에게 있음을 이해했습니다.
-        agreement_privacy_and_terms: 개인정보처리방침과 이용약관을 업데이트 했습니다.
+        agreement_privacy_and_terms: 개인정보처리방침과 이용약관을 업데이트했습니다.
       interactions:
-        must_be_follower: 나를 팔로우 하지 않는 사람에게서 온 알림을 차단
-        must_be_following: 내가 팔로우 하지 않는 사람에게서 온 알림을 차단
-        must_be_following_dm: 내가 팔로우 하지 않은 사람에게서 오는 다이렉트메시지를 차단
+        must_be_follower: 나를 팔로우하지 않는 사람에게서 온 알림을 차단
+        must_be_following: 내가 팔로우하지 않는 사람에게서 온 알림을 차단
+        must_be_following_dm: 내가 팔로우하지 않은 사람에게서 오는 다이렉트메시지를 차단
       invite:
         comment: 주석
       invite_request:
@@ -354,7 +354,7 @@ ko:
         digest: 요약 이메일 보내기
         end_of_support: 현재 마스토돈 버전은 지원 종료가 가까워지고 있습니다
         favourite: 누군가 내 상태를 마음에 들어했을 때
-        follow: 누군가 나를 팔로우 했을 때
+        follow: 누군가 나를 팔로우했을 때
         follow_request: 누군가 나를 팔로우 하길 요청할 때
         mention: 누군가 나를 언급했을 때
         pending_account: 새 계정이 심사가 필요할 때
