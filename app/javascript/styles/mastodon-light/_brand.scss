@@ -27,7 +27,7 @@ html:not([data-color-scheme]) {
   @include utils.invert-on-light;
 
   // Amber scale anchored at 700 = #f2a007 (the exact brand color), shaded
-  // the same way the rest of the palette in mastodon/theme/_base.scss is:
+  // the same way the rest of the palette in mastodon/tokens/theme/_base.scss is:
   // lighter tints below 700, darker shades above.
   --color-indigo-50: #fef9f0;
   --color-indigo-100: #fdf2dd;
