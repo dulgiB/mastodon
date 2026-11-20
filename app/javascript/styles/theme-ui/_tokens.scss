@@ -39,7 +39,13 @@ html:not([data-color-scheme]) {
     transparent
   );
   --color-light-text: var(--color-text-primary);
-  --color-modal-overlay: var(--color-bg-overlay-base);
+
+  // Mastodon 4.7 dropped --color-bg-overlay-base; this is its old value.
+  --color-modal-overlay: color-mix(
+    in oklab,
+    var(--color-grey-950) 60%,
+    transparent
+  );
   --color-thread-line: var(--color-border-primary);
 
   // Bird UI ships these as fixed greys and uses them purely as text colours --

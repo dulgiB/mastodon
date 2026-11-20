@@ -66,7 +66,7 @@ export const ColumnSearchHeader: React.FC<{
   }, [onActivate]);
 
   const handleSubmit = useCallback(
-    (e: React.FormEvent<HTMLFormElement>) => {
+    (e: React.SubmitEvent<HTMLFormElement>) => {
       // Without this, the browser performs its default (unprevented) form
       // submission, which navigates/reloads the page instead of letting
       // onEnter run.
