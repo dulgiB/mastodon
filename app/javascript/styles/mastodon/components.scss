@@ -7018,6 +7018,14 @@ a.status-card {
   border: 1px solid var(--color-border-primary);
 }
 
+// The filter picker borrows the emoji picker's list, which is a fixed 270px
+// box that always shows a scrollbar. With only a filter or two (or none yet)
+// that leaves an empty scroll track, so size it to its items instead.
+.select-filter__results {
+  height: auto;
+  overflow-y: auto;
+}
+
 .report-dialog-modal {
   max-width: 90vw;
   width: 480px;
