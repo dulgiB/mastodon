@@ -54,6 +54,7 @@ class UserSettings
     setting :trends, default: false
     setting :appeal, default: false
     setting :software_updates, default: 'critical', in: %w(none critical patch all)
+    setting :end_of_support, default: true
   end
 
   namespace :interactions do
