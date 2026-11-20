@@ -4,8 +4,8 @@
 // [data-color-scheme], since this theme is its own compiled bundle rather
 // than a runtime light/dark switch.
 
-@use '../mastodon/theme/light';
-@use '../mastodon/theme/utils';
+@use '../mastodon/tokens/theme/light';
+@use '../mastodon/tokens/theme/utils';
 
 [data-color-scheme='dark'],
 [data-color-scheme='light'],

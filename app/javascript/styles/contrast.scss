@@ -4,8 +4,8 @@
 // config/themes.yml.
 
 @use 'application';
-@use 'mastodon/theme/dark';
-@use 'mastodon/theme/light';
+@use 'mastodon/tokens/theme/dark';
+@use 'mastodon/tokens/theme/light';
 
 [data-color-scheme='dark'],
 html:not([data-color-scheme]) {
